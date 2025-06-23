@@ -1,5 +1,4 @@
 #include "netserver.h"
-#include <SPIFFS.h>
 #include <ArduinoJson.h>
 #include "../ESPFileUpdater/ESPFileUpdater.h"
 #include "config.h"
@@ -232,7 +231,7 @@ size_t NetServer::chunkedHtmlPageCallback(uint8_t* buffer, size_t maxLen, size_t
   if(sdpl){
     requiredfile = config.SDPLFS()->open(netserver.chunkedPathBuffer, "r");
   }else{
-    requiredfile = SPIFFS.open(netserver.chunkedPathBuffer, "r");
+    requiredfile = LittleFS.open(netserver.chunkedPathBuffer, "r");
   }
   if (!requiredfile) return 0;
   size_t filesize = requiredfile.size();
@@ -520,7 +519,7 @@ int NetServer::_readPlaylistLine(File &file, char * line, size_t size){
 
 bool NetServer::importPlaylist() {
   if(config.getMode()==PM_SDCARD) return false;
-  File tempfile = SPIFFS.open(TMP_PATH, "r");
+  File tempfile = LittleFS.open(TMP_PATH, "r");
   if (!tempfile) {
     return false;
   }
