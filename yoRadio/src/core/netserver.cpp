@@ -1,5 +1,4 @@
 #include "netserver.h"
-#include <SPIFFS.h>
 
 #include "config.h"
 #include "player.h"
@@ -92,7 +91,7 @@ bool NetServer::begin(bool quiet) {
   webserver.on("/update", HTTP_POST, beginUpdate, handleUpdate);
   webserver.on("/settings", HTTP_GET, handleHTTPArgs);
   if (IR_PIN != 255) webserver.on("/ir", HTTP_GET, handleHTTPArgs);
-  webserver.serveStatic("/", SPIFFS, "/www/").setCacheControl("max-age=31536000");
+  webserver.serveStatic("/", LittleFS, "/www/").setCacheControl("max-age=31536000");
 #ifdef CORS_DEBUG
   DefaultHeaders::Instance().addHeader(F("Access-Control-Allow-Origin"), F("*"));
   DefaultHeaders::Instance().addHeader(F("Access-Control-Allow-Headers"), F("content-type"));
@@ -166,7 +165,7 @@ size_t NetServer::chunkedHtmlPageCallback(uint8_t* buffer, size_t maxLen, size_t
   if(sdpl){
     requiredfile = config.SDPLFS()->open(netserver.chunkedPathBuffer, "r");
   }else{
-    requiredfile = SPIFFS.open(netserver.chunkedPathBuffer, "r");
+    requiredfile = LittleFS.open(netserver.chunkedPathBuffer, "r");
   }
   if (!requiredfile) return 0;
   size_t filesize = requiredfile.size();
@@ -789,7 +788,7 @@ int NetServer::_readPlaylistLine(File &file, char * line, size_t size){
 
 bool NetServer::importPlaylist() {
   if(config.getMode()==PM_SDCARD) return false;
-  File tempfile = SPIFFS.open(TMP_PATH, "r");
+  File tempfile = LittleFS.open(TMP_PATH, "r");
   if (!tempfile) {
     return false;
   }
@@ -798,12 +797,12 @@ bool NetServer::importPlaylist() {
   _readPlaylistLine(tempfile, linePl, sizeof(linePl)-1);
   if (config.parseCSV(linePl, sName, sUrl, sOvol)) {
     tempfile.close();
-    SPIFFS.rename(TMP_PATH, PLAYLIST_PATH);
+    LittleFS.rename(TMP_PATH, PLAYLIST_PATH);
     requestOnChange(PLAYLISTSAVED, 0);
     return true;
   }
   if (config.parseJSON(linePl, sName, sUrl, sOvol)) {
-    File playlistfile = SPIFFS.open(PLAYLIST_PATH, "w");
+    File playlistfile = LittleFS.open(PLAYLIST_PATH, "w");
     snprintf(linePl, sizeof(linePl)-1, "%s\t%s\t%d", sName, sUrl, 0);
     playlistfile.println(linePl);
     while (tempfile.available()) {
@@ -816,12 +815,12 @@ bool NetServer::importPlaylist() {
     playlistfile.flush();
     playlistfile.close();
     tempfile.close();
-    SPIFFS.remove(TMP_PATH);
+    LittleFS.remove(TMP_PATH);
     requestOnChange(PLAYLISTSAVED, 0);
     return true;
   }
   tempfile.close();
-  SPIFFS.remove(TMP_PATH);
+  LittleFS.remove(TMP_PATH);
   return false;
 }
 
@@ -848,13 +847,13 @@ int freeSpace;
 void handleUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) {
   if (!index) {
     if(filename!="tempwifi.csv"){
-      if(SPIFFS.exists(PLAYLIST_PATH)) SPIFFS.remove(PLAYLIST_PATH);
-      if(SPIFFS.exists(INDEX_PATH)) SPIFFS.remove(INDEX_PATH);
-      if(SPIFFS.exists(PLAYLIST_SD_PATH)) SPIFFS.remove(PLAYLIST_SD_PATH);
-      if(SPIFFS.exists(INDEX_SD_PATH)) SPIFFS.remove(INDEX_SD_PATH);
+      if(LittleFS.exists(PLAYLIST_PATH)) LittleFS.remove(PLAYLIST_PATH);
+      if(LittleFS.exists(INDEX_PATH)) LittleFS.remove(INDEX_PATH);
+      if(LittleFS.exists(PLAYLIST_SD_PATH)) LittleFS.remove(PLAYLIST_SD_PATH);
+      if(LittleFS.exists(INDEX_SD_PATH)) LittleFS.remove(INDEX_SD_PATH);
     }
-    freeSpace = (float)SPIFFS.totalBytes()/100*68-SPIFFS.usedBytes();
-    request->_tempFile = SPIFFS.open(TMP_PATH , "w");
+    freeSpace = (float)LittleFS.totalBytes()/100*68-LittleFS.usedBytes();
+    request->_tempFile = LittleFS.open(TMP_PATH , "w");
   }
   if (len) {
     if(freeSpace>index+len){
@@ -871,7 +870,7 @@ void handleUploadWeb(AsyncWebServerRequest *request, String filename, size_t ind
   if (!index) {
     String spath = "/www/";
     if(filename=="playlist.csv" || filename=="wifi.csv") spath = "/data/";
-    request->_tempFile = SPIFFS.open(spath + filename , "w");
+    request->_tempFile = LittleFS.open(spath + filename , "w");
   }
   if (len) {
     request->_tempFile.write(data, len);
@@ -946,9 +945,9 @@ void handleHTTPArgs(AsyncWebServerRequest * request) {
     #endif
     if (request->hasArg("reset")) { request->redirect("/"); request->send(200); config.reset(); return; }
     if (request->hasArg("trebble") && request->hasArg("middle") && request->hasArg("bass")) {
-      AsyncWebParameter* pt = request->getParam("trebble", request->method() == HTTP_POST);
-      AsyncWebParameter* pm = request->getParam("middle", request->method() == HTTP_POST);
-      AsyncWebParameter* pb = request->getParam("bass", request->method() == HTTP_POST);
+      const AsyncWebParameter* pt = request->getParam("trebble", request->method() == HTTP_POST);
+      const AsyncWebParameter* pm = request->getParam("middle", request->method() == HTTP_POST);
+      const AsyncWebParameter* pb = request->getParam("bass", request->method() == HTTP_POST);
       int t = atoi(pt->value().c_str());
       int m = atoi(pm->value().c_str());
       int b = atoi(pb->value().c_str());
@@ -958,7 +957,7 @@ void handleHTTPArgs(AsyncWebServerRequest * request) {
       commandFound=true;
     }
     if (request->hasArg("ballance")) {
-      AsyncWebParameter* p = request->getParam("ballance", request->method() == HTTP_POST);
+      const AsyncWebParameter* p = request->getParam("ballance", request->method() == HTTP_POST);
       int b = atoi(p->value().c_str());
       player.setBalance(b);
       config.setBalance(b);
@@ -966,7 +965,7 @@ void handleHTTPArgs(AsyncWebServerRequest * request) {
       commandFound=true;
     }
     if (request->hasArg("playstation") || request->hasArg("play")) {
-      AsyncWebParameter* p = request->getParam(request->hasArg("playstation") ? "playstation" : "play", request->method() == HTTP_POST);
+      const AsyncWebParameter* p = request->getParam(request->hasArg("playstation") ? "playstation" : "play", request->method() == HTTP_POST);
       int id = atoi(p->value().c_str());
       if (id < 1) id = 1;
       if (id > config.store.countStation) id = config.store.countStation;
@@ -976,7 +975,7 @@ void handleHTTPArgs(AsyncWebServerRequest * request) {
       DBGVB("[%s] play=%d", __func__, id);
     }
     if (request->hasArg("vol")) {
-      AsyncWebParameter* p = request->getParam("vol", request->method() == HTTP_POST);
+      const AsyncWebParameter* p = request->getParam("vol", request->method() == HTTP_POST);
       int v = atoi(p->value().c_str());
       if (v < 0) v = 0;
       if (v > 254) v = 254;
@@ -986,13 +985,13 @@ void handleHTTPArgs(AsyncWebServerRequest * request) {
       DBGVB("[%s] vol=%d", __func__, v);
     }
     if (request->hasArg("dspon")) {
-      AsyncWebParameter* p = request->getParam("dspon", request->method() == HTTP_POST);
+      const AsyncWebParameter* p = request->getParam("dspon", request->method() == HTTP_POST);
       int d = atoi(p->value().c_str());
       config.setDspOn(d!=0);
       commandFound=true;
     }
     if (request->hasArg("dim")) {
-      AsyncWebParameter* p = request->getParam("dim", request->method() == HTTP_POST);
+      const AsyncWebParameter* p = request->getParam("dim", request->method() == HTTP_POST);
       int d = atoi(p->value().c_str());
       if (d < 0) d = 0;
       if (d > 100) d = 100;
@@ -1001,11 +1000,11 @@ void handleHTTPArgs(AsyncWebServerRequest * request) {
       commandFound=true;
     }
     if (request->hasArg("sleep")) {
-      AsyncWebParameter* sfor = request->getParam("sleep", request->method() == HTTP_POST);
+      const AsyncWebParameter* sfor = request->getParam("sleep", request->method() == HTTP_POST);
       int sford = atoi(sfor->value().c_str());
       int safterd = 0;
       if(request->hasArg("after")){
-        AsyncWebParameter* safter = request->getParam("after", request->method() == HTTP_POST);
+        const AsyncWebParameter* safter = request->getParam("after", request->method() == HTTP_POST);
         safterd = atoi(safter->value().c_str());
       }
       if(sford > 0 && safterd >= 0){

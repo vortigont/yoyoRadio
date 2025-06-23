@@ -1,6 +1,5 @@
 #include "config.h"
 
-//#include <SPIFFS.h>
 #include "display.h"
 #include "player.h"
 #include "network.h"
@@ -25,7 +24,7 @@ bool Config::_isFSempty() {
   char fullpath[28];
   for (uint8_t i=0; i<reqiredFilesSize; i++){
     sprintf(fullpath, "/www/%s", reqiredFiles[i]);
-    if(!SPIFFS.exists(fullpath)) return true;
+    if(!LittleFS.exists(fullpath)) return true;
   }
   return false;
 }
@@ -69,18 +68,18 @@ void Config::init() {
   store.play_mode = store.play_mode & 0b11;
   if(store.play_mode>1) store.play_mode=PM_WEB;
   _initHW();
-  if (!SPIFFS.begin(true)) {
-    Serial.println("##[ERROR]#\tSPIFFS Mount Failed");
+  if (!LittleFS.begin(true)) {
+    Serial.println("##[ERROR]#\tLittleFS Mount Failed");
     return;
   }
-  BOOTLOG("SPIFFS mounted");
+  BOOTLOG("LittleFS mounted");
   emptyFS = _isFSempty();
-  if(emptyFS) BOOTLOG("SPIFFS is empty!");
+  if(emptyFS) BOOTLOG("LittleFS is empty!");
   ssidsCount = 0;
   #ifdef USE_SD
-  _SDplaylistFS = getMode()==PM_SDCARD?&sdman:(true?&SPIFFS:_SDplaylistFS);
+  _SDplaylistFS = getMode()==PM_SDCARD?&sdman:(true?&LittleFS:_SDplaylistFS);
   #else
-  _SDplaylistFS = &SPIFFS;
+  _SDplaylistFS = &LittleFS;
   #endif
   _bootDone=false;
 }
@@ -139,7 +138,7 @@ void Config::changeMode(int newmode){
     store.play_mode=(playMode_e)newmode;
   }
   saveValue(&store.play_mode, store.play_mode, true, true);
-  _SDplaylistFS = getMode()==PM_SDCARD?&sdman:(true?&SPIFFS:_SDplaylistFS);
+  _SDplaylistFS = getMode()==PM_SDCARD?&sdman:(true?&LittleFS:_SDplaylistFS);
   if(getMode()==PM_SDCARD){
     if(pir) player.sendCommand({PR_STOP, 0});
     display.putRequest(NEWMODE, SDCHANGE);
@@ -181,10 +180,10 @@ void Config::initSDPlaylist() {
 #endif //#ifdef USE_SD
 
 bool Config::spiffsCleanup(){
-  bool ret = (SPIFFS.exists(PLAYLIST_SD_PATH)) || (SPIFFS.exists(INDEX_SD_PATH)) || (SPIFFS.exists(INDEX_PATH));
-  if(SPIFFS.exists(PLAYLIST_SD_PATH)) SPIFFS.remove(PLAYLIST_SD_PATH);
-  if(SPIFFS.exists(INDEX_SD_PATH)) SPIFFS.remove(INDEX_SD_PATH);
-  if(SPIFFS.exists(INDEX_PATH)) SPIFFS.remove(INDEX_PATH);
+  bool ret = (LittleFS.exists(PLAYLIST_SD_PATH)) || (LittleFS.exists(INDEX_SD_PATH)) || (LittleFS.exists(INDEX_PATH));
+  if(LittleFS.exists(PLAYLIST_SD_PATH)) LittleFS.remove(PLAYLIST_SD_PATH);
+  if(LittleFS.exists(INDEX_SD_PATH)) LittleFS.remove(INDEX_SD_PATH);
+  if(LittleFS.exists(INDEX_PATH)) LittleFS.remove(INDEX_PATH);
   return ret;
 }
 
@@ -449,13 +448,13 @@ void Config::setStation(const char* station) {
 }
 
 void Config::indexPlaylist() {
-  File playlist = SPIFFS.open(PLAYLIST_PATH, "r");
+  File playlist = LittleFS.open(PLAYLIST_PATH, "r");
   if (!playlist) {
     return;
   }
   char sName[BUFLEN], sUrl[BUFLEN];
   int sOvol;
-  File index = SPIFFS.open(INDEX_PATH, "w");
+  File index = LittleFS.open(INDEX_PATH, "w");
   while (playlist.available()) {
     uint32_t pos = playlist.position();
     if (parseCSV(playlist.readStringUntil('\n').c_str(), sName, sUrl, sOvol)) {
@@ -468,10 +467,10 @@ void Config::indexPlaylist() {
 
 void Config::initPlaylist() {
   store.countStation = 0;
-  if (!SPIFFS.exists(INDEX_PATH)) indexPlaylist();
+  if (!LittleFS.exists(INDEX_PATH)) indexPlaylist();
 
-  if (SPIFFS.exists(INDEX_PATH)) {
-    File index = SPIFFS.open(INDEX_PATH, "r");
+  if (LittleFS.exists(INDEX_PATH)) {
+    File index = LittleFS.open(INDEX_PATH, "r");
     store.countStation = index.size() / 4;
     index.close();
     saveValue(&store.countStation, store.countStation, true, true);
@@ -664,7 +663,7 @@ bool Config::parseSsid(const char* line, char* ssid, char* pass) {
 }
 
 bool Config::saveWifiFromNextion(const char* post){
-  File file = SPIFFS.open(SSIDS_PATH, "w");
+  File file = LittleFS.open(SSIDS_PATH, "w");
   if (!file) {
     return false;
   } else {
@@ -676,15 +675,15 @@ bool Config::saveWifiFromNextion(const char* post){
 }
 
 bool Config::saveWifi() {
-  if (!SPIFFS.exists(TMP_PATH)) return false;
-  SPIFFS.remove(SSIDS_PATH);
-  SPIFFS.rename(TMP_PATH, SSIDS_PATH);
+  if (!LittleFS.exists(TMP_PATH)) return false;
+  LittleFS.remove(SSIDS_PATH);
+  LittleFS.rename(TMP_PATH, SSIDS_PATH);
   ESP.restart();
   return true;
 }
 
 bool Config::initNetwork() {
-  File file = SPIFFS.open(SSIDS_PATH, "r");
+  File file = LittleFS.open(SSIDS_PATH, "r");
   if (!file || file.isDirectory()) {
     return false;
   }

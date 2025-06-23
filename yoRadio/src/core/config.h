@@ -3,7 +3,7 @@
 #include "Arduino.h"
 #include <Ticker.h>
 #include <SPI.h>
-#include <SPIFFS.h>
+#include <LittleFS.h>
 #include <EEPROM.h>
 //#include "SD.h"
 #include "options.h"

@@ -41,7 +41,7 @@ void Telnet::stop() {
 }
 
 void Telnet::emptyClientStream(WiFiClient client) {
-  client.flush();
+  client.clear();
   delay(50);
   while (client.available()) {
     client.read();
@@ -250,7 +250,7 @@ void Telnet::on_input(const char* str, uint8_t clientId) {
     }
     if (strcmp(str, "cli.list") == 0 || strcmp(str, "list") == 0) {
       printf(clientId, "#CLI.LIST#\n");
-      File file = SPIFFS.open(PLAYLIST_PATH, "r");
+      File file = LittleFS.open(PLAYLIST_PATH, "r");
       if (!file || file.isDirectory()) {
         return;
       }
@@ -404,7 +404,7 @@ void Telnet::on_input(const char* str, uint8_t clientId) {
   }
   if (strcmp(str, "wifi.con") == 0 || strcmp(str, "conn") == 0) {
     printf(clientId, "#WIFI.CON#\n");
-    File file = SPIFFS.open(SSIDS_PATH, "r");
+    File file = LittleFS.open(SSIDS_PATH, "r");
     if (file && !file.isDirectory()) {
       char sSid[BUFLEN], sPas[BUFLEN];
       uint8_t c = 1;
@@ -420,7 +420,7 @@ void Telnet::on_input(const char* str, uint8_t clientId) {
   }
   if (strcmp(str, "wifi.station") == 0 || strcmp(str, "station") == 0 || strcmp(str, "ssid") == 0) {
     printf(clientId, "#WIFI.STATION#\n");
-    File file = SPIFFS.open(SSIDS_PATH, "r");
+    File file = LittleFS.open(SSIDS_PATH, "r");
     if (file && !file.isDirectory()) {
       char sSid[BUFLEN], sPas[BUFLEN];
       uint8_t c = 1;
