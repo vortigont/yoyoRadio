@@ -853,7 +853,7 @@ void handleUpload(AsyncWebServerRequest *request, String filename, size_t index,
       if(LittleFS.exists(INDEX_SD_PATH)) LittleFS.remove(INDEX_SD_PATH);
     }
     freeSpace = (float)LittleFS.totalBytes()/100*68-LittleFS.usedBytes();
-    request->_tempFile = LittleFS.open(TMP_PATH , "w");
+    request->_tempFile = LittleFS.open(TMP_PATH , "w", true);
   }
   if (len) {
     if(freeSpace>index+len){

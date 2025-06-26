@@ -678,6 +678,8 @@ bool Config::saveWifi() {
   if (!LittleFS.exists(TMP_PATH)) return false;
   LittleFS.remove(SSIDS_PATH);
   LittleFS.rename(TMP_PATH, SSIDS_PATH);
+  DBGVB("WiFi config updated, restarting...\n");
+  delay(1000);
   ESP.restart();
   return true;
 }
