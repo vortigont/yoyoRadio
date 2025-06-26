@@ -58,12 +58,13 @@ bool NetServer::begin(bool quiet) {
   if(!quiet) Serial.print("##[BOOT]#\tnetserver.begin\t");
   importRequest = IMDONE;
   irRecordEnable = false;
-  nsQueue = xQueueCreate( 20, sizeof( nsRequestParams_t ) );
-  while(nsQueue==NULL){;}
+  if (!nsQueue)
+    nsQueue = xQueueCreate( 20, sizeof( nsRequestParams_t ) );
+
   if(config.emptyFS){
-    webserver.on("/", HTTP_GET, [](AsyncWebServerRequest * request) { request->send_P(200, "text/html", emptyfs_html, processor); });
+    webserver.on("/", HTTP_GET, [](AsyncWebServerRequest * request) { request->send(200, asyncsrv::T_text_html, emptyfs_html, processor); });
     webserver.on("/", HTTP_POST, [](AsyncWebServerRequest *request) { 
-      if(request->arg("ssid")!="" && request->arg("pass")!=""){
+      if(!request->arg("ssid").isEmpty() && !request->arg("pass").isEmpty()){
         char buf[BUFLEN];
         memset(buf, 0, BUFLEN);
         snprintf(buf, BUFLEN, "%s\t%s", request->arg("ssid").c_str(), request->arg("pass").c_str());
@@ -71,27 +72,38 @@ bool NetServer::begin(bool quiet) {
         config.saveWifiFromNextion(buf);
         return;
       }
-      request->redirect("/"); 
+      request->redirect("/");
       ESP.restart(); 
     }, handleUploadWeb);
-  }else{
-    webserver.on("/", HTTP_ANY, handleHTTPArgs);
-    webserver.on("/webboard", HTTP_GET, [](AsyncWebServerRequest * request) { request->send_P(200, "text/html", emptyfs_html, processor); });
+  } else {
+    // server index
+    webserver.on("/", HTTP_GET, [](AsyncWebServerRequest *r){ if (r->args()) return handleHTTPArgs(r); r->redirect( network.status == CONNECTED ? "/index.html" : "/settings.html");});
+    // Not sure if there are any POST functionality here for index page ??? 
+    //webserver.on("/", HTTP_ANY, handleHTTPArgs);
+    webserver.on("/webboard", HTTP_GET, [](AsyncWebServerRequest * request) { request->send(200, asyncsrv::T_text_html, emptyfs_html, processor); });
     webserver.on("/webboard", HTTP_POST, [](AsyncWebServerRequest *request) { request->redirect("/"); }, handleUploadWeb);
   }
   
   webserver.on(PLAYLIST_PATH, HTTP_GET, handleHTTPArgs);
-  webserver.on(INDEX_PATH, HTTP_GET, handleHTTPArgs);
-  webserver.on(PLAYLIST_SD_PATH, HTTP_GET, handleHTTPArgs);
-  webserver.on(INDEX_SD_PATH, HTTP_GET, handleHTTPArgs);
-  webserver.on(SSIDS_PATH, HTTP_GET, handleHTTPArgs);
+  //webserver.on(PLAYLIST_SD_PATH, HTTP_GET, handleHTTPArgs);
+  //webserver.on(INDEX_PATH, HTTP_GET, handleHTTPArgs);
+  //webserver.on(INDEX_SD_PATH, HTTP_GET, handleHTTPArgs);
+  //webserver.on(SSIDS_PATH, HTTP_GET, handleHTTPArgs);
   
   webserver.on("/upload", HTTP_POST, beginUpload, handleUpload);
-  webserver.on("/update", HTTP_GET, handleHTTPArgs);
+  webserver.on("/update", HTTP_GET, [](AsyncWebServerRequest *r){ r->send(LittleFS, "/www/update.html", asyncsrv::T_text_html, false, processor); } );
   webserver.on("/update", HTTP_POST, beginUpdate, handleUpdate);
-  webserver.on("/settings", HTTP_GET, handleHTTPArgs);
-  if (IR_PIN != 255) webserver.on("/ir", HTTP_GET, handleHTTPArgs);
-  webserver.serveStatic("/", LittleFS, "/www/").setCacheControl("max-age=31536000");
+  webserver.serveStatic("/settings", LittleFS, "/www/settings.html", asyncsrv::T_no_cache);
+  webserver.serveStatic("/ir", LittleFS, "/www/ir.html", asyncsrv::T_no_cache);
+
+  // server file content from filesystem
+  webserver.serveStatic("/", LittleFS, "/www/")
+    .setCacheControl(asyncsrv::T_no_cache);     // revalidate based on etag/IMS headers
+
+  webserver.serveStatic("/data", LittleFS, "/data/")
+    .setCacheControl(asyncsrv::T_no_cache);     // revalidate based on etag/IMS headers
+
+
 #ifdef CORS_DEBUG
   DefaultHeaders::Instance().addHeader(F("Access-Control-Allow-Origin"), F("*"));
   DefaultHeaders::Instance().addHeader(F("Access-Control-Allow-Headers"), F("content-type"));
@@ -128,13 +140,13 @@ void handleUpdate(AsyncWebServerRequest *request, String filename, size_t index,
     display.putRequest(NEWMODE, UPDATING);
     if (!Update.begin(UPDATE_SIZE_UNKNOWN, target)) {
       Update.printError(Serial);
-      request->send(200, "text/html", updateError());
+      request->send(200, asyncsrv::T_text_html, updateError());
     }
   }
   if (!Update.hasError()) {
     if (Update.write(data, len) != len) {
       Update.printError(Serial);
-      request->send(200, "text/html", updateError());
+      request->send(200, asyncsrv::T_text_html, updateError());
     }
   }
   if (final) {
@@ -142,7 +154,7 @@ void handleUpdate(AsyncWebServerRequest *request, String filename, size_t index,
       Serial.printf("Update Success: %uB\n", index + len);
     } else {
       Update.printError(Serial);
-      request->send(200, "text/html", updateError());
+      request->send(200, asyncsrv::T_text_html, updateError());
     }
   }
 }
@@ -836,9 +848,10 @@ void NetServer::resetQueue(){
   if(nsQueue!=NULL) xQueueReset(nsQueue);
 }
 
-String processor(const String& var) { // %Templates%
-  if (var == "ACTION") return (network.status == CONNECTED && !config.emptyFS)?"webboard":"";
-  if (var == "UPLOADWIFI") return (network.status == CONNECTED)?" hidden":"";
+// HTML %Templates% processor
+String processor(const String& var) {
+  if (var == "ACTION") return (network.status == CONNECTED && !config.emptyFS) ? String("webboard") : String();
+  if (var == "UPLOADWIFI") return (network.status == CONNECTED) ? String(" hidden") : String();
   if (var == "VERSION") return YOVERSION;
   return String();
 }
@@ -895,33 +908,34 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
 void handleHTTPArgs(AsyncWebServerRequest * request) {
   if (request->method() == HTTP_GET) {
     DBGVB("[%s] client ip=%s request of %s", __func__, request->client()->remoteIP().toString().c_str(), request->url().c_str());
-    if (strcmp(request->url().c_str(), PLAYLIST_PATH) == 0 || 
-        strcmp(request->url().c_str(), SSIDS_PATH) == 0 || 
-        strcmp(request->url().c_str(), INDEX_PATH) == 0 || 
-        strcmp(request->url().c_str(), TMP_PATH) == 0 || 
-        strcmp(request->url().c_str(), PLAYLIST_SD_PATH) == 0 || 
-        strcmp(request->url().c_str(), INDEX_SD_PATH) == 0) {
-#ifdef MQTT_ROOT_TOPIC
-      if (strcmp(request->url().c_str(), PLAYLIST_PATH) == 0) while (mqttplaylistblock) vTaskDelay(5);
-#endif
-      if(strcmp(request->url().c_str(), PLAYLIST_PATH) == 0 && config.getMode()==PM_SDCARD){
-         netserver.chunkedHtmlPage("application/octet-stream", request, PLAYLIST_SD_PATH, false);
-      }else{
-        netserver.chunkedHtmlPage("application/octet-stream", request, request->url().c_str(), false);
+    if (strcmp(request->url().c_str(), PLAYLIST_PATH) == 0 //||
+        //strcmp(request->url().c_str(), PLAYLIST_SD_PATH) == 0 ||
+        //strcmp(request->url().c_str(), SSIDS_PATH) == 0 ||
+        //strcmp(request->url().c_str(), TMP_PATH) == 0 ||
+        //strcmp(request->url().c_str(), INDEX_PATH) == 0 ||
+        //strcmp(request->url().c_str(), INDEX_SD_PATH) == 0)
+    ){
+      if (strcmp(request->url().c_str(), PLAYLIST_PATH) == 0){
+        #ifdef MQTT_ROOT_TOPIC    // very ugly check
+          // if MQTT something is in progress, ask client to return later
+          if (mqttplaylistblock){
+            AsyncWebServerResponse *response = request->beginResponse(429);
+            response->addHeader(asyncsrv::T_retry_after, 1);
+            return request->send(response);
+          }
+        #endif
+
+        if (config.getMode()==PM_SDCARD)    // redirect to SDCARD's path
+          return request->redirect(PLAYLIST_SD_PATH);
+          //netserver.chunkedHtmlPage("application/octet-stream", request, PLAYLIST_SD_PATH, false);
+      } else {
+        request->send(LittleFS, request->url().c_str());
+        //netserver.chunkedHtmlPage("application/octet-stream", request, request->url().c_str(), false);
       }
       return;
     }
-    if (strcmp(request->url().c_str(), "/") == 0 && request->params() == 0) {
-      netserver.chunkedHtmlPage(String(), request, network.status == CONNECTED ? "/www/index.html" : "/www/settings.html");
-      return;
-    }
-    if (strcmp(request->url().c_str(), "/update") == 0 || strcmp(request->url().c_str(), "/settings") == 0 || strcmp(request->url().c_str(), "/ir") == 0) {
-      char buf[40] = { 0 };
-      sprintf(buf, "/www%s.html", request->url().c_str());
-      netserver.chunkedHtmlPage(String(), request, buf);
-      return;
-    }
   }
+
   if (network.status == CONNECTED) {
     bool commandFound=false;
     if (request->hasArg("start")) { player.sendCommand({PR_PLAY, config.lastStation()}); commandFound=true; }
