@@ -14,13 +14,27 @@
 #if DSP_HSPI
 DspCore::DspCore(): Adafruit_ST7789(&SPI2, TFT_CS, TFT_DC, TFT_RST) {}
 #else
+#ifdef TFT_CUSTOM_PINS
+DspCore::DspCore(): Adafruit_ST7789(TFT_CS, TFT_DC, TFT_MOSI, TFT_CLK, TFT_RST) {}
+#else
 DspCore::DspCore(): Adafruit_ST7789(TFT_CS, TFT_DC, TFT_RST) {}
+#endif  // TFT_CUSTOM_PINS
 #endif
 
 #include "tools/utf8RusGFX.h"
 
 void DspCore::initDisplay() {
+#if defined(TFT_WIDTH) && defined(TFT_HEIGHT)
+  init(TFT_WIDTH, TFT_HEIGHT);
+#else
   init(240,(DSP_MODEL==DSP_ST7789)?320:240);
+#endif  // defined(TFT_WIDTH) && defined(TFT_HEIGHT)
+
+#ifdef TFT_BACKLIGHT
+  pinMode(TFT_BACKLIGHT, OUTPUT);
+  digitalWrite(TFT_BACKLIGHT, HIGH);
+#endif  // TFT_BACKLIGHT
+
   if(DEF_SPI_FREQ > 0) setSPISpeed(DEF_SPI_FREQ);
   invert();
   cp437(true);
