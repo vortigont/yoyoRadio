@@ -192,6 +192,10 @@ The connection tables are located here https://github.com/e2002/yoradio#connecti
 #ifndef BTN_PRESS_TICKS
   #define BTN_PRESS_TICKS    500
 #endif
+#ifndef BTN_ACTIVE_LEVEL
+  #define BTN_ACTIVE_LEVEL    LOW
+#endif
+
 
 /*        TOUCH SCREEN            */
 #define TS_MODEL_UNDEFINED      0
