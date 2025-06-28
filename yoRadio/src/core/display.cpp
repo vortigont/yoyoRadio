@@ -14,7 +14,6 @@ Nextion nextion;
 
 #ifndef DUMMYDISPLAY
 //============================================================================================================================
-DspCore dsp;
 
 Page *pages[] = { new Page(), new Page(), new Page(), new Page() };
 
@@ -62,15 +61,16 @@ void Display::init() {
   analogSetAttenuation(ADC_0db);
 #endif
   _bootStep = 0;
-  dsp.initDisplay();
+  create_display_dev();
+  dsp->initDisplay();
   displayQueue=NULL;
   displayQueue = xQueueCreate( 5, sizeof( requestParams_t ) );
   while(displayQueue==NULL){;}
-  _createDspTask();
   while(!_bootStep==0) { delay(10); }
-  //_pager.begin();
-  //_bootScreen();
+  _pager.begin();
+  _bootScreen();
   Serial.println("done");
+  _createDspTask();
 }
 
 void Display::_bootScreen(){
@@ -79,7 +79,7 @@ void Display::_bootScreen(){
   _bootstring = (TextWidget*) &_boot->addWidget(new TextWidget(bootstrConf, 50, true, BOOT_TXT_COLOR, 0));
   _pager.addPage(_boot);
   _pager.setPage(_boot, true);
-  dsp.drawLogo(bootLogoTop);
+  dsp->drawLogo(bootLogoTop);
   _bootStep = 1;
 }
 
@@ -93,7 +93,7 @@ void Display::_buildPager(){
     _plcurrent.init("*", playlistConf, config.theme.plcurrent, config.theme.plcurrentbg);
   #endif
   #if !defined(DSP_LCD)
-    _plcurrent.moveTo({TFT_FRAMEWDT, (uint16_t)(dsp.plYStart+dsp.plCurrentPos*dsp.plItemHeight), (int16_t)playlistConf.width});
+    _plcurrent.moveTo({TFT_FRAMEWDT, (uint16_t)(dsp->plYStart+dsp->plCurrentPos*dsp->plItemHeight), (int16_t)playlistConf.width});
   #endif
   #ifndef HIDE_TITLE2
     _title2 = new ScrollWidget("*", title2Conf, config.theme.title2, config.theme.background);
@@ -166,8 +166,8 @@ void Display::_buildPager(){
   #if !defined(DSP_LCD)
   if(_plbackground) {
     pages[PG_PLAYLIST]->addWidget( _plbackground);
-    _plbackground->setHeight(dsp.plItemHeight);
-    _plbackground->moveTo({0,(uint16_t)(dsp.plYStart+dsp.plCurrentPos*dsp.plItemHeight-playlistConf.widget.textsize*2), (int16_t)playlBGConf.width});
+    _plbackground->setHeight(dsp->plItemHeight);
+    _plbackground->moveTo({0,(uint16_t)(dsp->plYStart+dsp->plCurrentPos*dsp->plItemHeight-playlistConf.widget.textsize*2), (int16_t)playlBGConf.width});
   }
   #endif
   pages[PG_PLAYLIST]->addWidget(&_plcurrent);
@@ -201,7 +201,7 @@ void Display::_apScreen() {
     _pager.addPage(_boot);
     _pager.setPage(_boot);
   #else
-    dsp.apScreen();
+    dsp->apScreen();
   #endif
 }
 
@@ -245,7 +245,7 @@ void Display::_start() {
 }
 
 void Display::_showDialog(const char *title){
-  dsp.setScrollId(NULL);
+  dsp->setScrollId(NULL);
   _pager.setPage( pages[PG_DIALOG]);
   #ifdef META_MOVE
     _meta.moveTo(metaMove);
@@ -266,14 +266,14 @@ void Display::_swichMode(displayMode_e newmode) {
   #endif
   if (newmode == _mode || (network.status != CONNECTED && network.status != SDREADY)) return;
   _mode = newmode;
-  dsp.setScrollId(NULL);
+  dsp->setScrollId(NULL);
   if (newmode == PLAYER) {
     if(player.isRunning())
       _clock.moveTo(clockMove);
     else
       _clock.moveBack();
     #ifdef DSP_LCD
-      dsp.clearDsp();
+      dsp->clearDsp();
     #endif
     numOfNextStation = 0;
     _returnTicker.detach();
@@ -292,7 +292,7 @@ void Display::_swichMode(displayMode_e newmode) {
     config.isScreensaver = true;
     _pager.setPage( pages[PG_SCREENSAVER]);
     if (newmode == SCREENBLANK) {
-      dsp.clearClock();
+      dsp->clearClock();
       config.setDspOn(false, false);
     }
   }else{
@@ -328,7 +328,7 @@ void Display::resetQueue(){
 }
 
 void Display::_drawPlaylist() {
-  dsp.drawPlaylist(currentPlItem);
+  dsp->drawPlaylist(currentPlItem);
   _setReturnTicker(30);
 }
 
@@ -339,7 +339,7 @@ void Display::_drawNextStationNum(uint16_t num) {
 }
 
 void Display::printPLitem(uint8_t pos, const char* item){
-  dsp.printPLitem(pos, item, _plcurrent);
+  dsp->printPLitem(pos, item, _plcurrent);
 }
 
 void Display::putRequest(displayRequestType_e type, int payload){
@@ -378,11 +378,13 @@ void Display::_layoutChange(bool played){
   #define DSP_QUEUE_TICKS 0
 #endif
 void Display::loop() {
+/*
   if(_bootStep==0) {
     _pager.begin();
     _bootScreen();
     return;
   }
+*/
   if(displayQueue==NULL) return;
   _pager.loop();
 #ifdef USE_NEXTION
@@ -470,7 +472,7 @@ void Display::loop() {
         default: break;
       }
   }
-  dsp.loop();
+  dsp->loop();
   #if I2S_DOUT==255
   player.computeVUlevel();
   #endif
@@ -543,9 +545,9 @@ void Display::_time(bool redraw) {
 #endif
   if(config.isScreensaver && network.timeinfo.tm_sec % 60 == 0){
     #ifdef GXCLOCKFONT
-      uint16_t ft=static_cast<uint16_t>(random(TFT_FRAMEWDT, (dsp.height()-dsp.plItemHeight-TFT_FRAMEWDT*2-clockConf.textsize)));
+      uint16_t ft=static_cast<uint16_t>(random(TFT_FRAMEWDT, (dsp->height()-dsp->plItemHeight-TFT_FRAMEWDT*2-clockConf.textsize)));
     #else
-      uint16_t ft=static_cast<uint16_t>(random(TFT_FRAMEWDT+clockConf.textsize, (dsp.height()-dsp.plItemHeight-TFT_FRAMEWDT*2)));
+      uint16_t ft=static_cast<uint16_t>(random(TFT_FRAMEWDT+clockConf.textsize, (dsp->height()-dsp->plItemHeight-TFT_FRAMEWDT*2)));
     #endif
     _clock.moveTo({clockConf.left, ft, 0});
   }
@@ -569,19 +571,19 @@ void Display::_volume() {
   #endif*/
 }
 
-void Display::flip(){ dsp.flip(); }
+void Display::flip(){ dsp->flip(); }
 
-void Display::invert(){ dsp.invert(); }
+void Display::invert(){ dsp->invert(); }
 
 void  Display::setContrast(){
   #if DSP_MODEL==DSP_NOKIA5110
-    dsp.setContrast(config.store.contrast);
+    dsp->setContrast(config.store.contrast);
   #endif
 }
 
 bool Display::deepsleep(){
 #if defined(LCD_I2C) || defined(DSP_OLED) || BRIGHTNESS_PIN!=255
-  dsp.sleep();
+  dsp->sleep();
   return true;
 #endif
   return false;
@@ -589,7 +591,7 @@ bool Display::deepsleep(){
 
 void Display::wakeup(){
 #if defined(LCD_I2C) || defined(DSP_OLED) || BRIGHTNESS_PIN!=255
-  dsp.wake();
+  dsp->wake();
 #endif
 }
 //============================================================================================================================

@@ -16,7 +16,7 @@ void FillWidget::init(FillConfig conf, uint16_t bgcolor){
 
 void FillWidget::_draw(){
   if(!_active) return;
-  dsp.fillRect(_config.left, _config.top, _width, _height, _bgcolor);
+  dsp->fillRect(_config.left, _config.top, _width, _height, _bgcolor);
 }
 
 void FillWidget::setHeight(uint16_t newHeight){
@@ -40,16 +40,16 @@ void TextWidget::init(WidgetConfig wconf, uint16_t buffsize, bool uppercase, uin
   memset(_oldtext, 0, _buffsize);
   //_charWidth = wconf.textsize * CHARWIDTH;    // default GFX font
   //_textheight = wconf.textsize * CHARHEIGHT;   // default GFX font
-  dsp.charSize(_config.textsize, _charWidth, _textheight);
+  dsp->charSize(_config.textsize, _charWidth, _textheight);
   _textwidth = _oldtextwidth = _oldleft = 0;
   _uppercase = uppercase;
 }
 
 void TextWidget::setText(const char* txt) {
-  strlcpy(_text, dsp.utf8Rus(txt, _uppercase), _buffsize);
+  strlcpy(_text, dsp->utf8Rus(txt, _uppercase), _buffsize);
   _textwidth = strlen(_text) * _charWidth;
   if (strcmp(_oldtext, _text) == 0) return;
-  if (_active) dsp.fillRect(_oldleft == 0 ? _realLeft() : min(_oldleft, _realLeft()),  _config.top, max(_oldtextwidth, _textwidth), _textheight, _bgcolor);
+  if (_active) dsp->fillRect(_oldleft == 0 ? _realLeft() : min(_oldleft, _realLeft()),  _config.top, max(_oldtextwidth, _textwidth), _textheight, _bgcolor);
   _oldtextwidth = _textwidth;
   _oldleft = _realLeft();
   if (_active) _draw();
@@ -69,19 +69,19 @@ void TextWidget::setText(const char* txt, const char *format){
 
 uint16_t TextWidget::_realLeft() {
   switch (_config.align) {
-    case WA_CENTER: return (dsp.width() - _textwidth) / 2; break;
-    case WA_RIGHT: return (dsp.width() - _textwidth - _config.left); break;
+    case WA_CENTER: return (dsp->width() - _textwidth) / 2; break;
+    case WA_RIGHT: return (dsp->width() - _textwidth - _config.left); break;
     default: return _config.left; break;
   }
 }
 
 void TextWidget::_draw() {
   if(!_active) return;
-  dsp.setTextColor(_fgcolor, _bgcolor);
-  dsp.setCursor(_realLeft(), _config.top);
-  dsp.setFont();
-  dsp.setTextSize(_config.textsize);
-  dsp.print(_text);
+  dsp->setTextColor(_fgcolor, _bgcolor);
+  dsp->setCursor(_realLeft(), _config.top);
+  dsp->setFont();
+  dsp->setTextSize(_config.textsize);
+  dsp->print(_text);
   strlcpy(_oldtext, _text, _buffsize);
 }
 
@@ -108,7 +108,7 @@ void ScrollWidget::init(const char* separator, ScrollConfig conf, uint16_t fgcol
   _scrolltime = conf.scrolltime;
   //_charWidth = CHARWIDTH * _config.textsize;           // default GFX font
   //_textheight = CHARHEIGHT * _config.textsize;          // default GFX font
-  dsp.charSize(_config.textsize, _charWidth, _textheight);
+  dsp->charSize(_config.textsize, _charWidth, _textheight);
   _sepwidth = strlen(_sep) * _charWidth;
   _width = conf.width;
   _backMove.width = _width;
@@ -119,8 +119,8 @@ void ScrollWidget::init(const char* separator, ScrollConfig conf, uint16_t fgcol
 
 void ScrollWidget::_setTextParams() {
   if (_config.textsize == 0) return;
-  dsp.setTextSize(_config.textsize);
-  dsp.setTextColor(_fgcolor, _bgcolor);
+  dsp->setTextSize(_config.textsize);
+  dsp->setTextColor(_fgcolor, _bgcolor);
 }
 
 bool ScrollWidget::_checkIsScrollNeeded() {
@@ -128,28 +128,28 @@ bool ScrollWidget::_checkIsScrollNeeded() {
 }
 
 void ScrollWidget::setText(const char* txt) {
-  strlcpy(_text, dsp.utf8Rus(txt, _uppercase), _buffsize - 1);
+  strlcpy(_text, dsp->utf8Rus(txt, _uppercase), _buffsize - 1);
   if (strcmp(_oldtext, _text) == 0) return;
   _textwidth = strlen(_text) * _charWidth;
   _x = _config.left;
   _doscroll = _checkIsScrollNeeded();
-  if (dsp.getScrollId() == this) dsp.setScrollId(NULL);
+  if (dsp->getScrollId() == this) dsp->setScrollId(NULL);
   _scrolldelay = millis();
   if (_active) {
     _setTextParams();
     if (_doscroll) {
-        dsp.fillRect(_config.left,  _config.top, _width, _textheight, _bgcolor);
-        dsp.setCursor(_config.left, _config.top);
+        dsp->fillRect(_config.left,  _config.top, _width, _textheight, _bgcolor);
+        dsp->setCursor(_config.left, _config.top);
         snprintf(_window, _width / _charWidth + 1, "%s", _text); //TODO
-        dsp.setClipping({_config.left, _config.top, _width, _textheight});
-        dsp.print(_window);
-        dsp.clearClipping();
+        dsp->setClipping({_config.left, _config.top, _width, _textheight});
+        dsp->print(_window);
+        dsp->clearClipping();
     } else {
-      dsp.fillRect(_config.left, _config.top, _width, _textheight, _bgcolor);
-      dsp.setCursor(_realLeft(), _config.top);
-      //dsp.setClipping({_config.left, _config.top, _width, _textheight});
-      dsp.print(_text);
-      //dsp.clearClipping();
+      dsp->fillRect(_config.left, _config.top, _width, _textheight, _bgcolor);
+      dsp->setCursor(_realLeft(), _config.top);
+      //dsp->setClipping({_config.left, _config.top, _width, _textheight});
+      dsp->print(_text);
+      //dsp->clearClipping();
     }
     strlcpy(_oldtext, _text, _buffsize);
   }
@@ -163,7 +163,7 @@ void ScrollWidget::setText(const char* txt, const char *format){
 
 void ScrollWidget::loop() {
   if(_locked) return;
-  if (!_doscroll || _config.textsize == 0 || (dsp.getScrollId() != NULL && dsp.getScrollId() != this)) return;
+  if (!_doscroll || _config.textsize == 0 || (dsp->getScrollId() != NULL && dsp->getScrollId() != this)) return;
   if (_checkDelay(_x == _config.left ? _startscrolldelay : _scrolltime, _scrolldelay)) {
     _calcX();
     if (_active) _draw();
@@ -171,7 +171,7 @@ void ScrollWidget::loop() {
 }
 
 void ScrollWidget::_clear(){
-  dsp.fillRect(_config.left, _config.top, _width, _textheight, _bgcolor);
+  dsp->fillRect(_config.left, _config.top, _width, _textheight, _bgcolor);
 }
 
 void ScrollWidget::_draw() {
@@ -187,19 +187,19 @@ void ScrollWidget::_draw() {
       const char* _scursor = _sep + (_cursor - (_text + strlen(_text)));
       snprintf(_window, _width / _charWidth + 1, "%s%s", _scursor, _text);
     }
-    dsp.setCursor(_x + hiddenChars * _charWidth, _config.top);
-    dsp.setClipping({_config.left, _config.top, _width, _textheight});
-    dsp.print(_window);
+    dsp->setCursor(_x + hiddenChars * _charWidth, _config.top);
+    dsp->setClipping({_config.left, _config.top, _width, _textheight});
+    dsp->print(_window);
     #ifndef DSP_LCD
-      dsp.print(" ");
+      dsp->print(" ");
     #endif
-    dsp.clearClipping();
+    dsp->clearClipping();
   } else {
-    dsp.fillRect(_config.left, _config.top, _width, _textheight, _bgcolor);
-    dsp.setCursor(_realLeft(), _config.top);
-    dsp.setClipping({_realLeft(), _config.top, _width, _textheight});
-    dsp.print(_text);
-    dsp.clearClipping();
+    dsp->fillRect(_config.left, _config.top, _width, _textheight, _bgcolor);
+    dsp->setCursor(_realLeft(), _config.top);
+    dsp->setClipping({_realLeft(), _config.top, _width, _textheight});
+    dsp->print(_text);
+    dsp->clearClipping();
   }
 }
 
@@ -208,9 +208,9 @@ void ScrollWidget::_calcX() {
   _x -= _scrolldelta;
   if (-_x > _textwidth + _sepwidth - _config.left) {
     _x = _config.left;
-    dsp.setScrollId(NULL);
+    dsp->setScrollId(NULL);
   } else {
-    dsp.setScrollId(this);
+    dsp->setScrollId(this);
   }
 }
 
@@ -224,7 +224,7 @@ bool ScrollWidget::_checkDelay(int m, uint32_t &tstamp) {
 }
 
 void ScrollWidget::_reset(){
-  dsp.setScrollId(NULL);
+  dsp->setScrollId(NULL);
   _x = _config.left;
   _scrolldelay = millis();
   _doscroll = _checkIsScrollNeeded();
@@ -248,7 +248,7 @@ void SliderWidget::setValue(uint32_t val) {
 void SliderWidget::_drawslider() {
   uint16_t valwidth = map(_value, 0, _max, 0, _width - _outlined * 2);
   if (_oldvalwidth == valwidth) return;
-  dsp.fillRect(_config.left + _outlined + min(valwidth, _oldvalwidth), _config.top + _outlined, abs(_oldvalwidth - valwidth), _height - _outlined * 2, _oldvalwidth > valwidth ? _bgcolor : _fgcolor);
+  dsp->fillRect(_config.left + _outlined + min(valwidth, _oldvalwidth), _config.top + _outlined, abs(_oldvalwidth - valwidth), _height - _outlined * 2, _oldvalwidth > valwidth ? _bgcolor : _fgcolor);
   _oldvalwidth = valwidth;
 }
 
@@ -256,14 +256,14 @@ void SliderWidget::_draw() {
   if(_locked) return;
   _clear();
   if(!_active) return;
-  if (_outlined) dsp.drawRect(_config.left, _config.top, _width, _height, _oucolor);
+  if (_outlined) dsp->drawRect(_config.left, _config.top, _width, _height, _oucolor);
   uint16_t valwidth = map(_value, 0, _max, 0, _width - _outlined * 2);
-  dsp.fillRect(_config.left + _outlined, _config.top + _outlined, valwidth, _height - _outlined * 2, _fgcolor);
+  dsp->fillRect(_config.left + _outlined, _config.top + _outlined, valwidth, _height - _outlined * 2, _fgcolor);
 }
 
 void SliderWidget::_clear() {
 //  _oldvalwidth = 0;
-  dsp.fillRect(_config.left, _config.top, _width, _height, _bgcolor);
+  dsp->fillRect(_config.left, _config.top, _width, _height, _bgcolor);
 }
 void SliderWidget::_reset() {
   _oldvalwidth = 0;
@@ -273,7 +273,7 @@ void SliderWidget::_reset() {
  ************************/
 #if !defined(DSP_LCD) && !defined(DSP_OLED)
 VuWidget::~VuWidget() {
-  if(_canvas) free(_canvas);
+  delete _canvas;
 }
 
 void VuWidget::init(WidgetConfig wconf, VUBandsConfig bands, uint16_t vumaxcolor, uint16_t vumincolor, uint16_t bgcolor) {
@@ -281,7 +281,7 @@ void VuWidget::init(WidgetConfig wconf, VUBandsConfig bands, uint16_t vumaxcolor
   _vumaxcolor = vumaxcolor;
   _vumincolor = vumincolor;
   _bands = bands;
-  _canvas = new Canvas(_bands.width * 2 + _bands.space, _bands.height);
+  _canvas = new Canvas(_bands.width * 2 + _bands.space, _bands.height, dsp);
 }
 
 
@@ -339,16 +339,18 @@ void VuWidget::_draw(){
     #ifndef BOOMBOX_STYLE
       _canvas->fillRect(_bands.width-measL, 0, measL, _bands.width, _bgcolor);
       _canvas->fillRect(_bands.width * 2 + _bands.space - measR, 0, measR, _bands.width, _bgcolor);
-      dsp.drawRGBBitmap(_config.left, _config.top, _canvas->getBuffer(), _bands.width * 2 + _bands.space, _bands.height);
+      dsp->draw16bitRGBBitmap(_config.left, _config.top, _canvas->getFramebuffer(), _bands.width * 2 + _bands.space, _bands.height);
+      //dsp->drawRGBBitmap(_config.left, _config.top, _canvas->getBuffer(), _bands.width * 2 + _bands.space, _bands.height);
     #else
       _canvas->fillRect(0, 0, _bands.width-(_bands.width-measL), _bands.width, _bgcolor);
       _canvas->fillRect(_bands.width * 2 + _bands.space - measR, 0, measR, _bands.width, _bgcolor);
-      dsp.drawRGBBitmap(_config.left, _config.top, _canvas->getBuffer(), _bands.width * 2 + _bands.space, _bands.height);
+      dsp->drawRGBBitmap(_config.left, _config.top, _canvas->getBuffer(), _bands.width * 2 + _bands.space, _bands.height);
     #endif
   }else{
     _canvas->fillRect(0, 0, _bands.width, measL, _bgcolor);
     _canvas->fillRect(_bands.width + _bands.space, 0, _bands.width, measR, _bgcolor);
-    dsp.drawRGBBitmap(_config.left, _config.top, _canvas->getBuffer(), _bands.width * 2 + _bands.space, _bands.height);
+    dsp->draw16bitRGBBitmap(_config.left, _config.top, _canvas->getFramebuffer(), _bands.width * 2 + _bands.space, _bands.height);
+    //dsp->drawRGBBitmap(_config.left, _config.top, _canvas->getBuffer(), _bands.width * 2 + _bands.space, _bands.height);
   }
 }
 
@@ -357,7 +359,7 @@ void VuWidget::loop(){
 }
 
 void VuWidget::_clear(){
-  dsp.fillRect(_config.left, _config.top, _bands.width * 2 + _bands.space, _bands.height, _bgcolor);
+  dsp->fillRect(_config.left, _config.top, _bands.width * 2 + _bands.space, _bands.height, _bgcolor);
 }
 #else // DSP_LCD
 VuWidget::~VuWidget() { }
@@ -391,7 +393,7 @@ void NumWidget::setText(const char* txt) {
 #if defined(DSP_OLED) && DSP_MODEL!=DSP_SSD1322
   realth = _textheight*CHARHEIGHT;
 #endif
-  if (_active) dsp.fillRect(_oldleft == 0 ? _realLeft() : min(_oldleft, _realLeft()),  _config.top-_textheight+1, max(_oldtextwidth, _textwidth), realth, _bgcolor);
+  if (_active) dsp->fillRect(_oldleft == 0 ? _realLeft() : min(_oldleft, _realLeft()),  _config.top-_textheight+1, max(_oldtextwidth, _textwidth), realth, _bgcolor);
   _oldtextwidth = _textwidth;
   _oldleft = _realLeft();
   if (_active) _draw();
@@ -404,18 +406,18 @@ void NumWidget::setText(int val, const char *format){
 }
 
 void NumWidget::_getBounds() {
-  _textwidth= dsp.textWidth(_text);
+  _textwidth= dsp->textWidth(_text);
 }
 
 void NumWidget::_draw() {
   if(!_active) return;
-  dsp.setNumFont(); // --------------SetBigFont
-  //dsp.setTextSize(1);
-  dsp.setTextColor(_fgcolor, _bgcolor);
-  dsp.setCursor(_realLeft(), _config.top);
-  dsp.print(_text);
+  dsp->setNumFont(); // --------------SetBigFont
+  //dsp->setTextSize(1);
+  dsp->setTextColor(_fgcolor, _bgcolor);
+  dsp->setCursor(_realLeft(), _config.top);
+  dsp->print(_text);
   strlcpy(_oldtext, _text, _buffsize);
-  dsp.setFont();
+  dsp->setFont();
 }
 
 /**************************
@@ -448,16 +450,16 @@ void ProgressWidget::loop() {
  **************************/
 void ClockWidget::draw(){
   if(!_active) return;
-  dsp.printClock(_config.top, _config.left, _config.textsize, false);
+  dsp->printClock(_config.top, _config.left, _config.textsize, false);
 }
 
 void ClockWidget::_draw(){
   if(!_active) return;
-  dsp.printClock(_config.top, _config.left, _config.textsize, true);
+  dsp->printClock(_config.top, _config.left, _config.textsize, true);
 }
 
 void ClockWidget::_clear(){
-  dsp.clearClock();
+  dsp->clearClock();
 }
 
 void BitrateWidget::init(BitrateConfig bconf, uint16_t fgcolor, uint16_t bgcolor){
@@ -465,7 +467,7 @@ void BitrateWidget::init(BitrateConfig bconf, uint16_t fgcolor, uint16_t bgcolor
   _dimension = bconf.dimension;
   _bitrate = 0;
   _format = BF_UNCNOWN;
-  dsp.charSize(bconf.widget.textsize, _charWidth, _textheight);
+  dsp->charSize(bconf.widget.textsize, _charWidth, _textheight);
   memset(_buf, 0, 6);
 }
 
@@ -483,28 +485,28 @@ void BitrateWidget::setFormat(BitrateFormat format){
 void BitrateWidget::_draw(){
   _clear();
   if(!_active || _format == BF_UNCNOWN || _bitrate==0) return;
-  dsp.drawRect(_config.left, _config.top, _dimension, _dimension, _fgcolor);
-  dsp.fillRect(_config.left, _config.top + _dimension/2, _dimension, _dimension/2, _fgcolor);
-  dsp.setFont();
-  dsp.setTextSize(_config.textsize);
-  dsp.setTextColor(_fgcolor, _bgcolor);
+  dsp->drawRect(_config.left, _config.top, _dimension, _dimension, _fgcolor);
+  dsp->fillRect(_config.left, _config.top + _dimension/2, _dimension, _dimension/2, _fgcolor);
+  dsp->setFont();
+  dsp->setTextSize(_config.textsize);
+  dsp->setTextColor(_fgcolor, _bgcolor);
   snprintf(_buf, 6, "%d", _bitrate);
-  dsp.setCursor(_config.left + _dimension/2 - _charWidth*strlen(_buf)/2 + 1, _config.top + _dimension/4 - _textheight/2+1);
-  dsp.print(_buf);
-  dsp.setTextColor(_bgcolor, _fgcolor);
-  dsp.setCursor(_config.left + _dimension/2 - _charWidth*3/2 + 1, _config.top + _dimension - _dimension/4 - _textheight/2);
+  dsp->setCursor(_config.left + _dimension/2 - _charWidth*strlen(_buf)/2 + 1, _config.top + _dimension/4 - _textheight/2+1);
+  dsp->print(_buf);
+  dsp->setTextColor(_bgcolor, _fgcolor);
+  dsp->setCursor(_config.left + _dimension/2 - _charWidth*3/2 + 1, _config.top + _dimension - _dimension/4 - _textheight/2);
   switch(_format){
-    case BF_MP3:  dsp.print("MP3"); break;
-    case BF_AAC:  dsp.print("AAC"); break;
-    case BF_FLAC: dsp.print("FLC"); break;
-    case BF_OGG:  dsp.print("OGG"); break;
-    case BF_WAV:  dsp.print("WAV"); break;
+    case BF_MP3:  dsp->print("MP3"); break;
+    case BF_AAC:  dsp->print("AAC"); break;
+    case BF_FLAC: dsp->print("FLC"); break;
+    case BF_OGG:  dsp->print("OGG"); break;
+    case BF_WAV:  dsp->print("WAV"); break;
     default:                        break;
   }
 }
 
 void BitrateWidget::_clear() {
-  dsp.fillRect(_config.left, _config.top, _dimension, _dimension, _bgcolor);
+  dsp->fillRect(_config.left, _config.top, _dimension, _dimension, _bgcolor);
 }
 
 #endif // #if DSP_MODEL!=DSP_DUMMY
