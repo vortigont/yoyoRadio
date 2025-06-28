@@ -40,6 +40,8 @@
   #include "displayGC9A01A.h"
 #elif DSP_MODEL==DSP_ILI9488 || DSP_MODEL==DSP_ILI9486
   #include "displayILI9488.h"
+#elif DSP_MODEL==DSP_ILI9488_TFT_eSPI
+  #include "display_tft_espi_il9488.hpp"
 #elif DSP_MODEL==DSP_SSD1322
   #include "displaySSD1322.h"
 #elif DSP_MODEL==DSP_ST7920
