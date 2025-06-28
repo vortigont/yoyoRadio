@@ -17,7 +17,7 @@ DspCore::DspCore(): Adafruit_ST7789(&SPI2, TFT_CS, TFT_DC, TFT_RST) {}
 #ifdef TFT_CUSTOM_PINS
 DspCore::DspCore(): Adafruit_ST7789(TFT_CS, TFT_DC, TFT_MOSI, TFT_CLK, TFT_RST) {}
 #else
-DspCore::DspCore(): Adafruit_ST7789(TFT_CS, TFT_DC, TFT_RST) {}
+DspCore::DspCore(): Adafruit_ST7789(TFT_CS, TFT_DC, TFT_RST, SCK ) {}
 #endif  // TFT_CUSTOM_PINS
 #endif
 
