@@ -83,6 +83,7 @@ struct theme_t {
   uint16_t plcurrentfill;
   uint16_t playlist[5];
 };
+
 struct config_t
 {
   uint16_t  config_set; //must be 4262
@@ -187,9 +188,8 @@ class Config {
     uint16_t screensaverTicks;
     uint16_t screensaverPlayingTicks;
     bool     isScreensaver;
-  public:
+
     Config() {};
-    //void save();
 #if IR_PIN!=255
     void saveIR();
 #endif
