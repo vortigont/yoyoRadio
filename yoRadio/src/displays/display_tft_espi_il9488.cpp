@@ -24,9 +24,9 @@ void DspCore::initDisplay() {
   cp437(true);
   setTextWrap(false);
   setTextSize(1);
-  fillScreen(0x0000);
   invert();
   flip();
+  fillScreen(TFT_BLUE);
   
   plItemHeight = playlistConf.widget.textsize*(CHARHEIGHT-1)+playlistConf.widget.textsize*4;
   plTtemsCount = round((float)height()/plItemHeight);

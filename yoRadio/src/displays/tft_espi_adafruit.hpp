@@ -6,7 +6,7 @@ class TFT_eSPI_AdafruitGFX_Wrapper : public Adafruit_GFX {
     TFT_eSPI _tft;
 
     public:
-    TFT_eSPI_AdafruitGFX_Wrapper(uint16_t w, uint16_t h) : Adafruit_GFX(w, h) {};
+    TFT_eSPI_AdafruitGFX_Wrapper(uint16_t w, uint16_t h) : Adafruit_GFX(w, h), _tft(TFT_eSPI(w, h)) {};
     void init(uint8_t tc = TAB_COLOUR){ _tft.init(tc); }
     void drawPixel(int16_t x, int16_t y, uint16_t color) override { _tft.drawPixel( x, y, color); }
     void fillScreen(uint16_t color) override { _tft.fillScreen(color); };
