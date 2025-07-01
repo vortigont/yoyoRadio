@@ -31,7 +31,7 @@ void SDManager::stop(){
   end();
   ready = false;
 }
-#include "diskio_impl.h"
+
 bool SDManager::cardPresent() {
 
   if(!ready) return false;
@@ -62,7 +62,7 @@ bool SDManager::_endsWith (const char* base, const char* str) {
 }
 
 void SDManager::listSD(File &plSDfile, File &plSDindex, const char* dirname, uint8_t levels) {
-    File root = sdman.open(dirname);
+    File root = open(dirname);
     if (!root) {
         Serial.println("##[ERROR]#\tFailed to open directory");
         return;
