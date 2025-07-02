@@ -1,10 +1,8 @@
 #ifndef sdmanager_h
 #define sdmanager_h
 #include <Arduino.h>
-#include <SPI.h>
 #include <SD.h>
 #include "vfs_api.h"
-#include "sd_diskio.h"
 #include "options.h"
 
 class SDManager : public SDFS {

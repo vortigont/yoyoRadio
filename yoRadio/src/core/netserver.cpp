@@ -946,7 +946,7 @@ void handleHTTPArgs(AsyncWebServerRequest * request) {
     if (request->hasArg("volp")) { player.stepVol(true); commandFound=true; }
     #ifdef USE_SD
     if (request->hasArg("mode")) {
-      AsyncWebParameter* p = request->getParam("mode");
+      const AsyncWebParameter* p = request->getParam("mode");
       int mm = atoi(p->value().c_str());
       if(mm>2) mm=0;
       if(mm==2)
