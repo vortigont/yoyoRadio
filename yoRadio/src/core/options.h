@@ -280,7 +280,8 @@ The connection tables are located here https://github.com/e2002/yoradio#connecti
     //#ifndef LED_BUILTIN
     //  #define LED_BUILTIN   255
     //#endif
-    #define REAL_LEDBUILTIN LED_BUILTIN
+    // have no idea what to do with this ugly define - it can't be universal for various boards, so just disable if for now
+    #define REAL_LEDBUILTIN -1
 #endif
 /*        Other settings. You can overwrite them in the myoptions.h file        */
 #ifndef MUTE_PIN
