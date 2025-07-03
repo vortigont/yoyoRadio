@@ -11,13 +11,18 @@
 #include "core/optionschecker.h"
 
 #if DSP_HSPI || TS_HSPI || VS_HSPI
-SPIClass  SPI2(HOOPSENb);
+//SPIClass  SPI2(HOOPSENb);
 #endif
 
 extern __attribute__((weak)) void yoradio_on_setup();
 
 void setup() {
   Serial.begin(115200);
+#if ARDUINO_USB_CDC_ON_BOOT==1
+  // let USB serial to settle
+  delay(2000);
+#endif
+  Serial.println("##[BOOT]#\tSetup");
   if(REAL_LEDBUILTIN!=255) pinMode(REAL_LEDBUILTIN, OUTPUT);
   if (yoradio_on_setup) yoradio_on_setup();
   pm.on_setup();
@@ -27,21 +32,31 @@ void setup() {
   network.begin();
   if (network.status != CONNECTED && network.status!=SDREADY) {
     netserver.begin();
+    Serial.println("##[BOOT]#\tsn1");
     initControls();
+    Serial.println("##[BOOT]#\tsn2");
     display.putRequest(DSP_START);
+    Serial.println("##[BOOT]#\tsn3");
     while(!display.ready()) delay(10);
+    Serial.println("##[BOOT]#\tsn4");
     return;
   }
   if(SDC_CS!=255) {
+    Serial.println("##[BOOT]#\ts sd1");
     display.putRequest(WAITFORSD, 0);
     Serial.print("##[BOOT]#\tSD search\t");
   }
+  Serial.println("##[BOOT]#\ts 2");
   config.initPlaylistMode();
+  Serial.println("##[BOOT]#\ts 3");
   netserver.begin();
+  Serial.println("##[BOOT]#\ts 4");
   telnet.begin();
   initControls();
+  Serial.println("##[BOOT]#\ts 5");
   display.putRequest(DSP_START);
   while(!display.ready()) delay(10);
+  Serial.println("##[BOOT]#\ts 6");
   #ifdef MQTT_ROOT_TOPIC
     mqttInit();
   #endif
@@ -49,6 +64,7 @@ void setup() {
   player.lockOutput=false;
   if (config.store.smartstart == 1) player.sendCommand({PR_PLAY, config.lastStation()});
   pm.on_end_setup();
+  Serial.println("##[BOOT]#\tSetup done!");
 }
 
 void loop() {

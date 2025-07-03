@@ -20,7 +20,7 @@ Page& Pager::addPage(Page* page, bool setNow){
 
 bool Pager::removePage(Page* page){
   page->setActive(false);
-  dsp.clearDsp();
+  dsp->clearDsp();
   auto i = std::find_if(_pages.begin(), _pages.end(), [&page](const Page* pn){ return page == pn; });
   if (i != _pages.end()){
     delete (*i);
@@ -33,9 +33,16 @@ bool Pager::removePage(Page* page){
 }
 
 void Pager::setPage(Page* page, bool black){
+  Serial.println("dd1");
   for(const auto& p: _pages) p->setActive(false);
-  dsp.clearDsp(black);
+  Serial.println("dd2");
+  if (dsp == nullptr)
+    Serial.println("Omg!");
+  else
+    dsp->clearDsp(black);
+  Serial.println("dd3");
   page->setActive(true);
+  Serial.println("dd4");
 }
 
 

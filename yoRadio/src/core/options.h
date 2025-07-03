@@ -50,6 +50,7 @@ The connection tables are located here https://github.com/e2002/yoradio#connecti
 #define DSP_ILI9486     22    // (Testing mode) 480x320  3.5'  https://aliexpress.com/item/1005001999296476.html?sku_id=12000018365356568
 #define DSP_SSD1322     23    // 256x64   2.8'  https://aliexpress.com/item/1005003480981568.html
 #define DSP_ST7920      24    // 128x64   2.6'  https://aliexpress.com/item/32699482638.html
+#define DSP_JC3248W535  30    // 480x320  3.5'  Guition JC3248W535 https://aliexpress.com/item/1005007593889279.html
 #define DSP_CUSTOM      101   // your display
 
 #ifndef DSP_MODEL
@@ -276,10 +277,12 @@ The connection tables are located here https://github.com/e2002/yoradio#connecti
       #define REAL_LEDBUILTIN LED_BUILTIN_S3
     #endif
 #else
-    #ifndef LED_BUILTIN
-      #define LED_BUILTIN   255
+    #ifdef LED_BUILTIN
+      #define REAL_LEDBUILTIN LED_BUILTIN
+    #else
+      #define REAL_LEDBUILTIN 255
+      //#define LED_BUILTIN   255
     #endif
-    #define REAL_LEDBUILTIN LED_BUILTIN
 #endif
 /*        Other settings. You can overwrite them in the myoptions.h file        */
 #ifndef MUTE_PIN

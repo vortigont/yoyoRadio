@@ -1,7 +1,7 @@
 #pragma once
 
-#define TFT_WIDTH   480
-#define TFT_HEIGHT  320
+#define TFT_WIDTH   320
+#define TFT_HEIGHT  480
 #define TFT_BLK_ON_LEVEL 1
 #define TFT_BLK     1
 #define TFT_RST     -1
@@ -35,6 +35,8 @@
 
 
 // yoradio defines
+#define IGNORE_BOARD_CHECKS
+
 #define I2S_DOUT    AUDIO_I2S_DO_IO
 #define I2S_BCLK    AUDIO_I2S_BCK_IO
 #define I2S_LRC     AUDIO_I2S_LRCK_IO
@@ -47,6 +49,8 @@
 #define TS_RST  TOUCH_PIN_NUM_RST -1
 #define TS_CS   -1
 
+// ArduinoGFX 
+#define DISPLAY_CREATE_OBJECT
 
 /*
 Links:
