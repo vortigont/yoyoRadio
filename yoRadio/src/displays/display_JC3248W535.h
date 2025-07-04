@@ -1,8 +1,7 @@
 #pragma once
-//#include "../core/options.h"
+#include "dspcore.h"
 #include <Arduino_GFX_Library.h>
-#define GFX_DEV_DEVICE JC3248W535
-#define GFX_BL 1
+#define GFX_DEV_DEVICE JC3248W535       // this module uses AXS15231B display 
 #define CANVAS
 
 
@@ -20,25 +19,37 @@ typedef Arduino_Canvas Canvas;
 #include "widgets/widgets.h"
 #include "widgets/pages.h"
 
-// reuse ILI9488 for it has same dimensions
-#if __has_include("conf/display_JC3248W535_conf_custom.h")
-  #include "conf/display_JC3248W535_conf_custom.h"
+#if __has_include("conf/displayAXS15231Bconf_custom.h")
+  #include "conf/displayAXS15231Bconf_custom.h"
 #else
-  #include "conf/displayILI9488conf.h"
+  #include "conf/displayAXS15231Bconf.h"
 #endif
 
 #define BOOT_PRG_COLOR    0xE68B
 #define BOOT_TXT_COLOR    0xFFFF
 #define PINK              0xF97F
 
-class DspCore: public  Arduino_AXS15231B {
-  public:
+class DspCore: public DspCoreBase, public  Arduino_AXS15231B {
+public:
   DspCore(Arduino_DataBus *b);
-  #include "tools/commongfx.h"
+
+  void initDisplay() override;
+  void clearDsp(bool black=false) override;
+
+  void drawLogo(uint16_t top) override;
+  void printClock(uint16_t top, uint16_t rightspace, uint16_t timeheight, bool redraw) override;
+  void clearClock() override;
+  void drawPlaylist(uint16_t currentItem) override;
+  void printPLitem(uint8_t pos, const char* item, ScrollWidget& current) override;
+
+  static uint16_t DspCore::textWidthGFX(const char *txt, uint8_t textsize);
+
+private:
+  uint8_t _charWidth(unsigned char c) override;
+
 };
   
 
-extern Arduino_DataBus *bus;
 extern DspCore* dsp;
 
 

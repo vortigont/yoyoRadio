@@ -96,13 +96,6 @@ uint16_t DspCore::textWidth(const char *txt){
   return w;
 }
 
-void DspCore::_getTimeBounds() {
-  _timewidth = textWidth(_timeBuf);
-  char buf[4];
-  strftime(buf, 4, "%H", &network.timeinfo);
-  _dotsLeft=textWidth(buf);
-}
-
 void DspCore::_clockSeconds(){
   setTextSize(3);
   setTextColor(config.theme.seconds, config.theme.background);

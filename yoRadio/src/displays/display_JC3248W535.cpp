@@ -4,10 +4,10 @@
 #include "display_JC3248W535.h"
 #include "fonts/bootlogo.h"
 #include "../core/config.h"
-#include "../core/network.h"
+//#include "../core/network.h"
 #include "tools/utf8RusGFX.h"
 
-Arduino_DataBus *bus{nullptr};
+static Arduino_DataBus *bus{nullptr};
 DspCore* dsp{nullptr};
 
 bool create_display_dev(){
@@ -24,9 +24,9 @@ bool create_display_dev(){
     dsp = new DspCore(bus);
     Serial.println("create dsp object");
     // backlight
-    #ifdef GFX_BL
-      pinMode(GFX_BL, OUTPUT);
-      digitalWrite(GFX_BL, HIGH);
+    #ifdef TFT_BLK
+      pinMode(TFT_BLK, OUTPUT);
+      digitalWrite(TFT_BLK, TFT_BLK_ON_LEVEL);
     #endif
   }
   return dsp != nullptr;
@@ -52,19 +52,48 @@ void DspCore::initDisplay() {
   plYStart = (height() / 2 - plItemHeight / 2) - plItemHeight * (plTtemsCount - 1) / 2 + playlistConf.widget.textsize*2;
 }
 
-void DspCore::drawLogo(uint16_t top) { draw16bitRGBBitmap((width() - 99) / 2, top, bootlogo2, 99, 64); }
+void DspCore::drawLogo(uint16_t top) {
+  fillRect(0, top, width(), 88, config.theme.background);
+  draw16bitRGBBitmap((width() - 99) / 2, top, bootlogo2, 99, 64);
+}
 //void DspCore::drawLogo(uint16_t top) { drawRGBBitmap((width() - 99) / 2, top, bootlogo2, 99, 64); }
 
 void DspCore::printPLitem(uint8_t pos, const char* item, ScrollWidget& current){
-  setTextSize(playlistConf.widget.textsize);
   if (pos == plCurrentPos) {
     current.setText(item);
   } else {
     uint8_t plColor = (abs(pos - plCurrentPos)-1)>4?4:abs(pos - plCurrentPos)-1;
-    setTextColor(config.theme.playlist[plColor], config.theme.background);
-    setCursor(TFT_FRAMEWDT, plYStart + pos * plItemHeight);
     fillRect(0, plYStart + pos * plItemHeight - 1, width(), plItemHeight - 2, config.theme.background);
-    print(utf8Rus(item, true));
+    // Обрезка строки по ширине без троеточия
+    const char* rus = utf8Rus(item, true);
+    int len = strlen(rus);
+    char buf[128];
+    int maxWidth = playlistConf.width;
+    uint8_t textsize = playlistConf.widget.textsize;
+    if (textWidthGFX(rus, textsize) <= maxWidth) {
+      strncpy(buf, rus, sizeof(buf)-1);
+      buf[sizeof(buf)-1] = 0;
+    } else {
+      int cut = len;
+      while (cut > 0) {
+        char tmp[128];
+        strncpy(tmp, rus, cut);
+        tmp[cut] = 0;
+        if (textWidthGFX(tmp, textsize) <= maxWidth) break;
+        cut--;
+      }
+      strncpy(buf, rus, cut);
+      buf[cut] = 0;
+    }
+    gfxDrawText(
+      gfx,
+      TFT_FRAMEWDT,
+      plYStart + pos * plItemHeight,
+      buf,
+      config.theme.playlist[plColor],
+      config.theme.background,
+      textsize
+    );
   }
 }
 
@@ -76,27 +105,10 @@ void DspCore::drawPlaylist(uint16_t currentItem) {
 }
 
 void DspCore::clearDsp(bool black) { fillScreen(black?0:config.theme.background); }
-/*
-GFXglyph *pgm_read_glyph_ptr(const GFXfont *gfxFont, uint8_t c) {
-  return gfxFont->glyph + c;
-}
-*/
+
 uint8_t DspCore::_charWidth(unsigned char c){
   GFXglyph *glyph = pgm_read_glyph_ptr(&DS_DIGI56pt7b, c - 0x20);
   return pgm_read_byte(&glyph->xAdvance);
-}
-
-uint16_t DspCore::textWidth(const char *txt){
-  uint16_t w = 0, l=strlen(txt);
-  for(uint16_t c=0;c<l;c++) w+=_charWidth(txt[c]);
-  return w;
-}
-
-void DspCore::_getTimeBounds() {
-  _timewidth = textWidth(_timeBuf);
-  char buf[4];
-  strftime(buf, 4, "%H", &network.timeinfo);
-  _dotsLeft=textWidth(buf);
 }
 
 void DspCore::_clockSeconds(){
@@ -240,4 +252,10 @@ void DspCore::setNumFont(){
   setFont(&DS_DIGI56pt7b);
   setTextSize(1);
 }
+
+// Функция для вычисления ширины строки для стандартного шрифта Adafruit_GFX
+uint16_t DspCore::textWidthGFX(const char *txt, uint8_t textsize) {
+  return strlen(txt) * CHARWIDTH * textsize;
+}
+
 #endif
