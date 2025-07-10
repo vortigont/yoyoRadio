@@ -1,10 +1,11 @@
 #ifndef widgets_h
 #define widgets_h
 
-#include "Arduino.h"
 #include "../../core/config.h"
-enum WidgetAlign { WA_LEFT, WA_CENTER, WA_RIGHT };
+#include "../gfx_lib.h"
 
+
+enum WidgetAlign { WA_LEFT, WA_CENTER, WA_RIGHT };
 
 typedef struct clipArea {
   uint16_t left; 
@@ -130,6 +131,7 @@ class TextWidget: public Widget {
     bool _uppercase;
     uint16_t  _buffsize, _textwidth, _oldtextwidth, _oldleft, _textheight;
     uint8_t _charWidth;
+    GFXfont *_font{nullptr};
   protected:
     void _draw();
     uint16_t _realLeft();

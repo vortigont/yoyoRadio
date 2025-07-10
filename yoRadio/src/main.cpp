@@ -3,7 +3,7 @@
 #include "core/config.h"
 #include "core/telnet.h"
 #include "core/player.h"
-#include "core/display.h"
+#include "displays/dspcore.h"
 #include "core/network.h"
 #include "core/netserver.h"
 #include "core/controls.h"
@@ -11,7 +11,7 @@
 #include "core/optionschecker.h"
 
 #if DSP_HSPI || TS_HSPI || VS_HSPI
-//SPIClass  SPI2(HOOPSENb);
+SPIClass  SPI2(HOOPSENb);
 #endif
 
 extern __attribute__((weak)) void yoradio_on_setup();
@@ -25,9 +25,10 @@ void setup() {
   Serial.println("##[BOOT]#\tSetup");
   if(REAL_LEDBUILTIN!=255) pinMode(REAL_LEDBUILTIN, OUTPUT);
   if (yoradio_on_setup) yoradio_on_setup();
-  pm.on_setup();
   config.init();
   display.init();
+
+  pm.on_setup();
   player.init();
   network.begin();
   if (network.status != CONNECTED && network.status!=SDREADY) {

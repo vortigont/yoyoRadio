@@ -1,58 +1,17 @@
 #ifndef dspcore_h
 #define dspcore_h
 #include "../core/options.h"
+#include "gfx_lib.h"
+#include "widgets/widgets.h"
+#include "widgets/pages.h"
 
-#if DSP_MODEL==DSP_DUMMY
-  #define DUMMYDISPLAY
-  #define DSP_NOT_FLIPPED
-  #include "tools/l10n.h"
-#elif DSP_MODEL==DSP_ST7735
-  #include "displayST7735.h"
-#elif DSP_MODEL==DSP_SSD1306 || DSP_MODEL==DSP_SSD1306x32
-  #include "displaySSD1306.h"
-#elif DSP_MODEL==DSP_NOKIA5110
-  #include "displayN5110.h"
-#elif DSP_MODEL==DSP_ST7789 || DSP_MODEL==DSP_ST7789_240
-  #include "displayST7789.h"
-#elif DSP_MODEL==DSP_SH1106
-  #include "displaySH1106.h"
-#elif DSP_MODEL==DSP_1602I2C || DSP_MODEL==DSP_2004I2C
-  #include "displayLC1602.h"
-#elif DSP_MODEL==DSP_SSD1327
-  #include "displaySSD1327.h"
-#elif DSP_MODEL==DSP_ILI9341
-  #include "displayILI9341.h"
-#elif DSP_MODEL==DSP_SSD1305 || DSP_MODEL==DSP_SSD1305I2C
-  #include "displaySSD1305.h"
-#elif DSP_MODEL==DSP_SH1107
-  #include "displaySH1106.h"
-#elif DSP_MODEL==DSP_1602 || DSP_MODEL==DSP_2004
-  #include "displayLC1602.h"
-#elif DSP_MODEL==DSP_GC9106
-  #include "displayGC9106.h"
-#elif DSP_MODEL==DSP_CUSTOM
-  #include "displayCustom.h"
-#elif DSP_MODEL==DSP_ILI9225
-  #include "displayILI9225.h"
-#elif DSP_MODEL==DSP_ST7796
-  #include "displayST7796.h"
-#elif DSP_MODEL==DSP_GC9A01A
-  #include "displayGC9A01A.h"
-#elif DSP_MODEL==DSP_ILI9488 || DSP_MODEL==DSP_ILI9486
-  #include "displayILI9488.h"
-#elif DSP_MODEL==DSP_SSD1322
-  #include "displaySSD1322.h"
-#elif DSP_MODEL==DSP_ST7920
-  #include "displayST7920.h"
-#elif DSP_MODEL== DSP_JC3248W535
-  #include "display_JC3248W535.h"
-#endif
+
 
 
 class DspCoreBase {
 public:
   DspCoreBase(){}
-  virtual ~DspCoreBase(){}
+  virtual ~DspCoreBase() = default;
 
   uint16_t plItemHeight, plTtemsCount, plCurrentPos;
   int plYStart;
@@ -70,6 +29,7 @@ public:
 
 
   static char* utf8Rus(const char* str, bool uppercase);
+  static uint16_t textWidthGFX(const char *txt, uint8_t textsize);
 
 
   virtual void charSize(uint8_t textsize, uint8_t& width, uint16_t& height);
@@ -94,7 +54,7 @@ public:
     void apScreen();
   #endif
 
-  virtual void writePixel(int16_t x, int16_t y, uint16_t color) = 0;
+  //virtual void writePixel(int16_t x, int16_t y, uint16_t color) = 0;
   virtual void writeFillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) = 0;
   virtual void setNumFont() = 0;
 
@@ -125,6 +85,7 @@ public:
     uint16_t drawChar(uint16_t x, uint16_t y, uint16_t ch, uint16_t color = COLOR_WHITE);
   #endif
 
+
 protected:
   char  _timeBuf[20], _dateBuf[20], _oldTimeBuf[20], _oldDateBuf[20], _bufforseconds[4], _buffordate[40];
   uint16_t _timewidth, _timeleft, _datewidth, _dateleft, _oldtimeleft, _oldtimewidth, _olddateleft, _olddatewidth, clockTop, clockRightSpace, clockTimeHeight, _dotsLeft;
@@ -147,8 +108,144 @@ protected:
 };
 
 
+// abstact class based on ArduinoGFX extending it with drawing helpers
+#ifdef _ARDUINO_GFX_H_
+class DspCore_Arduino_GFX : public DspCoreBase, virtual public DISPLAY_ENGINE {
+
+public:
+  DspCore_Arduino_GFX(){};
+
+  // Текст
+  void gfxDrawText(int x, int y, const char* text, uint16_t color, uint16_t bgcolor, uint8_t size, const GFXfont* font = nullptr);
+  void gfxDrawNumber(int x, int y, int num, uint16_t color, uint16_t bgcolor, uint8_t size, const GFXfont* font = nullptr);
+  void gfxDrawFormatted(int x, int y, const char* fmt, uint16_t color, uint16_t bgcolor, uint8_t size, const GFXfont* font, ...);
+
+  // Графика
+  void gfxDrawPixel (int x, int y, uint16_t color) { drawPixel(x, y, color); };
+  void gfxDrawLine  (int x0, int y0, int x1, int y1, uint16_t color) { drawLine(x0, y0, x1, y1, color); };
+  void gfxDrawRect  (int x, int y, int w, int h, uint16_t color) { drawRect(x, y, w, h, color); };
+  void gfxFillRect  (int x, int y, int w, int h, uint16_t color){ fillRect(x, y, w, h, color); };
+  void gfxDrawBitmap(int x, int y, const uint16_t* bitmap, int w, int h){ draw16bitRGBBitmap(x, y, const_cast<uint16_t*>(bitmap), w, h); };
+
+  // Очистка
+  void gfxClearArea(int x, int y, int w, int h, uint16_t bgcolor){ fillRect(x, y, w, h, bgcolor); };
+  void gfxClearScreen(uint16_t bgcolor){ fillScreen(bgcolor); };
+  void gfxFlushScreen(){ flush(); };
+//
+//#ifdef FONT_DEFAULT_AGFX
+  void setFont(const GFXfont* font = nullptr);
+//#endif
+
+//#ifdef FONT_DEFAULT_U8G2
+  void setFont(const uint8_t* font);
+//#endif
+//
+
+};
+#endif    // _ARDUINO_GFX_H_
 
 
-//extern DspCore dsp;
+#if NEXTION_RX!=255 && NEXTION_TX!=255
+  #define USE_NEXTION
+  #include "../displays/nextion.h"
+#endif
+
+
+
+
+
+#ifndef DUMMYDISPLAY
+  void loopDspTask(void * pvParameters);
+
+class Display {
+  public:
+    uint16_t currentPlItem;
+    uint16_t numOfNextStation;
+    displayMode_e _mode;
+  public:
+    Display() {};
+    displayMode_e mode() { return _mode; }
+    void mode(displayMode_e m) { _mode=m; }
+    void init();
+    void loop();
+    void _start();
+    bool ready() { return _bootStep==2; }
+    void resetQueue();
+    void putRequest(displayRequestType_e type, int payload=0);
+    void flip();
+    void invert();
+    bool deepsleep();
+    void wakeup();
+    void setContrast();
+    void printPLitem(uint8_t pos, const char* item);
+  private:
+    ScrollWidget _meta, _title1, _plcurrent;
+    ScrollWidget *_weather;
+    ScrollWidget *_title2;
+    BitrateWidget *_fullbitrate;
+    FillWidget *_metabackground, *_plbackground;
+    SliderWidget *_volbar, *_heapbar;
+    Pager _pager;
+    Page _footer;
+    VuWidget *_vuwidget;
+    NumWidget _nums;
+    ProgressWidget _testprogress;
+    ClockWidget _clock;
+    Page *_boot;
+    TextWidget *_bootstring, *_volip, *_voltxt, *_rssi, *_bitrate;
+    Ticker _returnTicker;
+    uint8_t _bootStep;
+    void _time(bool redraw = false);
+    void _apScreen();
+    void _swichMode(displayMode_e newmode);
+    void _drawPlaylist();
+    void _volume();
+    void _title();
+    void _station();
+    void _drawNextStationNum(uint16_t num);
+    void _createDspTask();
+    void _showDialog(const char *title);
+    void _buildPager();
+    void _bootScreen();
+    void _setReturnTicker(uint8_t time_s);
+    void _layoutChange(bool played);
+    void _setRSSI(int rssi);
+};
+
+#else
+
+class Display {
+  public:
+    uint16_t currentPlItem;
+    uint16_t numOfNextStation;
+    displayMode_e _mode;
+  public:
+    Display() {};
+    displayMode_e mode() { return _mode; }
+    void mode(displayMode_e m) { _mode=m; }
+    void init();
+    void _start();
+    void putRequest(displayRequestType_e type, int payload=0);
+    void loop(){}
+    bool ready() { return true; }
+    void resetQueue(){}
+    void centerText(const char* text, uint8_t y, uint16_t fg, uint16_t bg){}
+    void rightText(const char* text, uint8_t y, uint16_t fg, uint16_t bg){}
+    void flip(){}
+    void invert(){}
+    void setContrast(){}
+    bool deepsleep(){return true;}
+    void wakeup(){}
+    void printPLitem(uint8_t pos, const char* item){}
+};
 
 #endif
+
+
+extern Display display;
+
+// function that creates display controller class and assigns a pointer to DspCore* dsp, should be defined in one (and only one!) of the respective displayXXXX.cpp files
+bool create_display_dev();
+
+
+#endif    // dspcore_h

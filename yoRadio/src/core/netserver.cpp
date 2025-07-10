@@ -3,7 +3,7 @@
 #include "config.h"
 #include "player.h"
 #include "telnet.h"
-#include "display.h"
+#include "../displays/dspcore.h"
 #include "options.h"
 #include "network.h"
 #include "mqtt.h"

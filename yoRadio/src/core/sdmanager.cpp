@@ -2,7 +2,7 @@
 
 #define USE_SD
 #include "sdmanager.h"
-#include "display.h"
+#include "../displays/dspcore.h"
 #include "player.h"
 
 #if defined(SD_SPIPINS) || SD_HSPI

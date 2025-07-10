@@ -1,4 +1,4 @@
-#include "../dspcore.h"
+#include "../gfx_engine.h"
 #if DSP_MODEL!=DSP_DUMMY
 
 #include "widgets.h"
@@ -121,6 +121,7 @@ void ScrollWidget::_setTextParams() {
   if (_config.textsize == 0) return;
   dsp->setTextSize(_config.textsize);
   dsp->setTextColor(_fgcolor, _bgcolor);
+  dsp->setFont(_font);
 }
 
 bool ScrollWidget::_checkIsScrollNeeded() {
@@ -128,7 +129,8 @@ bool ScrollWidget::_checkIsScrollNeeded() {
 }
 
 void ScrollWidget::setText(const char* txt) {
-  strlcpy(_text, dsp->utf8Rus(txt, _uppercase), _buffsize - 1);
+  strlcpy(_text, txt, _buffsize - 1);
+  //strlcpy(_text, dsp->utf8Rus(txt, _uppercase), _buffsize - 1);
   if (strcmp(_oldtext, _text) == 0) return;
   _textwidth = strlen(_text) * _charWidth;
   _x = _config.left;

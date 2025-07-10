@@ -5,10 +5,26 @@
     More info on https://github.com/e2002/yoradio/wiki/Widgets#widgets-description
 *************************************************************************************/
 
-#ifndef displayAXS15231Bconf_h
-#define displayAXS15231Bconf_h
-
+#pragma once
 #include "../widgets/widgets.h"
+#include "clib/u8g2.h"
+//#include "Bahamas6.h"
+//#include "CourierCyr6.h"
+
+#ifndef FONT_DEFAULT_U8G2
+#define FONT_DEFAULT_U8G2 u8g2_font_6x12_t_cyrillic  // CourierCyr6pt8b  //Bahamas6pt8b
+#endif
+
+#if CLOCKFONT_MONO
+  //#include "fonts/DS_DIGI56pt7b_mono.h"        // https://tchapi.github.io/Adafruit-GFX-Font-Customiser/
+  #include "../fonts/DirectiveFour56.h"
+  #include "../fonts/DirectiveFour30.h"
+  #define CLK_FONT1 DirectiveFour56
+  #define CLK_FONT2 DirectiveFour30
+#else
+  #include "fonts/DS_DIGI56pt7b.h"
+#endif
+
 
 // Определение для скрытия VU-метра (если нужно)
 // #define HIDE_VU
@@ -18,6 +34,9 @@
 #define TFT_FRAMEWDT    8
 #define MAX_WIDTH       DSP_WIDTH-TFT_FRAMEWDT
 
+#define CHARWIDTH   6
+#define CHARHEIGHT  8
+
 #if BITRATE_FULL
   #define TITLE_FIX 44
 #else
@@ -25,7 +44,7 @@
 #endif
 #define bootLogoTop     220
 
-#ifndef BATTERY_OFF
+#ifdef BATTERY_ON
   #define BatX      92				// X coordinate for batt. ( X  )
   #define BatY      420		// Y cordinate for batt. ( Y  )
   #define BatFS     3		// FontSize for batt. (   )
@@ -37,58 +56,53 @@
   #define VoltFS     2		// FontSize for voltage (   )
 #endif
 
-/* SROLLS  */                            /* {{ left, top, fontsize, align }, buffsize, uppercase, width, scrolldelay, scrolldelta, scrolltime } */
-const ScrollConfig metaConf       PROGMEM = {{ TFT_FRAMEWDT, TFT_FRAMEWDT, 3, WA_CENTER}, 140, true, MAX_WIDTH, 5000, 30, 12 }; //5,12
-const ScrollConfig title1Conf     PROGMEM = {{ TFT_FRAMEWDT, 48, 2, WA_CENTER }, 140, true, DSP_WIDTH-TFT_FRAMEWDT*2 , 5000, 30, 12 };
-const ScrollConfig title2Conf     PROGMEM = {{ TFT_FRAMEWDT, 69, 2, WA_CENTER }, 140, false, DSP_WIDTH-TFT_FRAMEWDT*2, 5000, 30, 12 };
-const ScrollConfig playlistConf   PROGMEM = {{ TFT_FRAMEWDT, 146, 4, WA_LEFT }, 140, false, MAX_WIDTH, 1000, 30, 12 };
-const ScrollConfig apTitleConf    PROGMEM = {{ TFT_FRAMEWDT, TFT_FRAMEWDT, 4, WA_CENTER }, 140, false, MAX_WIDTH, 0, 30, 8 };
-const ScrollConfig apSettConf     PROGMEM = {{ TFT_FRAMEWDT, 320-TFT_FRAMEWDT-16, 2, WA_LEFT }, 140, false, MAX_WIDTH, 0, 30, 8 };
-const ScrollConfig weatherConf    PROGMEM = {{ TFT_FRAMEWDT,197, 2, WA_LEFT }, 140, false, MAX_WIDTH, 1000, 30, 4 }; //10,4
+/* SCROLLS  */                           /* {{ left, top, fontsize, align }, buffsize, uppercase, width, scrolldelay, scrolldelta, scrolltime } */
+static const ScrollConfig metaConf       = {{ TFT_FRAMEWDT, TFT_FRAMEWDT, 3, WA_CENTER}, 140, true, MAX_WIDTH, 5000, 30, 12 }; //5,12
+// state/ready titile
+static const ScrollConfig title1Conf     = {{ TFT_FRAMEWDT, 48, 1, WA_CENTER }, 140, true, DSP_WIDTH-TFT_FRAMEWDT*2 , 5000, 30, 12 };
+static const ScrollConfig title2Conf     = {{ TFT_FRAMEWDT, 269, 1, WA_CENTER }, 140, false, DSP_WIDTH-TFT_FRAMEWDT*2, 5000, 30, 12 };
+static const ScrollConfig playlistConf   = {{ TFT_FRAMEWDT, 146, 4, WA_LEFT }, 140, false, MAX_WIDTH, 1000, 30, 12 };
+static const ScrollConfig apTitleConf    = {{ TFT_FRAMEWDT, TFT_FRAMEWDT, 4, WA_CENTER }, 140, false, MAX_WIDTH, 0, 30, 8 };
+static const ScrollConfig apSettConf     = {{ TFT_FRAMEWDT, 320-TFT_FRAMEWDT-16, 2, WA_LEFT }, 140, false, MAX_WIDTH, 0, 30, 8 };
+static const ScrollConfig weatherConf    = {{ TFT_FRAMEWDT,197, 2, WA_LEFT }, 140, false, MAX_WIDTH, 1000, 30, 4 }; //10,4
 
 /* BACKGROUNDS  */                       /* {{ left, top, fontsize, align }, width, height, outlined } */
-const FillConfig   metaBGConf     PROGMEM = {{ 0, 38, 0, WA_LEFT }, DSP_WIDTH, 2, false };
-const FillConfig   metaBGConfInv  PROGMEM = {{ 0, 40, 0, WA_LEFT }, DSP_WIDTH, 2, false };
-const FillConfig   volbarConf     PROGMEM = {{ TFT_FRAMEWDT, DSP_HEIGHT-TFT_FRAMEWDT-4, 0, WA_LEFT }, MAX_WIDTH, 8, true };
-const FillConfig  playlBGConf     PROGMEM = {{ 0, 138, 0, WA_LEFT }, DSP_WIDTH, 36, false };
-const FillConfig  heapbarConf     PROGMEM = {{ TFT_FRAMEWDT, DSP_HEIGHT-4, 0, WA_LEFT }, MAX_WIDTH, 4, false };
+static const FillConfig   metaBGConf     = {{ 0, 38, 0, WA_LEFT }, DSP_WIDTH, 2, false };
+static const FillConfig   metaBGConfInv  = {{ 0, 40, 0, WA_LEFT }, DSP_WIDTH, 2, false };
+static const FillConfig   volbarConf     = {{ TFT_FRAMEWDT, DSP_HEIGHT-TFT_FRAMEWDT-4, 0, WA_LEFT }, MAX_WIDTH, 8, true };
+static const FillConfig  playlBGConf     = {{ 0, 138, 0, WA_LEFT }, DSP_WIDTH, 36, false };
+static const FillConfig  heapbarConf     = {{ TFT_FRAMEWDT, DSP_HEIGHT-4, 0, WA_LEFT }, MAX_WIDTH, 4, false };
 
 /* WIDGETS  */                           /* { left, top, fontsize, align } */
-const WidgetConfig bootstrConf    PROGMEM = { 0, bootLogoTop+100, 2, WA_CENTER };
-const WidgetConfig bitrateConf    PROGMEM = { 6, 62, 2, WA_RIGHT };
-const WidgetConfig voltxtConf     PROGMEM = { TFT_FRAMEWDT, DSP_HEIGHT-24, 1, WA_LEFT };
-const WidgetConfig  iptxtConf     PROGMEM = { TFT_FRAMEWDT+80, DSP_HEIGHT-29, 2, WA_LEFT };
-const WidgetConfig   rssiConf     PROGMEM = { TFT_FRAMEWDT, DSP_HEIGHT-24, 1, WA_RIGHT };
-const WidgetConfig   cpuConf      PROGMEM = { TFT_FRAMEWDT, DSP_HEIGHT-50, 1, WA_RIGHT };//эксперимент. новый
-const WidgetConfig numConf        PROGMEM = { TFT_FRAMEWDT, 250, 1, WA_CENTER };
-const WidgetConfig apNameConf     PROGMEM = { TFT_FRAMEWDT, 88, 3, WA_CENTER };
-const WidgetConfig apName2Conf    PROGMEM = { TFT_FRAMEWDT, 120, 3, WA_CENTER };
-const WidgetConfig apPassConf     PROGMEM = { TFT_FRAMEWDT, 173, 3, WA_CENTER };
-const WidgetConfig apPass2Conf    PROGMEM = { TFT_FRAMEWDT, 205, 3, WA_CENTER };
-const WidgetConfig  clockConf     PROGMEM = { 0, 98, 52, WA_CENTER };  /* 52 is a fixed font size. do not change */
-const WidgetConfig vuConf         PROGMEM = { TFT_FRAMEWDT, 268, 1, WA_LEFT };
+static const WidgetConfig bootstrConf    = { 0, bootLogoTop+100, 2, WA_CENTER };
+static const WidgetConfig bitrateConf    = { 6, 62, 2, WA_RIGHT };
+static const WidgetConfig voltxtConf     = { TFT_FRAMEWDT, DSP_HEIGHT-24, 1, WA_LEFT };
+static const WidgetConfig  iptxtConf     = { TFT_FRAMEWDT+80, DSP_HEIGHT-29, 2, WA_LEFT };
+static const WidgetConfig   rssiConf     = { TFT_FRAMEWDT, DSP_HEIGHT-24, 1, WA_RIGHT };
+static const WidgetConfig   cpuConf      = { TFT_FRAMEWDT, DSP_HEIGHT-50, 1, WA_RIGHT };//эксперимент. новый
+static const WidgetConfig numConf        = { TFT_FRAMEWDT, 250, 1, WA_CENTER };
+static const WidgetConfig apNameConf     = { TFT_FRAMEWDT, 88, 3, WA_CENTER };
+static const WidgetConfig apName2Conf    = { TFT_FRAMEWDT, 120, 3, WA_CENTER };
+static const WidgetConfig apPassConf     = { TFT_FRAMEWDT, 173, 3, WA_CENTER };
+static const WidgetConfig apPass2Conf    = { TFT_FRAMEWDT, 205, 3, WA_CENTER };
+static const WidgetConfig  clockConf     = { 0, 98, 52, WA_CENTER };  /* 52 is a fixed font size. do not change */
+static const WidgetConfig vuConf         = { TFT_FRAMEWDT, 268, 1, WA_LEFT };
 
-const WidgetConfig bootWdtConf    PROGMEM = { 120, bootLogoTop+130, 2, WA_LEFT }; //отступ, вертикальное положение, размер, выравнивание
-const ProgressConfig bootPrgConf  PROGMEM = { 90, 9, 4 }; //скорость, ширина, ширина движущей части
-const BitrateConfig fullbitrateConf PROGMEM = {{DSP_WIDTH-TFT_FRAMEWDT-80, 226, 2, WA_LEFT}, 60 };
+static const WidgetConfig bootWdtConf    = { 120, bootLogoTop+130, 2, WA_LEFT }; //отступ, вертикальное положение, размер, выравнивание
+static const ProgressConfig bootPrgConf  = { 90, 9, 4 }; //скорость, ширина, ширина движущей части
+static const BitrateConfig fullbitrateConf = {{DSP_WIDTH-TFT_FRAMEWDT-80, 226, 2, WA_LEFT}, 60 };
 
 /* BANDS  */                             /* { onebandwidth, onebandheight, bandsHspace, bandsVspace, numofbands, fadespeed } */
-const VUBandsConfig bandsConf     PROGMEM = {  MAX_WIDTH, 35, 4, 5, 45, 30};
+static const VUBandsConfig bandsConf     = {  MAX_WIDTH, 35, 4, 5, 45, 30};
 
 /* STRINGS  */
-const char         numtxtFmt[]    PROGMEM = "%d";
-//const char           rssiFmt[]    PROGMEM = "WiFi %d";
-const char           rssiFmt[]    PROGMEM = "WiFi %d";
-
-const char          iptxtFmt[]    PROGMEM = "%s";
-const char         voltxtFmt[]    PROGMEM = "\023\025%d";
-//const char         voltxtFmt[]    PROGMEM = "VOL %d";
-
-const char        bitrateFmt[]    PROGMEM = "%d kBs";
+static const char         numtxtFmt[]    = "%d";
+static const char           rssiFmt[]    = "WiFi %d";
+static const char          iptxtFmt[]    = "%s";
+static const char         voltxtFmt[]    = "\023\025%d";
+static const char        bitrateFmt[]    = "%d kBs";
 
 /* MOVES  */                             /* { left, top, width } */
-const MoveConfig    clockMove     PROGMEM = { 0, 98, MAX_WIDTH /* MAX_WIDTH */ }; // -1 disables move
-const MoveConfig   weatherMove    PROGMEM = { TFT_FRAMEWDT, 197, MAX_WIDTH};
-const MoveConfig   weatherMoveVU  PROGMEM = { TFT_FRAMEWDT, 197, MAX_WIDTH};
-
-#endif
+static const MoveConfig    clockMove     = { 0, 98, MAX_WIDTH /* MAX_WIDTH */ }; // -1 disables move
+static const MoveConfig   weatherMove    = { TFT_FRAMEWDT, 197, MAX_WIDTH};
+static const MoveConfig   weatherMoveVU  = { TFT_FRAMEWDT, 197, MAX_WIDTH};

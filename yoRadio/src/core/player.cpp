@@ -2,7 +2,8 @@
 #include "player.h"
 #include "config.h"
 #include "telnet.h"
-#include "display.h"
+#include "../displays/gfx_engine.h"
+#include "../displays/tools/l10n.h"
 #include "sdmanager.h"
 #include "netserver.h"
 

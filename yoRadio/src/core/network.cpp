@@ -1,5 +1,6 @@
 #include "network.h"
-#include "display.h"
+#include "../displays/dspcore.h"
+#include "../displays/tools/l10n.h"
 #include "options.h"
 #include "config.h"
 #include "telnet.h"

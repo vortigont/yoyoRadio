@@ -2,6 +2,7 @@
 #if DSP_MODEL!=DSP_DUMMY
 
 #include "pages.h"
+#include "../gfx_engine.h"
 
 void Pager::begin(){
 
@@ -33,16 +34,12 @@ bool Pager::removePage(Page* page){
 }
 
 void Pager::setPage(Page* page, bool black){
-  Serial.println("dd1");
   for(const auto& p: _pages) p->setActive(false);
-  Serial.println("dd2");
   if (dsp == nullptr)
     Serial.println("Omg!");
   else
     dsp->clearDsp(black);
-  Serial.println("dd3");
   page->setActive(true);
-  Serial.println("dd4");
 }
 
 
