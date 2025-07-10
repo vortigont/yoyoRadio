@@ -34,6 +34,8 @@ void handleUpload(AsyncWebServerRequest *request, String filename, size_t index,
 void handleUploadWeb(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final);
 void handleUpdate(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final);
 void handleHTTPArgs(AsyncWebServerRequest * request);
+// send playlist from LittleFS or from SD
+void send_playlist(AsyncWebServerRequest * request);
 void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
 
 bool  shouldReboot  = false;
@@ -79,13 +81,12 @@ bool NetServer::begin(bool quiet) {
   } else {
     // server index
     webserver.on("/", HTTP_GET, [](AsyncWebServerRequest *r){ if (r->args()) return handleHTTPArgs(r); r->redirect( network.status == CONNECTED ? "/index.html" : "/settings.html");});
-    // Not sure if there are any POST functionality here for index page ??? 
-    //webserver.on("/", HTTP_ANY, handleHTTPArgs);
+    webserver.on("/", HTTP_POST, handleHTTPArgs);
     webserver.on("/webboard", HTTP_GET, [](AsyncWebServerRequest * request) { request->send(200, asyncsrv::T_text_html, emptyfs_html, processor); });
     webserver.on("/webboard", HTTP_POST, [](AsyncWebServerRequest *request) { request->redirect("/"); }, handleUploadWeb);
   }
   
-  webserver.on(PLAYLIST_PATH, HTTP_GET, handleHTTPArgs);
+  webserver.on(PLAYLIST_PATH, HTTP_GET, send_playlist);
   //webserver.on(PLAYLIST_SD_PATH, HTTP_GET, handleHTTPArgs);
   //webserver.on(INDEX_PATH, HTTP_GET, handleHTTPArgs);
   //webserver.on(INDEX_SD_PATH, HTTP_GET, handleHTTPArgs);
@@ -988,38 +989,27 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
   }
 }
 
-void handleHTTPArgs(AsyncWebServerRequest * request) {
-  if (request->method() == HTTP_GET) {
-    DBGVB("[%s] client ip=%s request of %s", __func__, request->client()->remoteIP().toString().c_str(), request->url().c_str());
-    if (strcmp(request->url().c_str(), PLAYLIST_PATH) == 0 //||
-        //strcmp(request->url().c_str(), PLAYLIST_SD_PATH) == 0 ||
-        //strcmp(request->url().c_str(), SSIDS_PATH) == 0 ||
-        //strcmp(request->url().c_str(), TMP_PATH) == 0 ||
-        //strcmp(request->url().c_str(), INDEX_PATH) == 0 ||
-        //strcmp(request->url().c_str(), INDEX_SD_PATH) == 0)
-    ){
-      if (strcmp(request->url().c_str(), PLAYLIST_PATH) == 0){
-        #ifdef MQTT_ROOT_TOPIC    // very ugly check
-          // if MQTT something is in progress, ask client to return later
-          if (mqttplaylistblock){
-            AsyncWebServerResponse *response = request->beginResponse(429);
-            response->addHeader(asyncsrv::T_retry_after, 1);
-            return request->send(response);
-          }
-        #endif
+void send_playlist(AsyncWebServerRequest * request){
+#ifdef MQTT_ROOT_TOPIC    // very ugly check
+  // if MQTT something is in progress, ask client to return later
+  if (mqttplaylistblock){
+    AsyncWebServerResponse *response = request->beginResponse(429);
+    response->addHeader(asyncsrv::T_retry_after, 1);
+    return request->send(response);
+  }
+#endif
+  if (config.getMode()==PM_SDCARD)    // redirect to SDCARD's path
+    return request->redirect(PLAYLIST_SD_PATH);
 
-        if (config.getMode()==PM_SDCARD)    // redirect to SDCARD's path
-          return request->redirect(PLAYLIST_SD_PATH);
-          //netserver.chunkedHtmlPage("application/octet-stream", request, PLAYLIST_SD_PATH, false);
-      } else {
-        request->send(LittleFS, request->url().c_str());
-        //netserver.chunkedHtmlPage("application/octet-stream", request, request->url().c_str(), false);
-      }
-      return;
-    }
+  // last resort - send playlist from LittleFS
+  request->send(LittleFS, request->url().c_str());
+}
+
+void handleHTTPArgs(AsyncWebServerRequest * request) {
+  if (network.status != CONNECTED) {
+    return request->send(503, asyncsrv::T_text_plain, "Network is not available");
   }
 
-  if (network.status == CONNECTED) {
     bool commandFound=false;
     if (request->hasArg("start")) { player.sendCommand({PR_PLAY, config.lastStation()}); commandFound=true; }
     if (request->hasArg("stop")) { player.sendCommand({PR_STOP, 0}); commandFound=true; }
@@ -1120,14 +1110,9 @@ void handleHTTPArgs(AsyncWebServerRequest * request) {
       }
       return;
     }
-    if (request->params() > 0) {
-      request->send(commandFound?200:404);
-      return;
-    }
-  } else {
-    if (request->params() > 0) {
-      request->send(404);
-      return;
-    }
-  }
+
+    if (commandFound){
+      return request->send(200);
+    } else
+      return request->send(404, asyncsrv::T_text_plain, "Command unknown");
 }

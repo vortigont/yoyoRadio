@@ -2,7 +2,7 @@
 #include "player.h"
 #include "config.h"
 #include "telnet.h"
-#include "../displays/gfx_engine.h"
+#include "../displays/dspcore.h"
 #include "../displays/tools/l10n.h"
 #include "sdmanager.h"
 #include "netserver.h"
@@ -24,11 +24,14 @@ QueueHandle_t playerQueue;
     delay(100);
   }
 #else
+  Player::Player() {}
+/*
   #if !I2S_INTERNAL
     Player::Player() {}
   #else
     Player::Player(): Audio(true, I2S_DAC_CHANNEL_BOTH_EN)  {}
   #endif
+*/
 #endif
 
 
@@ -105,7 +108,7 @@ void Player::_stop(bool alreadyStopped){
   netserver.requestOnChange(BITRATE, 0);
   display.putRequest(DBITRATE);
   display.putRequest(PSTOP);
-  setDefaults();
+  //setDefaults();
   if(!alreadyStopped) stopSong();
   if(!lockOutput) stopInfo();
   if (player_on_stop_play) player_on_stop_play();
@@ -115,10 +118,10 @@ void Player::_stop(bool alreadyStopped){
 void Player::initHeaders(const char *file) {
   if(strlen(file)==0 || true) return; //TODO Read TAGs
   connecttoFS(sdman,file);
-  eofHeader = false;
-  while(!eofHeader) Audio::loop();
+  //eofHeader = false;
+  //while(!eofHeader) Audio::loop();
   //netserver.requestOnChange(SDPOS, 0);
-  setDefaults();
+  //setDefaults();
 }
 
 #ifndef PL_QUEUE_TICKS

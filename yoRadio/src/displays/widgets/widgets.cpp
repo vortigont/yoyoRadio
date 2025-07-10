@@ -300,7 +300,7 @@ void VuWidget::_draw(){
   static uint16_t measL, measR;
   uint16_t bandColor;
   uint16_t dimension = _config.align?_bands.width:_bands.height;
-  uint16_t vulevel = player.get_VUlevel(dimension);
+  uint16_t vulevel = player.getVUlevel();
   
   uint8_t L = (vulevel >> 8) & 0xFF;
   uint8_t R = vulevel & 0xFF;

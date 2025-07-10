@@ -76,6 +76,7 @@ void loop() {
   }
   loopControls();
   netserver.loop();
+  vTaskDelay(1);
 }
 
 #include "core/audiohandlers.h"

@@ -2,7 +2,7 @@
 #include "gfx_engine.h"
 #include "../core/network.h"
 #include "../core/player.h"
-#include "../audioI2S/AudioEx.h"
+#include "Audio.h"
 #include "tools/l10n.h"
 
 char* DspCoreBase::utf8Rus(const char* str, bool uppercase) {
@@ -118,9 +118,9 @@ void DspCore_Arduino_GFX::gfxDrawText(int x, int y, const char* text, uint16_t c
   if (font)
     setFont(font);
   else {
-#ifdef    FONT_DEFAULT_AGFX
+#if defined FONT_DEFAULT_AGFX
     setFont(&FONT_DEFAULT_AGFX);
-#else if defined  FONT_DEFAULT_U8G2
+#elif defined  FONT_DEFAULT_U8G2
     setFont(FONT_DEFAULT_U8G2);
 #endif  //  FONT_DEFAULT_U8G2
   }
@@ -149,10 +149,10 @@ void DspCore_Arduino_GFX::gfxDrawFormatted(int x, int y, const char* fmt, uint16
 void DspCore_Arduino_GFX::setFont(const GFXfont* font){
   if (font)
     Arduino_GFX::setFont(font);
-#ifdef FONT_DEFAULT_AGFX
+#if defined FONT_DEFAULT_AGFX
   else
     Arduino_GFX::setFont(&FONT_DEFAULT_AGFX);
-#else if defined FONT_DEFAULT_U8G2
+#elif defined FONT_DEFAULT_U8G2
   else {
     Arduino_GFX::setFont(FONT_DEFAULT_U8G2);
   }
@@ -162,10 +162,10 @@ void DspCore_Arduino_GFX::setFont(const GFXfont* font){
 void DspCore_Arduino_GFX::setFont(const uint8_t* font){
   if (font)
     Arduino_GFX::setFont(font);
-#ifdef FONT_DEFAULT_AGFX
+#if defined FONT_DEFAULT_AGFX
   else
     Arduino_GFX::setFont(&FONT_DEFAULT_AGFX);
-#else if defined FONT_DEFAULT_U8G2
+#elif defined FONT_DEFAULT_U8G2
   else {
     Arduino_GFX::setFont(FONT_DEFAULT_U8G2);
   }
@@ -181,6 +181,11 @@ void DspCore_Arduino_GFX::setFont(const uint8_t* font){
 Display display;
 #ifdef USE_NEXTION
 Nextion nextion;
+#endif
+
+// some old legacy from AudioEx.h
+#ifndef AUDIOBUFFER_MULTIPLIER2                                                                                                                               
+#define AUDIOBUFFER_MULTIPLIER2    8                                                                                                                          
 #endif
 
 #ifndef DUMMYDISPLAY
