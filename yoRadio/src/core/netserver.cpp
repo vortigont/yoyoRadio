@@ -50,10 +50,12 @@ void mqttplaylistSend() {
 }
 #endif
 
-char* updateError() {
-  static char ret[140] = {0};
-  sprintf(ret, "Update failed with error (%d)<br /> %s", (int)Update.getError(), Update.errorString());
-  return ret;
+void updateError(String& s) {
+  s.reserve(200);
+  s = "Update failed with code:";
+  s += Update.getError();
+  s += ", err:";
+  s += Update.errorString();
 }
 
 bool NetServer::begin(bool quiet) {
@@ -86,11 +88,8 @@ bool NetServer::begin(bool quiet) {
     webserver.on("/webboard", HTTP_POST, [](AsyncWebServerRequest *request) { request->redirect("/"); }, handleUploadWeb);
   }
   
+  // playlist serve
   webserver.on(PLAYLIST_PATH, HTTP_GET, send_playlist);
-  //webserver.on(PLAYLIST_SD_PATH, HTTP_GET, handleHTTPArgs);
-  //webserver.on(INDEX_PATH, HTTP_GET, handleHTTPArgs);
-  //webserver.on(INDEX_SD_PATH, HTTP_GET, handleHTTPArgs);
-  //webserver.on(SSIDS_PATH, HTTP_GET, handleHTTPArgs);
   
   webserver.on("/upload", HTTP_POST, beginUpload, handleUpload);
   webserver.on("/update", HTTP_GET, [](AsyncWebServerRequest *r){ r->send(LittleFS, "/www/update.html", asyncsrv::T_text_html, false, processor); } );
@@ -128,9 +127,17 @@ bool NetServer::begin(bool quiet) {
 }
 
 void NetServer::beginUpdate(AsyncWebServerRequest *request) {
+  AsyncWebServerResponse *response;
   shouldReboot = !Update.hasError();
-  AsyncWebServerResponse *response = request->beginResponse(200, "text/plain", shouldReboot ? "OK" : updateError());
-  response->addHeader("Connection", "close");
+  if (shouldReboot)
+    response = request->beginResponse(200, asyncsrv::T_text_plain, "OK");
+  else {
+    String s;
+    updateError(s);
+    response = request->beginResponse(200, asyncsrv::T_text_plain, s.c_str());
+  }
+
+  response->addHeader(asyncsrv::T_Connection, asyncsrv::T_close);
   request->send(response);
 }
 
@@ -142,13 +149,17 @@ void handleUpdate(AsyncWebServerRequest *request, String filename, size_t index,
     display.putRequest(NEWMODE, UPDATING);
     if (!Update.begin(UPDATE_SIZE_UNKNOWN, target)) {
       Update.printError(Serial);
-      request->send(200, asyncsrv::T_text_html, updateError());
+      String s;
+      updateError(s);
+      request->send(200, asyncsrv::T_text_html, s.c_str() );
     }
   }
   if (!Update.hasError()) {
     if (Update.write(data, len) != len) {
       Update.printError(Serial);
-      request->send(200, asyncsrv::T_text_html, updateError());
+      String s;
+      updateError(s);
+      request->send(200, asyncsrv::T_text_html, s.c_str() );
     }
   }
   if (final) {
@@ -156,7 +167,9 @@ void handleUpdate(AsyncWebServerRequest *request, String filename, size_t index,
       Serial.printf("Update Success: %uB\n", index + len);
     } else {
       Update.printError(Serial);
-      request->send(200, asyncsrv::T_text_html, updateError());
+      String s;
+      updateError(s);
+      request->send(200, asyncsrv::T_text_html, s.c_str() );
     }
   }
 }
