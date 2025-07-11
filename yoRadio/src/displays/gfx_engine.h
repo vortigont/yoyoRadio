@@ -6,6 +6,8 @@
   #define DUMMYDISPLAY
   #define DSP_NOT_FLIPPED
   #include "tools/l10n.h"
+  #define CHARWIDTH 1
+  #define CHARHEIGHT 1
 #elif DSP_MODEL==DSP_ST7735
   #include "displayST7735.h"
 #elif DSP_MODEL==DSP_SSD1306 || DSP_MODEL==DSP_SSD1306x32
@@ -48,4 +50,6 @@
   #include "display_JC3248W535.h"
 #endif
 
+#if DSP_MODEL!=DSP_DUMMY
 extern DspCore* dsp;
+#endif
