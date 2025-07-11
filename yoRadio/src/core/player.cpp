@@ -97,6 +97,7 @@ void Player::setError(const char *e){
 void Player::_stop(bool alreadyStopped){
   log_i("%s called", __func__);
   if(config.getMode()==PM_SDCARD && !alreadyStopped) config.sdResumePos = player.getFilePos();
+   stopSong(); 
   _status = STOPPED;
   setOutputPins(false);
   if(!hasError()) config.setTitle((display.mode()==LOST || display.mode()==UPDATING)?"":const_PlStopped);
@@ -109,7 +110,6 @@ void Player::_stop(bool alreadyStopped){
   display.putRequest(DBITRATE);
   display.putRequest(PSTOP);
   //setDefaults();
-  if(!alreadyStopped) stopSong();
   if(!lockOutput) stopInfo();
   if (player_on_stop_play) player_on_stop_play();
   pm.on_stop_play();
@@ -133,7 +133,8 @@ void Player::initHeaders(const char *file) {
 void Player::loop() {
   if(playerQueue==NULL) return;
   playerRequestParams_t requestP;
-  if(xQueueReceive(playerQueue, &requestP, isRunning()?PL_QUEUE_TICKS:PL_QUEUE_TICKS_ST)){
+  // do NOT block on mgs receive, we are in arduino's loop!!!
+  if(xQueueReceive(playerQueue, &requestP, 0)){  // isRunning()?PL_QUEUE_TICKS:PL_QUEUE_TICKS_ST)){
     switch (requestP.type){
       case PR_STOP: _stop(); break;
       case PR_PLAY: {
@@ -141,7 +142,9 @@ void Player::loop() {
           config.setLastStation((uint16_t)requestP.payload);
         }
         _play((uint16_t)abs(requestP.payload)); 
-        if (player_on_station_change) player_on_station_change(); 
+        // callback
+        if (player_on_station_change)
+          player_on_station_change(); 
         pm.on_station_change();
         break;
       }
@@ -166,8 +169,12 @@ void Player::loop() {
       default: break;
     }
   }
+
   Audio::loop();
-  if(!isRunning() && _status==PLAYING) _stop(true);
+  if(!isRunning() && _status==PLAYING)
+    _stop(true);
+
+  // some volume save timer
   if(_volTimer){
     if((millis()-_volTicks)>3000){
       config.saveVolume();
@@ -210,12 +217,12 @@ void Player::_play(uint16_t stationId) {
   display.putRequest(NEWSTATION);
   netserver.requestOnChange(STATION, 0);
   netserver.loop();
-  netserver.loop();
   config.setSmartStart(0);
   bool isConnected = false;
+  stopSong();
   if(config.getMode()==PM_SDCARD && SDC_CS!=255){
     isConnected=connecttoFS(sdman,config.station.url,config.sdResumePos==0?_resumeFilePos:config.sdResumePos-player.sd_min);
-  }else {
+  } else {
     config.saveValue(&config.store.play_mode, static_cast<uint8_t>(PM_WEB));
   }
   if(config.getMode()==PM_WEB) isConnected=connecttohost(config.station.url);
