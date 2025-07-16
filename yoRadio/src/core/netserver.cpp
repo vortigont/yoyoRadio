@@ -1,16 +1,17 @@
 #include "netserver.h"
 
+#include "AsyncUDP.h"
+#include "EmbUI.h"
+#include "basicui.h"
 #include "config.h"
 #include "player.h"
 #include "telnet.h"
 #include "display.h"
 #include "options.h"
 #include "network.h"
-#include "mqtt.h"
+//#include "mqtt.h"
 #include "controls.h"
-#include <Update.h>
-#include <ESPmDNS.h>
-#include "ArduinoJson.h"
+//#include <ESPmDNS.h>
 #ifdef USE_SD
 #include "sdmanager.h"
 #endif
@@ -25,18 +26,78 @@
 
 NetServer netserver;
 
-AsyncWebServer webserver(80);
-AsyncWebSocket websocket("/ws");
 AsyncUDP udp;
 
 String processor(const String& var);
 void handleUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final);
 void handleUploadWeb(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final);
-void handleUpdate(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final);
 void handleHTTPArgs(AsyncWebServerRequest * request);
 // send playlist from LittleFS or from SD
 void send_playlist(AsyncWebServerRequest * request);
-void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
+//void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
+
+
+// **************
+// EmbUI handlers declarations
+void ui_page_main(Interface *interf, JsonVariantConst data, const char* action);
+void ui_section_menu(Interface *interf, JsonVariantConst data, const char* action);
+void ui_page_radio(Interface *interf);
+
+
+// **************
+// EmbUI handlers
+
+/**
+ * @brief index page for WebUI,
+ * it loads on each new WebSocket connection
+ * 
+ */
+void ui_page_main(Interface *interf, JsonVariantConst data, const char* action){
+  interf->json_frame_interface();
+  interf->json_section_manifest("yoRadio", embui.macid(), 0, "0.0.0 testing");       // app name/version manifest
+  interf->json_section_end();
+
+  // build side menu
+  ui_section_menu(interf, data, action);
+  interf->json_frame_flush();     // close frame
+
+  // generate effect's list
+  //interf->json_frame_jscall("make_effect_list");
+
+  if(WiFi.getMode() & WIFI_MODE_STA){
+    ui_page_radio(interf);
+  } else {
+    // открываем страницу с настройками WiFi если контроллер не подключен к внешней AP
+    basicui::page_settings_netw(interf, {}, NULL);
+  }
+}
+
+void ui_section_menu(Interface *interf, JsonVariantConst data, const char* action){
+  if (!interf) return;
+  // создаем меню
+  interf->json_section_menu();
+
+  //interf->option(A_ui_page_effects, TINTF_000);           //  Эффекты
+  //interf->option(A_ui_page_modules, "🏗 Модули");         //  Modules
+  basicui::menuitem_settings(interf);                     //  настройки
+
+  interf->json_section_end();
+}
+
+void ui_page_radio(Interface *interf){
+  interf->json_frame_interface();
+  interf->json_section_uidata();
+  interf->uidata_pick( "yo.pages.radio" );
+  interf->json_frame_flush();
+}
+
+
+void embui_actions_register(){
+  // регистрируем обработчики активностей
+  embui.action.set_mainpage_cb(ui_page_main);                             // index page callback
+  //embui.action.set_settings_cb(block_user_settings);                      // "settings" page options callback
+}
+
 
 bool  shouldReboot  = false;
 #ifdef MQTT_ROOT_TOPIC
@@ -50,14 +111,6 @@ void mqttplaylistSend() {
 }
 #endif
 
-void updateError(String& s) {
-  s.reserve(200);
-  s = "Update failed with code:";
-  s += Update.getError();
-  s += ", err:";
-  s += Update.errorString();
-}
-
 bool NetServer::begin(bool quiet) {
   if(network.status==SDREADY) return true;
   if(!quiet) Serial.print("##[BOOT]#\tnetserver.begin\t");
@@ -65,10 +118,10 @@ bool NetServer::begin(bool quiet) {
   irRecordEnable = false;
   if (!nsQueue)
     nsQueue = xQueueCreate( 20, sizeof( nsRequestParams_t ) );
-
+/*
   if(config.emptyFS){
     webserver.on("/", HTTP_GET, [](AsyncWebServerRequest * request) { request->send(200, asyncsrv::T_text_html, emptyfs_html, processor); });
-    webserver.on("/", HTTP_POST, [](AsyncWebServerRequest *request) { 
+    webserver.on("/", HTTP_POST, [](AsyncWebServerRequest *request) {
       if(!request->arg("ssid").isEmpty() && !request->arg("pass").isEmpty()){
         char buf[BUFLEN];
         memset(buf, 0, BUFLEN);
@@ -87,21 +140,22 @@ bool NetServer::begin(bool quiet) {
     webserver.on("/webboard", HTTP_GET, [](AsyncWebServerRequest * request) { request->send(200, asyncsrv::T_text_html, emptyfs_html, processor); });
     webserver.on("/webboard", HTTP_POST, [](AsyncWebServerRequest *request) { request->redirect("/"); }, handleUploadWeb);
   }
-  
+*/
+
   // playlist serve
-  webserver.on(PLAYLIST_PATH, HTTP_GET, send_playlist);
+  embui.server.on(PLAYLIST_PATH, HTTP_GET, send_playlist);
   
-  webserver.on("/upload", HTTP_POST, beginUpload, handleUpload);
-  webserver.on("/update", HTTP_GET, [](AsyncWebServerRequest *r){ r->send(LittleFS, "/www/update.html", asyncsrv::T_text_html, false, processor); } );
-  webserver.on("/update", HTTP_POST, beginUpdate, handleUpdate);
-  webserver.serveStatic("/settings", LittleFS, "/www/settings.html", asyncsrv::T_no_cache);
-  webserver.serveStatic("/ir", LittleFS, "/www/ir.html", asyncsrv::T_no_cache);
+  embui.server.on("/upload", HTTP_POST, beginUpload, handleUpload);
+  //webserver.on("/update", HTTP_GET, [](AsyncWebServerRequest *r){ r->send(LittleFS, "/www/update.html", asyncsrv::T_text_html, false, processor); } );
+  //webserver.on("/update", HTTP_POST, beginUpdate, handleUpdate);
+  //webserver.serveStatic("/settings", LittleFS, "/www/settings.html", asyncsrv::T_no_cache);
+  //webserver.serveStatic("/ir", LittleFS, "/www/ir.html", asyncsrv::T_no_cache);
 
   // server file content from filesystem
-  webserver.serveStatic("/", LittleFS, "/www/")
-    .setCacheControl(asyncsrv::T_no_cache);     // revalidate based on etag/IMS headers
+  //webserver.serveStatic("/", LittleFS, "/www/")
+  //  .setCacheControl(asyncsrv::T_no_cache);     // revalidate based on etag/IMS headers
 
-  webserver.serveStatic("/data", LittleFS, "/data/")
+  embui.server.serveStatic("/data", LittleFS, "/data/")
     .setCacheControl(asyncsrv::T_no_cache);     // revalidate based on etag/IMS headers
 
 
@@ -109,11 +163,17 @@ bool NetServer::begin(bool quiet) {
   DefaultHeaders::Instance().addHeader(F("Access-Control-Allow-Origin"), F("*"));
   DefaultHeaders::Instance().addHeader(F("Access-Control-Allow-Headers"), F("content-type"));
 #endif
-  webserver.begin();
-  if(strlen(config.store.mdnsname)>0)
-    MDNS.begin(config.store.mdnsname);
-  websocket.onEvent(onWsEvent);
-  webserver.addHandler(&websocket);
+  //webserver.begin();
+  //if(strlen(config.store.mdnsname)>0)
+  //  MDNS.begin(config.store.mdnsname);
+  //websocket.onEvent(onWsEvent);
+  //webserver.addHandler(&websocket);
+
+  embui_actions_register();
+
+  embui.begin();
+  // change periodic WebUI publish interval
+  embui.setPubInterval(30);
 
   //echo -n "helle?" | socat - udp-datagram:255.255.255.255:44490,broadcast
   if (udp.listen(44490)) {
@@ -124,54 +184,6 @@ bool NetServer::begin(bool quiet) {
   }
   if(!quiet) Serial.println("done");
   return true;
-}
-
-void NetServer::beginUpdate(AsyncWebServerRequest *request) {
-  AsyncWebServerResponse *response;
-  shouldReboot = !Update.hasError();
-  if (shouldReboot)
-    response = request->beginResponse(200, asyncsrv::T_text_plain, "OK");
-  else {
-    String s;
-    updateError(s);
-    response = request->beginResponse(200, asyncsrv::T_text_plain, s.c_str());
-  }
-
-  response->addHeader(asyncsrv::T_Connection, asyncsrv::T_close);
-  request->send(response);
-}
-
-void handleUpdate(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) {
-  if (!index) {
-    int target = (request->getParam("updatetarget", true)->value() == "spiffs") ? U_SPIFFS : U_FLASH;
-    Serial.printf("Update Start: %s\n", filename.c_str());
-    player.sendCommand({PR_STOP, 0});
-    display.putRequest(NEWMODE, UPDATING);
-    if (!Update.begin(UPDATE_SIZE_UNKNOWN, target)) {
-      Update.printError(Serial);
-      String s;
-      updateError(s);
-      request->send(200, asyncsrv::T_text_html, s.c_str() );
-    }
-  }
-  if (!Update.hasError()) {
-    if (Update.write(data, len) != len) {
-      Update.printError(Serial);
-      String s;
-      updateError(s);
-      request->send(200, asyncsrv::T_text_html, s.c_str() );
-    }
-  }
-  if (final) {
-    if (Update.end(true)) {
-      Serial.printf("Update Success: %uB\n", index + len);
-    } else {
-      Update.printError(Serial);
-      String s;
-      updateError(s);
-      request->send(200, asyncsrv::T_text_html, s.c_str() );
-    }
-  }
 }
 
 void NetServer::beginUpload(AsyncWebServerRequest *request) {
@@ -460,14 +472,14 @@ void NetServer::processQueue(){
     }
     if (!doc.isNull()){
       size_t length = measureJson(obj);
-      auto buffer = websocket.makeBuffer(length);
+      auto buffer = embui.ws.makeBuffer(length);
       if (buffer){
         serializeJson(obj, (char*)buffer->get(), length);
       }
       if (clientId == 0)
-        { websocket.textAll(buffer); }
+        { embui.ws.textAll(buffer); }
       else
-        { websocket.text(clientId, buffer); }
+        { embui.ws.text(clientId, buffer); }
 
       #ifdef MQTT_ROOT_TOPIC
         if (clientId == 0 && (request.type == STATION || request.type == ITEM || request.type == TITLE || request.type == MODE)) mqttPublishStatus();
@@ -484,27 +496,28 @@ void NetServer::loop() {
     delay(100);
     ESP.restart();
   }
-  websocket.cleanupClients();
+  //embui.ws.cleanupClients();
   switch (importRequest) {
     case IMPL:    importPlaylist();  importRequest = IMDONE; break;
-    case IMWIFI:  config.saveWifi(); importRequest = IMDONE; break;
+    //case IMWIFI:  config.saveWifi(); importRequest = IMDONE; break;
     default:      break;
   }
   //if (rssi < 255) requestOnChange(NRSSI, 0);
   processQueue();
+  embui.handle();
 }
 
 #if IR_PIN!=255
 void NetServer::irToWs(const char* protocol, uint64_t irvalue) {
   char buf[BUFLEN] = { 0 };
   sprintf (buf, "{\"ircode\": %llu, \"protocol\": \"%s\"}", irvalue, protocol);
-  websocket.textAll(buf);
+  embui.ws.textAll(buf);
 }
 void NetServer::irValsToWs() {
   if (!irRecordEnable) return;
   char buf[BUFLEN] = { 0 };
   sprintf (buf, "{\"irvals\": [%llu, %llu, %llu]}", config.ircodes.irVals[config.irindex][0], config.ircodes.irVals[config.irindex][1], config.ircodes.irVals[config.irindex][2]);
-  websocket.textAll(buf);
+  embui.ws.textAll(buf);
 }
 #endif
 
@@ -557,7 +570,7 @@ void NetServer::onWsMessage(void *arg, uint8_t *data, size_t len, uint8_t client
           snprintf(buf, MDNS_LENGTH*2, "{\"redirect\": \"http://%s.local\"}", config.store.mdnsname);
         else
           snprintf(buf, MDNS_LENGTH*2, "{\"redirect\": \"http://%s/\"}", WiFi.localIP().toString().c_str());
-        websocket.text(clientId, buf);
+        embui.ws.text(clientId, buf);
         delay(500);
         ESP.restart();
         return;
@@ -883,7 +896,7 @@ void NetServer::onWsMessage(void *arg, uint8_t *data, size_t len, uint8_t client
 void NetServer::getPlaylist(uint8_t clientId) {
   char buf[160] = {0};
   sprintf(buf, "{\"file\": \"http://%s%s\"}", WiFi.localIP().toString().c_str(), PLAYLIST_PATH);
-  if (clientId == 0) { websocket.textAll(buf); } else { websocket.text(clientId, buf); }
+  if (clientId == 0) { embui.ws.textAll(buf); } else { embui.ws.text(clientId, buf); }
 }
 
 int NetServer::_readPlaylistLine(File &file, char * line, size_t size){
@@ -991,6 +1004,8 @@ void handleUploadWeb(AsyncWebServerRequest *request, String filename, size_t ind
   }
 }
 
+namespace yoradio {
+
 void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len) {
   switch (type) {
     case WS_EVT_CONNECT: if (config.store.audioinfo) Serial.printf("[WEBSOCKET] client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str()); break;
@@ -1001,6 +1016,8 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
       break;
   }
 }
+
+} // namespace yoradio
 
 void send_playlist(AsyncWebServerRequest * request){
 #ifdef MQTT_ROOT_TOPIC    // very ugly check

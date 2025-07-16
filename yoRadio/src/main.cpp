@@ -18,27 +18,34 @@ extern __attribute__((weak)) void yoradio_on_setup();
 
 void setup() {
   Serial.begin(115200);
+  Serial.println("##Setup#");
   if(REAL_LEDBUILTIN!=255) pinMode(REAL_LEDBUILTIN, OUTPUT);
   if (yoradio_on_setup) yoradio_on_setup();
   pm.on_setup();
   config.init();
   display.init();
+  //network.begin();
+  netserver.begin();
+  network.status = CONNECTED;
+
   player.init();
-  network.begin();
+/*
   if (network.status != CONNECTED && network.status!=SDREADY) {
     netserver.begin();
+    network.status = CONNECTED;
     initControls();
     display.putRequest(DSP_START);
     while(!display.ready()) delay(10);
     return;
   }
+*/
   if(SDC_CS!=255) {
     display.putRequest(WAITFORSD, 0);
     Serial.print("##[BOOT]#\tSD search\t");
   }
   config.initPlaylistMode();
-  netserver.begin();
-  telnet.begin();
+  //netserver.begin();
+  //telnet.begin();
   initControls();
   display.putRequest(DSP_START);
   while(!display.ready()) delay(10);
