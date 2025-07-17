@@ -48,11 +48,12 @@ void ui_page_radio(Interface *interf);
 // EmbUI handlers
 
 /**
- * @brief index page for WebUI,
+ * @brief index page callback for WebUI,
  * it loads on each new WebSocket connection
  * 
  */
 void ui_page_main(Interface *interf, JsonVariantConst data, const char* action){
+  // send application manifest
   interf->json_frame_interface();
   interf->json_section_manifest("yoRadio", embui.macid(), 0, "0.0.0 testing");       // app name/version manifest
   interf->json_section_end();
@@ -72,6 +73,7 @@ void ui_page_main(Interface *interf, JsonVariantConst data, const char* action){
   }
 }
 
+// build left-side menu section
 void ui_section_menu(Interface *interf, JsonVariantConst data, const char* action){
   if (!interf) return;
   // создаем меню
@@ -84,10 +86,11 @@ void ui_section_menu(Interface *interf, JsonVariantConst data, const char* actio
   interf->json_section_end();
 }
 
+// build page with radio (main page that opens )
 void ui_page_radio(Interface *interf){
   interf->json_frame_interface();
   interf->json_section_uidata();
-  interf->uidata_pick( "yo.pages.radio" );
+    interf->uidata_pick( "yo.pages.radio" );
   interf->json_frame_flush();
 }
 
