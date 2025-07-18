@@ -29,6 +29,12 @@ void setup() {
   display.init();
 
   pm.on_setup();
+
+#ifdef JC1060P470C
+  pinMode(PA_CTRL, OUTPUT);
+  digitalWrite(PA_CTRL, HIGH);
+#endif
+
   player.init();
   network.begin();
   if (network.status != CONNECTED && network.status!=SDREADY) {
