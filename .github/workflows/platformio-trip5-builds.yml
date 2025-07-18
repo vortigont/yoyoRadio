@@ -37,6 +37,9 @@ jobs:
           name: firmware
           path: .pio/build/*.bin
 
+      - name: Extract version
+        run: grep '#define YOVERSION ' yoRadio/src/core/options.h > version.txt
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
@@ -45,5 +48,6 @@ jobs:
           files: |
             .pio/build/*.bin
             yoRadio/data/www/*
+            version.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

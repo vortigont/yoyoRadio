@@ -15,7 +15,8 @@
 
 /* --- Update Files --- */
 #define UPDATEURL "https://github.com/trip5/yoradio/releases/latest/download/" // + FIRMWARE for the file(s)
-#define CHECKUPDATEURL "https://raw.githubusercontent.com/trip5/yoradio/refs/heads/trip5/yoRadio/src/core/options.h"
+#define CHECKUPDATEURL "https://github.com/trip5/yoradio/releases/latest/download/version.txt"
+//#define CHECKUPDATEURL "https://raw.githubusercontent.com/trip5/yoradio/refs/heads/trip5/yoRadio/src/core/options.h"
 #define VERSIONSTRING "#define YOVERSION" // the file above should have a line that contains this followed by a version number
 
 /* --- Auto-update Firmware File Name --- */
