@@ -1,0 +1,214 @@
+#irform .hidden {
+  display: none;
+}
+.playerwrap {
+  flex:1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#irremote {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-column-gap: 8px;
+  grid-row-gap: 8px;
+  border-radius: 20px;
+  border: var(--section-border) 2px solid;
+  background-color: var(--section-gradient);
+  box-sizing: border-box;
+  padding: 12px;
+}
+.irwrap {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  max-width: 480px;
+  margin: 0 auto;
+}
+.irbutton {
+  font-family: Helvatica, Arial, Sans;
+  width: 54px;
+  height: 54px;
+  border-radius: 27px;
+  border: var(--section-border) 3px solid;
+  box-sizing: border-box;
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--main-hl-color);
+  background-color: var(--main-bg-color);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+.irbutton svg {
+  width: 20px;
+  fill: var(--main-hl-color);  stroke: none;
+}
+.irbutton.blue {
+  background-color: #2648a9;
+  border-color: #3356ba;
+  color: var(--main-hl-color);
+}
+.irbutton.red {
+  background-color: #d31b20;
+  border-color: #e53a3e;
+  color: var(--main-hl-color);
+}
+.irbutton:hover, .irbutton:active, .irbutton.active {
+  background-color: var(--accent-color);
+  border-color: var(--accent-color);
+  color: var(--main-bg-color);
+}
+.irbutton:hover svg, .irbutton:active svg, .irbutton.active svg {
+  fill: var(--main-bg-color);
+}
+#irform {
+  flex: 1;
+  text-align: center;
+  padding-left: 20px;
+}
+#irstartrecord h3 {
+  font-size: 20px;
+  font-weight: bold;
+  color: var(--accent-color);
+}
+#irrecordtitle {
+  padding-left: 42px;
+}
+#irrecordtitle span {
+  background-color: var(--accent-color);
+  color: var(--main-bg-color);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: Helvatica, Arial, Sans;
+  font-size: 18px;
+  margin-left: 8px;
+  border: var(--section-border) 2px solid;
+}
+#irrecordtitle span svg {
+  fill: var(--main-bg-color);
+  width: 16px;
+}
+.irrecordrow {
+  display: flex;
+  margin-bottom: 20px;
+  position: relative;
+}
+.irradio {
+  width: 42px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+.irradio span {
+  position: relative;
+  height: 28px;
+  width: 28px;
+  background-color: var(--main-bg-color);
+  border-radius: 50%;
+  border: var(--accent-color) 2px solid;
+  margin: 4px 0;
+}
+.irradio span:hover {
+  background-color: var(--odd-bg-color);
+}
+.irradio.active span {
+  background-color: var(--odd-bg-color);
+}
+.irradio span:after {
+  content: "";
+  position: absolute;
+  display: none;
+}
+.irradio.active span:after {
+  display: block;
+}
+.irradio span:after {
+  top: 6px;
+  left: 6px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent-color);
+}
+
+.irrecordvalue {
+  box-sizing: border-box;
+  background: var(--odd-bg-color);
+  color: var(--section-border);
+  padding: 0px 12px;
+  line-height: 36px;
+  height: 40px;
+  font-size: 24px;
+  border: var(--section-border) 2px solid;
+  border-radius: 20px;
+  font-weight: normal;
+  flex: 1;
+  overflow: hidden;
+  max-width: 212px;
+  text-align: center;
+}
+#protocol {
+  text-transform: uppercase;
+  line-height: 20px;
+  height: 20px;
+  padding-left: 40px;
+}
+.irrecordvalue.active {
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+}
+.irtitle {
+  line-height: 48px;
+  margin: 5px 0;
+  text-align: center;
+  padding-top: 10px;
+  text-transform: uppercase;
+  font-weight: bold;
+  font-size: 26px;
+  color: var(--accent-color);
+  width: 100%;
+}
+
+#done_ir, #back_ir {
+  background: var(--accent-color);
+  color: var(--main-bg-color);
+  margin: 40px auto 0 auto;
+  max-width: 120px;
+  user-select: none;
+  display: block;
+}
+#back_ir {
+  margin-top: 20px;
+}
+#back_ir {
+  margin-left: calc(50% + 18px);
+  transform: translateX(-50%);
+}
+.irclear {
+  width: 22px;
+  height: 22px;
+  background: var(--odd-bg-color) url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMBAMAAACkW0HUAAAAFVBMVEUAAABUVFRUVFRUVFRUVFRUVFRUVFTyq8WEAAAABnRSTlMA9T3ruK3N/zxkAAAAOElEQVQI12NwVmBgYDJhMBNiYFBMZlBMVGASE2IAYiCLAcgFchiAXCAHSkEFoUqgGmDag0GGmQIAZPIIklXNC10AAAAASUVORK5CYII=') center center no-repeat;
+  border-radius: 50%;
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+@media screen and (max-width: 480px) {
+.irbutton {
+  width: 40px;
+  height: 40px;
+  font-size: 18px;
+  line-height: 36px;
+}
+}
+
+

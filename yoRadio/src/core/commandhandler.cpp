@@ -5,6 +5,7 @@
 #include "config.h"
 #include "controls.h"
 #include "options.h"
+#include "network.h"
 
 CommandHandler cmd;
 
@@ -50,6 +51,7 @@ bool CommandHandler::exec(const char *command, const char *value, uint8_t cid) {
   if (strEquals(command, "getweather")) { netserver.requestOnChange(GETWEATHER, cid); return true; }
   if (strEquals(command, "getactive"))  { netserver.requestOnChange(GETACTIVE, cid); return true; }
   if (strEquals(command, "newmode"))    { config.newConfigMode = atoi(value); netserver.requestOnChange(CHANGEMODE, cid); return true; }
+  //if (strEquals(command, "search_done") == 0 ) { websocket.textAll("{\"search_done\":true}"); return; }
   
   if (strEquals(command, "invertdisplay")){ config.saveValue(&config.store.invertdisplay, static_cast<bool>(atoi(value))); display.invert(); return true; }
   if (strEquals(command, "numplaylist"))  { config.saveValue(&config.store.numplaylist, static_cast<bool>(atoi(value))); display.putRequest(NEWMODE, CLEAR); display.putRequest(NEWMODE, PLAYER); return true; }
@@ -66,18 +68,18 @@ bool CommandHandler::exec(const char *command, const char *value, uint8_t cid) {
   if (strEquals(command, "screensaverplayingtimeout")){ config.setScreensaverPlayingTimeout(static_cast<uint16_t>(atoi(value))); return true; }
   if (strEquals(command, "screensaverplayingblank"))  { config.setScreensaverPlayingBlank(static_cast<bool>(atoi(value))); return true; }
   
-  if (strEquals(command, "tzh"))    { config.saveValue(&config.store.tzHour, static_cast<int8_t>(atoi(value))); return true; }
-  if (strEquals(command, "tzm"))    { config.saveValue(&config.store.tzMin, static_cast<int8_t>(atoi(value))); return true; }
-  if (strEquals(command, "sntp2"))  { config.saveValue(config.store.sntp2, value, 35, false); return true; }
-  if (strEquals(command, "sntp1"))  {  config.setSntpOne(value); return true; }
+  if (strEquals(command, "tz_name")){ config.saveValue(config.store.tz_name, value, sizeof(config.store.tz_name), false); return true; }
+  if (strEquals(command, "tzposix")){ config.saveValue(config.store.tzposix, value, sizeof(config.store.tzposix), false); network.forceTimeSync = true; network.requestTimeSync(true); return true; }
+  if (strEquals(command, "sntp2"))  { config.saveValue(config.store.sntp2, value, sizeof(config.store.sntp2), false); return true; }
+  if (strEquals(command, "sntp1"))  { config.saveValue(config.store.sntp1, value, sizeof(config.store.sntp1), false); network.forceTimeSync = true; network.requestTimeSync(true); return true; }
   
   if (strEquals(command, "volsteps"))         { config.saveValue(&config.store.volsteps, static_cast<uint8_t>(atoi(value))); return true; }
   if (strEquals(command, "encacc"))  { setEncAcceleration(static_cast<uint16_t>(atoi(value))); return true; }
   if (strEquals(command, "irtlp"))            { setIRTolerance(static_cast<uint8_t>(atoi(value))); return true; }
   if (strEquals(command, "oneclickswitching")){ config.saveValue(&config.store.skipPlaylistUpDown, static_cast<bool>(atoi(value))); return true; }
   if (strEquals(command, "showweather"))      { config.setShowweather(static_cast<bool>(atoi(value))); return true; }
-  if (strEquals(command, "lat"))              { config.saveValue(config.store.weatherlat, value, 10, false); return true; }
-  if (strEquals(command, "lon"))              { config.saveValue(config.store.weatherlon, value, 10, false); return true; }
+  if (strEquals(command, "lat"))              { config.saveValue(config.store.weatherlat, value, sizeof(config.store.weatherlat), false); return true; }
+  if (strEquals(command, "lon"))              { config.saveValue(config.store.weatherlon, value, sizeof(config.store.weatherlon), false); return true; }
   if (strEquals(command, "key"))              { config.setWeatherKey(value); return true; }
   //<-----TODO
   if (strEquals(command, "volume"))  { player.setVol(static_cast<uint8_t>(atoi(value))); return true; }
