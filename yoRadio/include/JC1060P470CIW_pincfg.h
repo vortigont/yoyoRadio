@@ -24,7 +24,7 @@
 #define ES7210_LRCK             10  //  I2S_WS
 #define ES7210_SDOUT            11  //  I2S_DI
 
-#define PA_CTRL                 20  //  NS4160 PA control: H=output
+#define PA_ENABLE               20  //  NS4160 PA control: H - output active, L - mute
 
 // I2C
 #define I2C_SDA                 7
@@ -46,6 +46,10 @@
 // yoradio defines
 #define IGNORE_BOARD_CHECKS
 
+#define I2S_MCLK    ES7210_MCLK
 #define I2S_DOUT    CODEC_I2S0_DSDIN
 #define I2S_BCLK    ES7210_SCLK
 #define I2S_LRC     ES7210_LRCK
+#define MUTE_PIN    PA_ENABLE
+#define MUTE_VAL    LOW
+#define DAC_TYPE    ES8311

@@ -169,11 +169,11 @@ void Telnet::info() {
   strftime(timeStringBuff, sizeof(timeStringBuff), "%Y-%m-%dT%H:%M:%S+03:00", &network.timeinfo);
   telnet.printf("##SYS.DATE#: %s\n", timeStringBuff); //TODO timezone offset
   telnet.printf("##CLI.NAMESET#: %d %s\n", config.lastStation(), config.station.name);
-  if (player.status() == PLAYING) {
+  if (player->status() == PLAYING) {
     telnet.printf("##CLI.META#: %s\n",  config.station.title);
   }
   telnet.printf("##CLI.VOL#: %d\n", config.store.volume);
-  if (player.status() == PLAYING) {
+  if (player->status() == PLAYING) {
     telnet.printf("##CLI.PLAYING#\n");
   } else {
     telnet.printf("##CLI.STOPPED#\n");
@@ -185,24 +185,24 @@ void Telnet::on_input(const char* str, uint8_t clientId) {
   if (strlen(str) == 0) return;
   if(network.status == CONNECTED){
     if (strcmp(str, "cli.prev") == 0 || strcmp(str, "prev") == 0) {
-      player.prev();
+      player->prev();
       return;
     }
     if (strcmp(str, "cli.next") == 0 || strcmp(str, "next") == 0) {
-      player.next();
+      player->next();
       return;
     }
     if (strcmp(str, "cli.toggle") == 0 || strcmp(str, "toggle") == 0) {
-      player.toggle();
+      player->toggle();
       return;
     }
     if (strcmp(str, "cli.stop") == 0 || strcmp(str, "stop") == 0) {
-      player.sendCommand({PR_STOP, 0});
+      player->sendCommand({PR_STOP, 0});
       //info();
       return;
     }
     if (strcmp(str, "cli.start") == 0 || strcmp(str, "start") == 0 || strcmp(str, "cli.play") == 0 || strcmp(str, "play") == 0) {
-      player.sendCommand({PR_PLAY, config.lastStation()});
+      player->sendCommand({PR_PLAY, config.lastStation()});
       return;
     }
     if (strcmp(str, "cli.vol") == 0 || strcmp(str, "vol") == 0) {
@@ -210,11 +210,11 @@ void Telnet::on_input(const char* str, uint8_t clientId) {
       return;
     }
     if (strcmp(str, "cli.vol-") == 0 || strcmp(str, "vol-") == 0) {
-      player.stepVol(false);
+      player->stepVol(false);
       return;
     }
     if (strcmp(str, "cli.vol+") == 0 || strcmp(str, "vol+") == 0) {
-      player.stepVol(true);
+      player->stepVol(true);
       return;
     }
     if (strcmp(str, "sys.date") == 0 || strcmp(str, "date") == 0 || strcmp(str, "time") == 0) {
@@ -225,7 +225,7 @@ void Telnet::on_input(const char* str, uint8_t clientId) {
     if (sscanf(str, "vol(%d)", &volume) == 1 || sscanf(str, "cli.vol(\"%d\")", &volume) == 1 || sscanf(str, "vol %d", &volume) == 1) {
       if (volume < 0) volume = 0;
       if (volume > 254) volume = 254;
-      player.setVol(volume);
+      player->setVol(volume);
       return;
     }
     if (strcmp(str, "cli.audioinfo") == 0 || strcmp(str, "audioinfo") == 0) {
@@ -277,11 +277,11 @@ void Telnet::on_input(const char* str, uint8_t clientId) {
         printf(clientId, "##SYS.DATE#: %s+%02d:%02d\n", timeStringBuff, config.store.tzHour, config.store.tzMin);
       }
       printf(clientId, "##CLI.NAMESET#: %d %s\n", config.lastStation(), config.station.name);
-      if (player.status() == PLAYING) {
+      if (player->status() == PLAYING) {
         printf(clientId, "##CLI.META#: %s\n", config.station.title);
       }
       printf(clientId, "##CLI.VOL#: %d\n", config.store.volume);
-      if (player.status() == PLAYING) {
+      if (player->status() == PLAYING) {
         printf(clientId, "##CLI.PLAYING#\n");
       } else {
         printf(clientId, "##CLI.STOPPED#\n");
@@ -293,7 +293,7 @@ void Telnet::on_input(const char* str, uint8_t clientId) {
     if (sscanf(str, "play(%d)", &sb) == 1 || sscanf(str, "cli.play(\"%d\")", &sb) == 1 || sscanf(str, "play %d", &sb) == 1 ) {
       if (sb < 1) sb = 1;
       if (sb >= config.store.countStation) sb = config.store.countStation;
-      player.sendCommand({PR_PLAY, (uint16_t)sb});
+      player->sendCommand({PR_PLAY, (uint16_t)sb});
       return;
     }
     #ifdef USE_SD

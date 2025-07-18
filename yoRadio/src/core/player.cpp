@@ -7,7 +7,7 @@
 #include "sdmanager.h"
 #include "netserver.h"
 
-Player player;
+Player* player{nullptr};
 QueueHandle_t playerQueue;
 
 #if VS1053_CS!=255 && !I2S_INTERNAL
@@ -35,6 +35,18 @@ QueueHandle_t playerQueue;
 #endif
 
 
+void create_player(dac_type_t dac){
+  switch (dac){
+    case   dac_type_t::ES8311 :
+      player = new PlayerES8311();
+      break;
+    default:
+      player = new Player();
+  }
+
+}
+
+
 void Player::init() {
   Serial.print("##[BOOT]#\tplayer.init\t");
   playerQueue=NULL;
@@ -47,15 +59,7 @@ void Player::init() {
   memset(burl, 0, MQTT_BURL_SIZE);
 #endif
   if(MUTE_PIN!=255) pinMode(MUTE_PIN, OUTPUT);
-  #if I2S_DOUT!=255
-    #if !I2S_INTERNAL
-      setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
-    #endif
-  #else
-    SPI.begin();
-    if(VS1053_RST>0) ResetChip();
-    begin();
-  #endif
+  dac_init();
   setBalance(config.store.balance);
   setTone(config.store.bass, config.store.middle, config.store.trebble);
   setVolume(0);
@@ -69,6 +73,18 @@ void Player::init() {
   _loadVol(config.store.volume);
   setConnectionTimeout(1700, 3700);
   Serial.println("done");
+}
+
+void Player::dac_init(){
+  #if I2S_DOUT!=255
+    #if !I2S_INTERNAL
+      setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
+    #endif
+  #else
+    SPI.begin();
+    if(VS1053_RST>0) ResetChip();
+    begin();
+  #endif  
 }
 
 void Player::sendCommand(playerRequestParams_t request){
@@ -96,7 +112,7 @@ void Player::setError(const char *e){
 
 void Player::_stop(bool alreadyStopped){
   log_i("%s called", __func__);
-  if(config.getMode()==PM_SDCARD && !alreadyStopped) config.sdResumePos = player.getFilePos();
+  if(config.getMode()==PM_SDCARD && !alreadyStopped) config.sdResumePos = player->getFilePos();
    stopSong(); 
   _status = STOPPED;
   setOutputPins(false);
@@ -221,7 +237,7 @@ void Player::_play(uint16_t stationId) {
   bool isConnected = false;
   stopSong();
   if(config.getMode()==PM_SDCARD && SDC_CS!=255){
-    isConnected=connecttoFS(sdman,config.station.url,config.sdResumePos==0?_resumeFilePos:config.sdResumePos-player.sd_min);
+    isConnected=connecttoFS(sdman,config.station.url,config.sdResumePos==0?_resumeFilePos:config.sdResumePos - sd_min);
   } else {
     config.saveValue(&config.store.play_mode, static_cast<uint8_t>(PM_WEB));
   }
@@ -332,5 +348,19 @@ void Player::_loadVol(uint8_t volume) {
 void Player::setVol(uint8_t volume) {
   _volTicks = millis();
   _volTimer = true;
-  player.sendCommand({PR_VOL, volume});
+  player->sendCommand({PR_VOL, volume});
 }
+
+
+
+void PlayerES8311::init(){
+  Player::init();
+  if(!_es.begin(I2C_SDA, I2C_SCL, 400000)) log_e("ES8311 begin failed");
+  _es.setVolume(50);
+  _es.setBitsPerSample(16);
+}
+
+void PlayerES8311::dac_init(){
+  setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT, I2S_MCLK);
+}
+

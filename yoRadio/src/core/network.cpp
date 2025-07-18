@@ -51,7 +51,7 @@ void ticks() {
     }
   }
 #ifndef DSP_LCD
-  if(config.store.screensaverEnabled && display.mode()==PLAYER && !player.isRunning()){
+  if(config.store.screensaverEnabled && display.mode()==PLAYER && !player->isRunning()){
     config.screensaverTicks++;
     if(config.screensaverTicks > config.store.screensaverTimeout+SCREENSAVERSTARTUPDELAY){
       if(config.store.screensaverBlank){
@@ -61,7 +61,7 @@ void ticks() {
       }
     }
   }
-  if(config.store.screensaverPlayingEnabled && display.mode()==PLAYER && player.isRunning()){
+  if(config.store.screensaverPlayingEnabled && display.mode()==PLAYER && player->isRunning()){
     config.screensaverPlayingTicks++;
     if(config.screensaverPlayingTicks > config.store.screensaverPlayingTimeout*60+SCREENSAVERSTARTUPDELAY){
       if(config.store.screensaverPlayingBlank){
@@ -85,7 +85,7 @@ void ticks() {
     display.putRequest(CLOCK);
   }
 #endif
-  if(player.isRunning() && config.getMode()==PM_SDCARD) netserver.requestOnChange(SDPOS, 0);
+  if(player->isRunning() && config.getMode()==PM_SDCARD) netserver.requestOnChange(SDPOS, 0);
   if(divrssi) {
     if(network.status == CONNECTED){
       netserver.setRSSI(WiFi.RSSI());
@@ -93,15 +93,15 @@ void ticks() {
       display.putRequest(DSPRSSI, netserver.getRSSI());
     }
 #ifdef USE_SD
-    if(display.mode()!=SDCHANGE) player.sendCommand({PR_CHECKSD, 0});
+    if(display.mode()!=SDCHANGE) player->sendCommand({PR_CHECKSD, 0});
 #endif
-    player.sendCommand({PR_VUTONUS, 0});
+    player->sendCommand({PR_VUTONUS, 0});
   }
 }
 
 void MyNetwork::WiFiReconnected(WiFiEvent_t event, WiFiEventInfo_t info){
   network.beginReconnect = false;
-  player.lockOutput = false;
+  player->lockOutput = false;
   delay(100);
   display.putRequest(NEWMODE, PLAYER);
   if(config.getMode()==PM_SDCARD) {
@@ -109,7 +109,7 @@ void MyNetwork::WiFiReconnected(WiFiEvent_t event, WiFiEventInfo_t info){
     display.putRequest(NEWIP, 0);
   }else{
     display.putRequest(NEWMODE, PLAYER);
-    if (network.lostPlaying) player.sendCommand({PR_PLAY, config.lastStation()});
+    if (network.lostPlaying) player->sendCommand({PR_PLAY, config.lastStation()});
   }
   #ifdef MQTT_ROOT_TOPIC
     connectToMqtt();
@@ -123,8 +123,8 @@ void MyNetwork::WiFiLostConnection(WiFiEvent_t event, WiFiEventInfo_t info){
       network.status=SDREADY;
       display.putRequest(NEWIP, 0);
     }else{
-      network.lostPlaying = player.isRunning();
-      if (network.lostPlaying) { player.lockOutput = true; player.sendCommand({PR_STOP, 0}); }
+      network.lostPlaying = player->isRunning();
+      if (network.lostPlaying) { player->lockOutput = true; player->sendCommand({PR_STOP, 0}); }
       display.putRequest(NEWMODE, LOST);
     }
   }

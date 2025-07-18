@@ -30,12 +30,10 @@ void setup() {
 
   pm.on_setup();
 
-#ifdef JC1060P470C
-  pinMode(PA_CTRL, OUTPUT);
-  digitalWrite(PA_CTRL, HIGH);
-#endif
+  // cerate and init Player object
+  create_player(dac_type_t::DAC_TYPE);
+  player->init();
 
-  player.init();
   network.begin();
   if (network.status != CONNECTED && network.status!=SDREADY) {
     netserver.begin();
@@ -67,9 +65,9 @@ void setup() {
   #ifdef MQTT_ROOT_TOPIC
     mqttInit();
   #endif
-  if (config.getMode()==PM_SDCARD) player.initHeaders(config.station.url);
-  player.lockOutput=false;
-  if (config.store.smartstart == 1) player.sendCommand({PR_PLAY, config.lastStation()});
+  if (config.getMode()==PM_SDCARD) player->initHeaders(config.station.url);
+  player->lockOutput=false;
+  //if (config.store.smartstart == 1) player->sendCommand({PR_PLAY, config.lastStation()});
   pm.on_end_setup();
   Serial.println("##[BOOT]#\tSetup done!");
 }
@@ -77,7 +75,7 @@ void setup() {
 void loop() {
   telnet.loop();
   if (network.status == CONNECTED || network.status==SDREADY) {
-    player.loop();
+    player->loop();
     //loopControls();
   }
   loopControls();

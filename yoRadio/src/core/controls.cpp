@@ -171,9 +171,9 @@ void encodersLoop(yoEncoder *enc, bool first){
       int nv = config.store.volume+encoderDelta;
       if(nv<0) nv=0;
       if(nv>254) nv=254;
-      player.setVol((uint8_t)nv);  
+      player->setVol((uint8_t)nv);  
     }else{
-      if(encoderDelta > 0) player.next(); else player.prev();
+      if(encoderDelta > 0) player->next(); else player->prev();
     }
 #   else
     if(first){
@@ -181,7 +181,7 @@ void encodersLoop(yoEncoder *enc, bool first){
     }else{
       if (encBtnState == HIGH && display.mode() == PLAYER) {
         if(config.store.skipPlaylistUpDown){
-          if(encoderDelta > 0) player.next(); else player.prev();
+          if(encoderDelta > 0) player->next(); else player->prev();
           return;
         }
         display.putRequest(NEWMODE, STATIONS);
@@ -209,7 +209,7 @@ void encoder2Loop() {
 #if IR_PIN!=255
 void irBlink() {
   if(REAL_LEDBUILTIN==255) return;
-  if (player.status() == STOPPED) {
+  if (player->status() == STOPPED) {
     for (uint8_t i = 0; i < 7; i++) {
       digitalWrite(REAL_LEDBUILTIN, !digitalRead(REAL_LEDBUILTIN));
       delay(100);
@@ -265,7 +265,7 @@ void irLoop() {
                 irBlink();
                 if (display.mode() == NUMBERS) {
                   display.putRequest(NEWMODE, PLAYER);
-                  player.sendCommand({PR_PLAY, display.numOfNextStation});
+                  player->sendCommand({PR_PLAY, display.numOfNextStation});
                   display.numOfNextStation = 0;
                   break;
                 }
@@ -273,11 +273,11 @@ void irLoop() {
                 break;
               }
             case IR_PREV: {
-                player.prev();
+                player->prev();
                 break;
               }
             case IR_NEXT: {
-                player.next();
+                player->next();
                 break;
               }
             case IR_UP: {
@@ -456,9 +456,9 @@ void controlsEvent(bool toRight, int8_t volDelta) {
       int nv = config.store.volume+volDelta;
       if(nv<0) nv=0;
       if(nv>254) nv=254;
-      player.setVol((uint8_t)nv);
+      player->setVol((uint8_t)nv);
     }else{
-      player.stepVol(toRight);
+      player->stepVol(toRight);
     }
   }
   if (display.mode() == STATIONS) {
@@ -489,7 +489,7 @@ void onBtnClick(int id) {
           display.putRequest(NEWMODE, PLAYER);
         }
         if (display.mode() == PLAYER) {
-          player.toggle();
+          player->toggle();
         }
         if (display.mode() == SCREENSAVER || display.mode() == SCREENBLANK) {
           display.putRequest(NEWMODE, PLAYER);
@@ -502,7 +502,7 @@ void onBtnClick(int id) {
           #ifdef DSP_LCD
             delay(200);
           #endif
-          player.sendCommand({PR_PLAY, display.currentPlItem});
+          player->sendCommand({PR_PLAY, display.currentPlItem});
         }
         if(network.status==SOFT_AP || display.mode()==LOST){
           #ifdef USE_SD
@@ -519,17 +519,17 @@ void onBtnClick(int id) {
     case EVT_BTNDOWN: {
         if (DSP_MODEL == DSP_DUMMY) {
           if (id == EVT_BTNUP) {
-            player.next();
+            player->next();
           } else {
-            player.prev();
+            player->prev();
           }
         } else {
           if (display.mode() == PLAYER) {
             if(config.store.skipPlaylistUpDown || ENC2_BTNL!=255){
               if (id == EVT_BTNUP) {
-                player.prev();
+                player->prev();
               } else {
-                player.next();
+                player->next();
               }
             }else{
               display.putRequest(NEWMODE, STATIONS);
@@ -560,7 +560,7 @@ void onBtnDoubleClick(int id) {
     case EVT_BTNLEFT: {
         if (display.mode() != PLAYER) return;
         if (network.status != CONNECTED && network.status!=SDREADY) return;
-        player.prev();
+        player->prev();
         break;
       }
     case EVT_BTNCENTER:
@@ -573,7 +573,7 @@ void onBtnDoubleClick(int id) {
     case EVT_BTNRIGHT: {
         if (display.mode() != PLAYER) return;
         if (network.status != CONNECTED && network.status!=SDREADY) return;
-        player.next();
+        player->next();
         break;
       }
     default:

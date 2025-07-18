@@ -113,10 +113,10 @@ void Config::_setupVersion(){
 #ifdef USE_SD
 
 void Config::changeMode(int newmode){
-  bool pir = player.isRunning();
+  bool pir = player->isRunning();
   if(SDC_CS==255) return;
   if(getMode()==PM_SDCARD) {
-    sdResumePos = player.getFilePos();
+    sdResumePos = player->getFilePos();
   }
   if(network.status==SOFT_AP || display.mode()==LOST){
     saveValue(&store.play_mode, static_cast<uint8_t>(PM_SDCARD));
@@ -140,7 +140,7 @@ void Config::changeMode(int newmode){
   saveValue(&store.play_mode, store.play_mode, true, true);
   _SDplaylistFS = getMode()==PM_SDCARD?&sdman:(true?&LittleFS:_SDplaylistFS);
   if(getMode()==PM_SDCARD){
-    if(pir) player.sendCommand({PR_STOP, 0});
+    if(pir) player->sendCommand({PR_STOP, 0});
     display.putRequest(NEWMODE, SDCHANGE);
     while(display.mode()!=SDCHANGE)
       delay(10);
@@ -152,7 +152,7 @@ void Config::changeMode(int newmode){
   }
   if(!_bootDone) return;
   initPlaylistMode();
-  if (pir) player.sendCommand({PR_PLAY, getMode()==PM_WEB?store.lastStation:store.lastSdStation});
+  if (pir) player->sendCommand({PR_PLAY, getMode()==PM_WEB?store.lastStation:store.lastSdStation});
   netserver.resetQueue();
   netserver.requestOnChange(GETPLAYERMODE, 0);
   netserver.requestOnChange(GETMODE, 0);
@@ -382,7 +382,7 @@ uint16_t Config::getTimezoneOffset() {
 
 void Config::setSnuffle(bool sn){
   saveValue(&store.sdsnuffle, sn);
-  if(store.sdsnuffle) player.next();
+  if(store.sdsnuffle) player->next();
 }
 
 #if IR_PIN!=255

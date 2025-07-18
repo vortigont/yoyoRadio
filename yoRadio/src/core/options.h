@@ -111,6 +111,9 @@ The connection tables are located here https://github.com/e2002/yoradio#connecti
 #endif
 
 /*        I2S DAC                 */
+#ifndef DAC_TYPE
+  #define DAC_TYPE      generic  // type if used DAC, must a member of dac_type_t
+#endif
 #ifndef I2S_DOUT
   #define I2S_DOUT      27  // DIN connection
 #endif

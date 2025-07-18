@@ -145,7 +145,7 @@ void handleUpdate(AsyncWebServerRequest *request, String filename, size_t index,
   if (!index) {
     int target = (request->getParam("updatetarget", true)->value() == "spiffs") ? U_SPIFFS : U_FLASH;
     Serial.printf("Update Start: %s\n", filename.c_str());
-    player.sendCommand({PR_STOP, 0});
+    player->sendCommand({PR_STOP, 0});
     display.putRequest(NEWMODE, UPDATING);
     if (!Update.begin(UPDATE_SIZE_UNKNOWN, target)) {
       Update.printError(Serial);
@@ -408,15 +408,15 @@ void NetServer::processQueue(){
         break;
 
       case SDPOS:
-        obj["sdpos"] =  player.getFilePos();
-        obj["sdend"] =  player.getFileSize();
-        obj["sdtpos"] =  player.getAudioCurrentTime();
-        obj["sdtend"] =  player.getAudioFileDuration(); 
+        obj["sdpos"] =  player->getFilePos();
+        obj["sdend"] =  player->getFileSize();
+        obj["sdtpos"] =  player->getAudioCurrentTime();
+        obj["sdtend"] =  player->getAudioFileDuration(); 
         break;
 
       case SDLEN:
-        obj["sdmin"] =  player.sd_min;
-        obj["sdmax"] =  player.sd_max;
+        obj["sdmin"] =  player->sd_min;
+        obj["sdmax"] =  player->sd_max;
         break;
 
       case SDSNUFFLE:
@@ -429,7 +429,7 @@ void NetServer::processQueue(){
         break;
 
       case MODE:
-        obj["mode"] = player.status() == PLAYING ? "playing" : "stopped";
+        obj["mode"] = player->status() == PLAYING ? "playing" : "stopped";
         break;
 
       case EQUALIZER:
@@ -526,7 +526,7 @@ void NetServer::onWsMessage(void *arg, uint8_t *data, size_t len, uint8_t client
       if (strcmp(cmd, "smartstart") == 0) {
         uint8_t valb = atoi(val);
         uint8_t ss = valb == 1 ? 1 : 2;
-        if (!player.isRunning() && ss == 1) ss = 0;
+        if (!player->isRunning() && ss == 1) ss = 0;
         config.setSmartStart(ss);
         return;
       }
@@ -800,17 +800,17 @@ void NetServer::onWsMessage(void *arg, uint8_t *data, size_t len, uint8_t client
       } /*  EOF RESETS  */
       if (strcmp(cmd, "volume") == 0) {
         uint8_t v = atoi(val);
-        player.setVol(v);
+        player->setVol(v);
       }
       if (strcmp(cmd, "sdpos") == 0) {
         //return;
         if (config.getMode()==PM_SDCARD){
           config.sdResumePos = 0;
-          if(!player.isRunning()){
-            player.setResumeFilePos(atoi(val)-player.sd_min);
-            player.sendCommand({PR_PLAY, config.store.lastSdStation});
+          if(!player->isRunning()){
+            player->setResumeFilePos(atoi(val)-player->sd_min);
+            player->sendCommand({PR_PLAY, config.store.lastSdStation});
           }else{
-            player.setFilePos(atoi(val)-player.sd_min);
+            player->setFilePos(atoi(val)-player->sd_min);
           }
         }
         return;
@@ -821,28 +821,28 @@ void NetServer::onWsMessage(void *arg, uint8_t *data, size_t len, uint8_t client
       }
       if (strcmp(cmd, "balance") == 0) {
         int8_t valb = atoi(val);
-        player.setBalance(valb);
+        player->setBalance(valb);
         config.setBalance(valb);
         netserver.requestOnChange(BALANCE, 0);
         return;
       }
       if (strcmp(cmd, "treble") == 0) {
         int8_t valb = atoi(val);
-        player.setTone(config.store.bass, config.store.middle, valb);
+        player->setTone(config.store.bass, config.store.middle, valb);
         config.setTone(config.store.bass, config.store.middle, valb);
         netserver.requestOnChange(EQUALIZER, 0);
         return;
       }
       if (strcmp(cmd, "middle") == 0) {
         int8_t valb = atoi(val);
-        player.setTone(config.store.bass, valb, config.store.trebble);
+        player->setTone(config.store.bass, valb, config.store.trebble);
         config.setTone(config.store.bass, valb, config.store.trebble);
         netserver.requestOnChange(EQUALIZER, 0);
         return;
       }
       if (strcmp(cmd, "bass") == 0) {
         int8_t valb = atoi(val);
-        player.setTone(valb, config.store.middle, config.store.trebble);
+        player->setTone(valb, config.store.middle, config.store.trebble);
         config.setTone(valb, config.store.middle, config.store.trebble);
         netserver.requestOnChange(EQUALIZER, 0);
         return;
@@ -855,8 +855,8 @@ void NetServer::onWsMessage(void *arg, uint8_t *data, size_t len, uint8_t client
         //mqttPublishPlaylist();
         mqttplaylistticker.attach(5, mqttplaylistSend);
 #endif
-        if (player.isRunning()) {
-          player.sendCommand({PR_PLAY, -config.lastStation()});
+        if (player->isRunning()) {
+          player->sendCommand({PR_PLAY, -config.lastStation()});
         }
         return;
       }
@@ -1024,13 +1024,13 @@ void handleHTTPArgs(AsyncWebServerRequest * request) {
   }
 
     bool commandFound=false;
-    if (request->hasArg("start")) { player.sendCommand({PR_PLAY, config.lastStation()}); commandFound=true; }
-    if (request->hasArg("stop")) { player.sendCommand({PR_STOP, 0}); commandFound=true; }
-    if (request->hasArg("toggle")) { player.toggle(); commandFound=true; }
-    if (request->hasArg("prev")) { player.prev(); commandFound=true; }
-    if (request->hasArg("next")) { player.next(); commandFound=true; }
-    if (request->hasArg("volm")) { player.stepVol(false); commandFound=true; }
-    if (request->hasArg("volp")) { player.stepVol(true); commandFound=true; }
+    if (request->hasArg("start")) { player->sendCommand({PR_PLAY, config.lastStation()}); commandFound=true; }
+    if (request->hasArg("stop")) { player->sendCommand({PR_STOP, 0}); commandFound=true; }
+    if (request->hasArg("toggle")) { player->toggle(); commandFound=true; }
+    if (request->hasArg("prev")) { player->prev(); commandFound=true; }
+    if (request->hasArg("next")) { player->next(); commandFound=true; }
+    if (request->hasArg("volm")) { player->stepVol(false); commandFound=true; }
+    if (request->hasArg("volp")) { player->stepVol(true); commandFound=true; }
     #ifdef USE_SD
     if (request->hasArg("mode")) {
       const AsyncWebParameter* p = request->getParam("mode");
@@ -1051,7 +1051,7 @@ void handleHTTPArgs(AsyncWebServerRequest * request) {
       int t = atoi(pt->value().c_str());
       int m = atoi(pm->value().c_str());
       int b = atoi(pb->value().c_str());
-      player.setTone(b, m, t);
+      player->setTone(b, m, t);
       config.setTone(b, m, t);
       netserver.requestOnChange(EQUALIZER, 0);
       commandFound=true;
@@ -1059,7 +1059,7 @@ void handleHTTPArgs(AsyncWebServerRequest * request) {
     if (request->hasArg("ballance")) {
       const AsyncWebParameter* p = request->getParam("ballance", request->method() == HTTP_POST);
       int b = atoi(p->value().c_str());
-      player.setBalance(b);
+      player->setBalance(b);
       config.setBalance(b);
       netserver.requestOnChange(BALANCE, 0);
       commandFound=true;
@@ -1070,7 +1070,7 @@ void handleHTTPArgs(AsyncWebServerRequest * request) {
       if (id < 1) id = 1;
       if (id > config.store.countStation) id = config.store.countStation;
       //config.sdResumePos = 0;
-      player.sendCommand({PR_PLAY, id});
+      player->sendCommand({PR_PLAY, id});
       commandFound=true;
       DBGVB("[%s] play=%d", __func__, id);
     }
@@ -1080,7 +1080,7 @@ void handleHTTPArgs(AsyncWebServerRequest * request) {
       if (v < 0) v = 0;
       if (v > 254) v = 254;
       config.store.volume = v;
-      player.setVol(v);
+      player->setVol(v);
       commandFound=true;
       DBGVB("[%s] vol=%d", __func__, v);
     }
