@@ -282,6 +282,7 @@ Work is in progress...
   - all of these can be automatically defined by `platformio.ini` amd `myoptions.h`
     - an example of this automatic building is at `https://github.com/trip5/yoradio/tree/trip5/`
     - check out `platformio-trip5-builds.yml` to see how firmwares are built and files made available online
+      - First commit your changes to Github
       - Tag your local most recent commit and push it to Github:
         - `git tag 2025.07.19`
         - `git push origin 2025.07.19`
