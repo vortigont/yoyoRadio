@@ -19,17 +19,24 @@ jobs:
       - name: Install PlatformIO
         run: pip install platformio
 
+      - name: Extract first environment
+        id: extract_env
+        run: |
+          # Extract the first environment name from platformio.ini
+          first_env=$(grep -oP '(?<=\[env:)[^\]]+' platformio.ini | head -n 1)
+          echo "First environment: $first_env"
+          echo "env_name=$first_env" >> $GITHUB_ENV
+
+      - name: Build SPIFFS for first environment
+        run: pio run --environment ${{ env.env_name }} --target buildfs
+
+      - name: Use SPIFFS from first environment
+        run: |
+          # Copy the SPIFFS binary for the first environment
+          cp .pio/build/${{ env.env_name }}/spiffs.bin .pio/build/spiffs.bin
+
       - name: Build all environments
         run: pio run
-
-      - name: Build data filesystem (SPIFFS from yoRadio/data)
-        # uses data_dir = ./yoRadio/data as defined in platformio.ini
-        run: pio run --target buildfs
-
-      - name: Flatten SPIFFS image
-        run: |
-          # copy the one universal spiffs.bin into root build folder
-          cp .pio/build/*/spiffs.bin .pio/build/spiffs.bin
 
       - name: Rename firmware files with env name
         run: |
