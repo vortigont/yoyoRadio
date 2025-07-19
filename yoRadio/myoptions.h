@@ -22,7 +22,7 @@
 #if defined(BOARD_ESP32) & not defined(DEBUG_MYOPTIONS)
 #undef FIRMWARE
 #define FIRMWARE "board_esp32.bin"
-#elif defined(ESP32_S3_N16R8)
+#elif defined(BOARD_ESP32_S3_N16R8)
 #undef FIRMWARE
 #define FIRMWARE "board_esp32_s3_n16r8.bin"
 #elif defined(ESP32_S3_TRIP5_SH1106_PCM_REMOTE)
