@@ -4,13 +4,13 @@
 /* - - - = = = - - - Choose the Radio (defined by platformio.ini env) - - - = = = - - - */
 /* automatic builds define the board - - - be sure to comment all lines after debugging */
 
-// ESP32_S3_N16R8_TEST                  // no need to choose...
-//#define SH1106_PCM_REMOTE             // Self-contained OLED with PCM, Remote
-//#define SH1106_PCM_1BUTTON            // Mini OLED with PCM, 1 Button, Speakers built-in
-//#define SSD1306X32_PCM_1BUTTON        // Mini Tiny OLED with PCM, 1 Button, Speakers built-in
-//#define SH1106_VS1053_3BUTTONS        // Ali Speaker with OLED, VS1053, 3 Buttons
-//#define ST7735_PCM_1BUTTON            // Color TFT (red board) with PCM I2S, 1 Button
-//#define ILI9488_PCM_1BUTTON           // Big Screen with PCM, 1 button
+//#define DEBUG_MYOPTIONS                              // uncomment to debug myoptions.h
+//#define ESP32_S3_TRIP5_SH1106_PCM_REMOTE             // Self-contained OLED with PCM, Remote
+//#define ESP32_S3_TRIP5_SH1106_PCM_1BUTTON            // Mini OLED with PCM, 1 Button, Speakers built-in
+//#define ESP32_S3_TRIP5_SSD1306X32_PCM_1BUTTON        // Mini Tiny OLED with PCM, 1 Button, Speakers built-in
+//#define ESP32_S3_TRIP5_SH1106_VS1053_3BUTTONS        // Ali Speaker with OLED, VS1053, 3 Buttons
+//#define ESP32_S3_TRIP5_ST7735_PCM_1BUTTON            // Color TFT (red board) with PCM I2S, 1 Button
+//#define ESP32_S3_TRIP5_ILI9488_PCM_1BUTTON           // Big Screen with PCM, 1 button
 
 /* --- Update Files --- */
 #define UPDATEURL "https://github.com/trip5/yoradio/releases/latest/download/" // + FIRMWARE for the file(s)
@@ -19,27 +19,30 @@
 
 /* --- Auto-update Firmware File Name --- */
 
-#if defined(SH1106_PCM_REMOTE)
+#if defined(BOARD_ESP32) & not defined(DEBUG_MYOPTIONS)
 #undef FIRMWARE
-#define FIRMWARE "firmware_sh1106_pcm_remote.bin"
-#elif defined(SH1106_PCM_1BUTTON)
+#define FIRMWARE "board_esp32.bin"
+#elif defined(ESP32_S3_N16R8)
 #undef FIRMWARE
-#define FIRMWARE "firmware_sh1106_pcm_1button.bin"
-#elif defined(SSD1306X32_PCM_1BUTTON)
+#define FIRMWARE "board_esp32_s3_n16r8.bin"
+#elif defined(ESP32_S3_TRIP5_SH1106_PCM_REMOTE)
 #undef FIRMWARE
-#define FIRMWARE "firmware_ssd1306x32_pcm_1button.bin"
-#elif defined(SH1106_VS1053_3BUTTONS)
+#define FIRMWARE "esp32_s3_trip5_sh1106_pcm_remote.bin"
+#elif defined(ESP32_S3_TRIP5_SH1106_PCM_1BUTTON)
 #undef FIRMWARE
-#define FIRMWARE "firmware_sh1106_vs1053_3buttons.bin"
-#elif defined(ILI9488_PCM_1BUTTON)
+#define FIRMWARE "esp32_s3_trip5_sh1106_pcm_1button.bin"
+#elif defined(ESP32_S3_TRIP5_SSD1306X32_PCM_1BUTTON)
 #undef FIRMWARE
-#define FIRMWARE "firmware_ili9488_pcm_1button.bin"
-#elif defined(ST7735_PCM_1BUTTON)
+#define FIRMWARE "esp32_s3_trip5_ssd1306x32_pcm_1button.bin"
+#elif defined(ESP32_S3_TRIP5_SH1106_VS1053_3BUTTONS)
 #undef FIRMWARE
-#define FIRMWARE "firmware_st7735_pcm_1button.bin"
-#else //ESP32_S3_N16R8_TEST
+#define FIRMWARE "esp32_s3_trip5_sh1106_vs1053_3buttons.bin"
+#elif defined(ESP32_S3_TRIP5_ILI9488_PCM_1BUTTON)
 #undef FIRMWARE
-#define FIRMWARE "firmware_esp32_s3_n16r8_test.bin"
+#define FIRMWARE "esp32_s3_trip5_st7735_pcm_1button.bin"
+#elif defined(ESP32_S3_TRIP5_ST7735_PCM_1BUTTON)
+#undef FIRMWARE
+#define FIRMWARE "esp32_s3_trip5_ili9488_pcm_1button.bin"
 #endif
 
 
