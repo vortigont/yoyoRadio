@@ -235,7 +235,7 @@ Work is in progress...
 ---
 ## Version history
 
-### 0.9.512 Trip5/2025.07.18
+### 0.9.533 Trip5/2025.07.19
 
 - BREAKING CHANGES
   - requires a large SPIFFS partition
