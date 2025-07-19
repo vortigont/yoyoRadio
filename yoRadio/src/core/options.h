@@ -1,7 +1,7 @@
 #ifndef options_h
 #define options_h
 
-#define YOVERSION "0.9.533 Trip5/2025.07.18"
+#define YOVERSION "0.9.533 Trip5/2025.07.19"
 #define YOURL "https://github.com/trip5/yoradio" // used by the ESPFileUpdater in BrowserClient
 
 /*******************************************************
