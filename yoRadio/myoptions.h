@@ -3,14 +3,14 @@
 
 /* - - - = = = - - - Choose the Radio (defined by platformio.ini env) - - - = = = - - - */
 
-#ifndef PLATFORMIO_BUILD // automatic builds define the board anyways (so this section is here for testing)
+#ifndef PLATFORMIO_BUILD // automatic builds define the board (but this can be used to debug)
 // if building ESP32_S3_N16R8_TEST no need to choose a board
-//#define SH1106_PCM_REMOTE // Self-contained OLED with PCM, Remote
-//#define SH1106_PCM_1BUTTON // Mini Tiny OLED with PCM, 1 Button, Speakers built-in
+#define SH1106_PCM_REMOTE // Self-contained OLED with PCM, Remote
+//#define SH1106_PCM_1BUTTON // Mini OLED with PCM, 1 Button, Speakers built-in
 //#define SSD1306X32_PCM_1BUTTON // Mini Tiny OLED with PCM, 1 Button, Speakers built-in
 //#define SH1106_VS1053_3BUTTONS // Ali Speaker with OLED, VS1053, 3 Buttons
-//#define ILI9488_PCM_1BUTTON // Big Screen with PCM, 1 button
 //#define ST7735_PCM_1BUTTON // Color TFT (red board) with PCM I2S, 1 Button
+//#define ILI9488_PCM_1BUTTON // Big Screen with PCM, 1 button
 #endif
 
 /* --- Update Files --- */
@@ -32,10 +32,10 @@
 #elif defined(SH1106_VS1053_3BUTTONS)
 #undef FIRMWARE
 #define FIRMWARE "firmware_sh1106_vs1053_3buttons.bin"
-#elif defined(ILI9488_PCM_1BUTTON_1_BUTTON)
+#elif defined(ILI9488_PCM_1BUTTON)
 #undef FIRMWARE
 #define FIRMWARE "firmware_ili9488_pcm_1button.bin"
-#elif defined(ST7735_PCM_1BUTTON_1_BUTTON)
+#elif defined(ST7735_PCM_1BUTTON)
 #undef FIRMWARE
 #define FIRMWARE "firmware_st7735_pcm_1button.bin"
 #else //ESP32_S3_N16R8_TEST

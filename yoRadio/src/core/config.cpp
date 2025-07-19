@@ -90,7 +90,7 @@ void Config::init() {
       BOOTLOG("SPIFFS is empty.  Will attempt to get files from online...");
       File markerFile = SPIFFS.open(ONLINEUPDATE_MARKERFILE, "w");
       if (markerFile) markerFile.close();
-      // display.putRequest(NEWMODE, UPDATING);
+      display.putRequest(NEWMODE, UPDATING);
     #endif
   }
   ssidsCount = 0;
@@ -1313,6 +1313,9 @@ void Config::bootInfo() {
           ENC_BTNL, ENC_BTNB, ENC_BTNR, ENC_INTERNALPULLUP?"true":"false", ENC2_BTNL, ENC2_BTNB, ENC2_BTNR, ENC2_INTERNALPULLUP?"true":"false");
   BOOTLOG("ir:\t\t%d", IR_PIN);
   if(SDC_CS!=255) BOOTLOG("SD:\t\t%d", SDC_CS);
+  #ifdef FIRMWARE
+    BOOTLOG("Firmware:\t\t%s", FIRMWARE);
+  #endif
   BOOTLOG("------------------------------------------------");
 }
 

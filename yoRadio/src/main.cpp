@@ -54,6 +54,7 @@ void setup() {
     delay(99);
     player.sendCommand({PR_PLAY, config.lastStation()});
   }
+  config.startAsyncServicesButWait();
   pm.on_end_setup();
 }
 

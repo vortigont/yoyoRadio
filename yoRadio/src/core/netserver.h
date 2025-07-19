@@ -68,7 +68,7 @@ document.getElementById("wupload").classList.add("hidden");
 if (onlineupdatecapable) {
 document.getElementById('downloader').classList.remove("hidden");
 document.getElementById('uploader').classList.add("hidden");
-setTimeout(() => { window.location.reload(true); }, 5000);
+setTimeout(() => { window.location.reload(true); }, 10000);
 }
 } else if (onlineupdatecapable) {
 document.getElementById('credtitle').classList.remove("hidden");

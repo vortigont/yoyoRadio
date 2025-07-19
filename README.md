@@ -290,6 +290,11 @@ Work is in progress...
         - `git tag -d 2025.07.19`
         - `git tag -a 2025.07.19 -m "2025.07.19"`
         - `git push origin 2025.07.19 --force`
+    - this means you can just download a .bin file and flash from a command line
+      - for example, for ESP32-S3
+        - `esptool --chip esp32s3 --port com14 --baud 460800 write_flash -z 0x0000 bootloader.bin 0x8000 partitions.bin 0x10000 firmware.bin`
+      - you could upload SPIFFS to but keep in mind it will erase any files already there (the playlist and Wi-fi data)
+        - add this to the above command: `0x00670000 spiffs.bin`
 - implements proper timezones
   - uses ESPFileUpdater to download an up-to-date json to be used as a selector in the WebUI
   - fetches from https://raw.githubusercontent.com/trip5/timezones.json/refs/heads/master/timezones.gz.json
