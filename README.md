@@ -343,20 +343,21 @@ Work is in progress...
     - missing name or ovol fields will continue to be imported
     - for example, all of these are valid:
       - space-separated values:
-        `nap.casthost.net:8793/stream Intra Nature Radio`
-        `Ambient Sleeping Pill http://radio.stereoscenic.com/asp-s`
-        `Super Relax FM https://streams.radio.menu/listen/super-relax-fm/radio.mp3 0`
+        - `nap.casthost.net:8793/stream Intra Nature Radio`
+        - `Ambient Sleeping Pill http://radio.stereoscenic.com/asp-s`
+        - `Super Relax FM https://streams.radio.menu/listen/super-relax-fm/radio.mp3 0`
       - tab-separated values:
-        `Traxx FM - Ambient	http://traxx011.ice.infomaniak.ch/traxx011-low.mp3	0`
-        `Positively Meditation	0	https://streaming.positivity.radio/pr/posimeditation/icecast.audio`
-        `0	Cryosleep	http://streams.echoesofbluemars.org/8000/cryosleep`
-        `https://ice4.somafm.com/darkzone-128-mp3	Soma FM - Dark Zone 0`
+        - `Traxx FM - Ambient	http://traxx011.ice.infomaniak.ch/traxx011-low.mp3	0`
+        - `Positively Meditation	0	https://streaming.positivity.radio/pr/posimeditation/icecast.audio`
+        - `0	Cryosleep	http://streams.echoesofbluemars.org/8000/cryosleep`
+        - `https://ice4.somafm.com/darkzone-128-mp3	Soma FM - Dark Zone 0`
       - just the URL
-        `https://ice4.somafm.com/dronezone-128-mp3`
+        - `https://ice4.somafm.com/dronezone-128-mp3`
     - the old CSV parser is still used for the yoRadio playlist internally
   - JSON import made more resilient
     - can handle line-by-line files that are not enclosed in [ ]
-      - ie. each line looks like `{"name":"Swinging radio 60s","host":"http://s2.xrad.io","file":"/8058/stream","port":"0","ovol":"0"}`
+      - ie. each line looks like
+        - `{"name":"Swinging radio 60s","host":"http://s2.xrad.io","file":"/8058/stream","port":"0","ovol":"0"}`
     - can handle proper json files where all entries are enclosed in [ ]
       - the field "url_resolved" will be preferred
       - fallback to "url"
