@@ -109,7 +109,7 @@ void DspCore::_clockDate(){
   setTextSize(4);
   setTextColor(config.theme.dow, config.theme.background);
   setCursor(width() - 8 - clockRightSpace - CHARWIDTH*4*2, clockTop-CHARHEIGHT*4+4);
-  print(utf8Rus(dow[network.timeinfo.tm_wday], DAY_UPPERCASE));       /* print dow */
+  print(utf8Rus(dow[network.timeinfo.tm_wday], false));       /* print dow */
 }
 
 void DspCore::_clockTime(){

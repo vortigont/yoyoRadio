@@ -2,16 +2,15 @@
 #define myoptions_h
 
 /* - - - = = = - - - Choose the Radio (defined by platformio.ini env) - - - = = = - - - */
+/* automatic builds define the board - - - be sure to comment all lines after debugging */
 
-#ifndef PLATFORMIO_BUILD // automatic builds define the board (but this can be used to debug)
-// if building ESP32_S3_N16R8_TEST no need to choose a board
-#define SH1106_PCM_REMOTE // Self-contained OLED with PCM, Remote
-//#define SH1106_PCM_1BUTTON // Mini OLED with PCM, 1 Button, Speakers built-in
-//#define SSD1306X32_PCM_1BUTTON // Mini Tiny OLED with PCM, 1 Button, Speakers built-in
-//#define SH1106_VS1053_3BUTTONS // Ali Speaker with OLED, VS1053, 3 Buttons
-//#define ST7735_PCM_1BUTTON // Color TFT (red board) with PCM I2S, 1 Button
-//#define ILI9488_PCM_1BUTTON // Big Screen with PCM, 1 button
-#endif
+// ESP32_S3_N16R8_TEST                  // no need to choose...
+//#define SH1106_PCM_REMOTE             // Self-contained OLED with PCM, Remote
+//#define SH1106_PCM_1BUTTON            // Mini OLED with PCM, 1 Button, Speakers built-in
+//#define SSD1306X32_PCM_1BUTTON        // Mini Tiny OLED with PCM, 1 Button, Speakers built-in
+//#define SH1106_VS1053_3BUTTONS        // Ali Speaker with OLED, VS1053, 3 Buttons
+//#define ST7735_PCM_1BUTTON            // Color TFT (red board) with PCM I2S, 1 Button
+//#define ILI9488_PCM_1BUTTON           // Big Screen with PCM, 1 button
 
 /* --- Update Files --- */
 #define UPDATEURL "https://github.com/trip5/yoradio/releases/latest/download/" // + FIRMWARE for the file(s)
@@ -232,27 +231,8 @@
 #define WEATHERLAT "55.7512" /* latitude */
 #define WEATHERLON "37.6184" /* longitude */
 
-/* Capitalization Defaults */
-//#define UPPERCASE_PLAYLIST false
-//#define UPPERCASE_DAY false
-//#define UPPERCASE_DATE false
-//#define UPPERCASE_ALL
-
 /* Use https://www.radio-browser.info/ API to get JSON of radio streams */
 //#define RADIO_BROWSER_SERVERS_URL "https://all.api.radio-browser.info/json/servers"
-
-
-/* --- MALEKSM'S BATTERY WIDGET --- */
-
-//#define BATTERY_WIDGET
-//#define ADC_PIN x
-//#define R1
-//#define R2
-//#define DELTA_BAT
-//#define R1 50 // resistor from battery positive to ADC_PIN, default 50 = 50k ohm
-//#define R2 100  // resistor from ADC_PIN to GND, default 100 = 100k ohm
-//#define DELTA_BAT // simple addition or subtraction to correct the calculation, default 0
-
 
 #define HIDE_VOLPAGE       /* Hides "Volume" page - use the progress bar instead  */
 
