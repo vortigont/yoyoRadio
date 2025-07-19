@@ -266,11 +266,13 @@ Work is in progress...
   - a new library created for this project
   - this may be used to download / update any file from online to SPIFFS
   - add `#define ESPFILEUPDATER_DEBUG` to `myoptions.h` to get verbose output
-- Online updating for pre-built BIN files (and other assets)
+- Online updating for pre-built BIN files and other assets
   - Uses ESPFileUpdater when SPIFFS is empty or incomplete if the running program is a pre-built firmware
-  - the online URL path used to update firmware and download SPIFFS file assets:
+  - the online URL path used to download SPIFFS file assets (for the running version):
+    - `#define FILESURL "https://github.com/trip5/yoradio/releases/download/2025.07.19/"`
+  - the online URL path used to OTA update firmware:
     - `#define UPDATEURL "https://github.com/trip5/yoradio/releases/latest/download/"`
-  - the online file that the running yoRadio can compare it's version against:
+  - the online file that the current version can compare it's version against:
     - `#define CHECKUPDATEURL "https://raw.githubusercontent.com/trip5/yoradio/refs/heads/trip5/yoRadio/src/core/options.h"`
   - the above file must contain a line that is defined by this setting:
     - `#define VERSIONSTRING "#define YOVERSION"` (followed by a version string)

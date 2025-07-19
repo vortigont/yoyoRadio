@@ -528,8 +528,9 @@ The connection tables are located here https://github.com/e2002/yoradio#connecti
 #endif
 
 /*    PRE-BUILT FIRMWARES CHECK   */
-/* only keep these if all four are defined by myoptions.h */
-#if !(defined(UPDATEURL) && defined(CHECKUPDATEURL) && defined(VERSIONSTRING) && defined(FIRMWARE))
+/* only keep these if all 5 are defined by myoptions.h */
+#if !(defined(FILESURL) && defined(UPDATEURL) && defined(CHECKUPDATEURL) && defined(VERSIONSTRING) && defined(FIRMWARE))
+  #undef FILESURL
   #undef UPDATEURL
   #undef CHECKUPDATEURL
   #undef VERSIONSTRING

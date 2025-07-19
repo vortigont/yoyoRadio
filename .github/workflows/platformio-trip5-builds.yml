@@ -41,14 +41,14 @@ jobs:
         id: extract_boards
         run: |
           # Extract all environments prefixed with 'board' from platformio.ini
-          board_envs=$(grep -oP '(?<=\[env:board_)[^\]]+' platformio.ini)
+          board_envs=$(grep -oP '(?<=\[env:board_)[^\]]+' platformio.ini | tr '\n' ' ')
           echo "Board environments: $board_envs"
           echo "board_envs=$board_envs" >> $GITHUB_ENV
 
       - name: Build SPIFFS and extract bootloader/partitions for each board environment
         run: |
           # Extract all environments prefixed with 'board' from platformio.ini
-          board_envs=$(grep -oP '(?<=\[env:board_)[^\]]+' platformio.ini)
+          board_envs=$(grep -oP '(?<=\[env:board_)[^\]]+' platformio.ini | tr '\n' ' ')
           echo "Board environments: $board_envs"
 
           # Iterate over all board environments

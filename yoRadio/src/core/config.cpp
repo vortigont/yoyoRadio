@@ -84,7 +84,7 @@ void Config::init() {
   BOOTLOG("SPIFFS mounted");
   emptyFS = _isFSempty();
   if(emptyFS) {
-    #ifndef UPDATEURL
+    #ifndef FILESURL
       BOOTLOG("SPIFFS is empty!");
     #else
       BOOTLOG("SPIFFS is empty.  Will attempt to get files from online...");
