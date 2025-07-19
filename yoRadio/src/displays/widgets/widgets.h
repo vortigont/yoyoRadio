@@ -131,8 +131,10 @@ class TextWidget: public Widget {
     bool _uppercase;
     uint16_t  _buffsize, _textwidth, _oldtextwidth, _oldleft, _textheight;
     uint8_t _charWidth;
-    //GFXfont *_font{nullptr};
-  protected:
+#if DSP_MODEL!=DSP_DUMMY
+    GFXfont *_font{nullptr};
+#endif
+    protected:
     void _draw();
     uint16_t _realLeft();
 };
@@ -204,8 +206,8 @@ class VuWidget: public Widget {
     void init(WidgetConfig wconf, VUBandsConfig bands, uint16_t vumaxcolor, uint16_t vumincolor, uint16_t bgcolor);
     void loop();
   protected:
-    #if !defined(DSP_LCD) && !defined(DSP_OLED)
-      //Canvas *_canvas;
+    #if !defined(DSP_LCD) && !defined(DSP_OLED) && DSP_MODEL!=DSP_DUMMY
+      Canvas *_canvas;
     #endif
     VUBandsConfig _bands;
     uint16_t _vumaxcolor, _vumincolor;

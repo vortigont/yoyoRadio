@@ -1,6 +1,6 @@
 #pragma once
 
-#define JC1060P470C
+#define JC1060P470
 
 // Display driver JD9165BA-DS
 #define LCD_H_RES   1024
@@ -8,6 +8,7 @@
 #define LCD_RST     27
 #define LCD_LED     23
 
+// Touch
 #define TP_I2C_SDA  7
 #define TP_I2C_SCL  8
 #define TP_RST      22
@@ -29,6 +30,9 @@
 // I2C
 #define I2C_SDA                 7
 #define I2C_SCL                 8
+#define GT911_I2C_ADDR          0x5d
+#define RTC_I2C_ADDR            0x32
+#define ES8311_I2C_ADDR         0x18
 
 // SD CARD
 #define SD_DATA0                39
@@ -36,11 +40,16 @@
 #define SD_DATA2                41
 #define SD_DATA3                42
 #define SD_CLK                  43
+#define SD_CMD                  44
+
 
 // WS2812
 #define WS2812_RGB_LED          26
 
 #define BAT_VOLTAGE_SENSOR_PIN  52
+
+
+
 
 
 // yoradio defines
@@ -53,3 +62,6 @@
 #define MUTE_PIN    PA_ENABLE
 #define MUTE_VAL    LOW
 #define DAC_TYPE    ES8311
+#define DSP_MODEL   DSP_JC1060P470
+#define DSP_WIDTH       LCD_H_RES
+#define DSP_HEIGHT      LCD_V_RES

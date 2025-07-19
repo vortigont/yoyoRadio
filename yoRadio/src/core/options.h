@@ -51,6 +51,7 @@ The connection tables are located here https://github.com/e2002/yoradio#connecti
 #define DSP_SSD1322     23    // 256x64   2.8'  https://aliexpress.com/item/1005003480981568.html
 #define DSP_ST7920      24    // 128x64   2.6'  https://aliexpress.com/item/32699482638.html
 #define DSP_JC3248W535  30    // 480x320  3.5'  Guition JC3248W535 https://aliexpress.com/item/1005007593889279.html
+#define DSP_JC1060P470  31    // 1024x600 7'    Guition JC1060P470
 #define DSP_CUSTOM      101   // your display
 
 #ifndef DSP_MODEL
@@ -285,11 +286,11 @@ The connection tables are located here https://github.com/e2002/yoradio#connecti
     //  #define LED_BUILTIN   255
     //#endif
     // have no idea what to do with this ugly define - it can't be universal for various boards, so just disable if for now
-    #define REAL_LEDBUILTIN -1
+    #define REAL_LEDBUILTIN 255
 #endif
 /*        Other settings. You can overwrite them in the myoptions.h file        */
 #ifndef MUTE_PIN
-  #define MUTE_PIN      255   // MUTE Pin
+  #define MUTE_PIN      -1   // MUTE Pin
 #endif
 #ifndef MUTE_VAL
   #define MUTE_VAL      HIGH  // Write this to MUTE_PIN when player is stopped

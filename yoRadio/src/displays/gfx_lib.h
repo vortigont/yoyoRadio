@@ -72,4 +72,13 @@ typedef Arduino_Canvas Canvas;
   #else
     #include "conf/displayAXS15231Bconf.h"
   #endif
+#elif DSP_MODEL==DSP_JC1060P470
+  // Use Arduino_DSI_Display
+  #include "display/Arduino_DSI_Display.h"
+  #define DISPLAY_ENGINE  Arduino_DSI_Display
+  #if __has_include("conf/display_1024x600_conf_custom.h")
+    #include "conf/display_1024x600_conf_custom.h"
+  #else
+    #include "conf/display_1024x600_conf.h"
+  #endif
 #endif

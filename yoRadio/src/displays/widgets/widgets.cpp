@@ -300,12 +300,12 @@ void VuWidget::_draw(){
   static uint16_t measL, measR;
   uint16_t bandColor;
   uint16_t dimension = _config.align?_bands.width:_bands.height;
-  uint16_t vulevel = player.getVUlevel();
+  uint16_t vulevel = player->getVUlevel();
   
   uint8_t L = (vulevel >> 8) & 0xFF;
   uint8_t R = vulevel & 0xFF;
   
-  bool played = player.isRunning();
+  bool played = player->isRunning();
   if(played){
     measL=(L>=measL)?measL + _bands.fadespeed:L;
     measR=(R>=measR)?measR + _bands.fadespeed:R;

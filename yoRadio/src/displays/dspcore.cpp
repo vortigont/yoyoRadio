@@ -456,7 +456,7 @@ void Display::_swichMode(displayMode_e newmode) {
   _mode = newmode;
   dsp->setScrollId(NULL);
   if (newmode == PLAYER) {
-    if(player.isRunning())
+    if(player->isRunning())
       _clock.moveTo(clockMove);
     else
       _clock.moveBack();
@@ -607,11 +607,11 @@ void Display::loop() {
             } 
           }
           break;
-        case AUDIOINFO: if(_heapbar)  { _heapbar->lock(!config.store.audioinfo); _heapbar->setValue(player.inBufferFilled()); } break;
+        case AUDIOINFO: if(_heapbar)  { _heapbar->lock(!config.store.audioinfo); _heapbar->setValue(player->inBufferFilled()); } break;
         case SHOWVUMETER: {
           if(_vuwidget){
             _vuwidget->lock(!config.store.vumeter); 
-            _layoutChange(player.isRunning());
+            _layoutChange(player->isRunning());
           }
           break;
         }
@@ -647,7 +647,7 @@ void Display::loop() {
           if(_mode == SDCHANGE) _nums.setText(request.payload, "%d");
           break;
         }
-        case DSPRSSI: if(_rssi){ _setRSSI(request.payload); } if (_heapbar && config.store.audioinfo) _heapbar->setValue(player.isRunning()?player.inBufferFilled():0); break;
+        case DSPRSSI: if(_rssi){ _setRSSI(request.payload); } if (_heapbar && config.store.audioinfo) _heapbar->setValue(player->isRunning()?player->inBufferFilled():0); break;
         case PSTART: _layoutChange(true);   break;
         case PSTOP:  _layoutChange(false);  break;
         case DSP_START: _start();  break;

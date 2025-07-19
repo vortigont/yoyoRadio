@@ -48,6 +48,8 @@
   #include "displayST7920.h"
 #elif DSP_MODEL== DSP_JC3248W535
   #include "display_JC3248W535.h"
+#elif DSP_MODEL== DSP_JC1060P470
+  #include "display_JC1060P470C.h"
 #endif
 
 #if DSP_MODEL!=DSP_DUMMY
