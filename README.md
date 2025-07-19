@@ -238,10 +238,8 @@ Work is in progress...
 ### 0.9.533 Trip5/2025.07.19
 
 - BREAKING CHANGES
-  - requires a large SPIFFS partition
-    - if ESP32, use the `4MBflash.csv` as your partition file (see the text file for more)
-      - MUST do full Erase Flash and upload Firmware and Filesystem system
-      - WARNING: this will make OTA firmware updates impossible
+  - requires larger app partitions
+    - if using 4MB flash sizeESP32, use the `ESP32-4MB.csv` as your partition file (see the text file for more)
   - many settings will be reset to defaults
   - notes were added to `config.cpp` how to handle breaking and non-breaking store updates in the future
   - future re-flashes should not lose settings after this update

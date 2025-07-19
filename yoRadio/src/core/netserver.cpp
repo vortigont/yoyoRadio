@@ -39,7 +39,7 @@
 String g_ipv4_servers[20];
 // For the search task
 TaskHandle_t g_searchTaskHandle = NULL;
-#define FS_REQUIRED_FREE_SPACE 300 // in KB - must be minimum x3 of the limit_per_page in search.js
+#define FS_REQUIRED_FREE_SPACE 230 // in KB - must be minimum x2.2 of the limit_per_page in search.js (100)
 
 //#define CORS_DEBUG //Enable CORS policy: 'Access-Control-Allow-Origin' (for testing)
 
