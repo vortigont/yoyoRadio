@@ -242,7 +242,6 @@ Work is in progress...
     - if ESP32, use the `4MBflash.csv` as your partition file (see the text file for more)
       - MUST do full Erase Flash and upload Firmware and Filesystem system
       - WARNING: this will make OTA firmware updates impossible
-  - Filesystem Image MUST be flashed again
   - many settings will be reset to defaults
   - notes were added to `config.cpp` how to handle breaking and non-breaking store updates in the future
   - future re-flashes should not lose settings after this update
@@ -331,10 +330,10 @@ Work is in progress...
       - `#define RADIO_BROWSER_SERVERS_URL "https://all.api.radio-browser.info/json/servers"` in `myoptions.h`
   - handles down API servers gracefully (and they do go down fairly often)
   - uses ESPFileUpdater to download JSON search results directly from the API to the ESP's file system
-    - previous searches are saved and not lost on reboot (50 results, page number)
+    - previous searches are saved and not lost on reboot (100 results, page number)
     - saved searches will be deleted on reboot if they are older than 24 hours
   - search results shows station name, country code, codec, bitrate
-  - stations can be previewed with a play button that does not it to the playlist
+  - stations can be previewed (through the radio) with a play button that does not add it to the playlist
     - if matches URL in the playlist will play the station from the playlist
   - stations can be added with a plus button
     - will not add a station which has the same URL as one already in the playlist (http & https considered same)
