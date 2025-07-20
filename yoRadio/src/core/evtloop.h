@@ -46,10 +46,10 @@ enum class yo_event_t:int32_t {
 
   // Audio player
   plsStation = 40,          // play radio station from a playlist, param: int n - index in a playlist entry
-  mp3volstep,               // set mp3 volume increment/decrement, param: int n
-  mp3mute,
-  mp3unmute,
-  mp3state,                 // get mp3player state, will publish current mp3player state both to event bus and EmbUI's feeders
+  // Audio player states
+  playerStop,               // player's state command/state, no param allowed
+  playerPlay,               // player's state command/state, no param allowed
+  playerPause,              // player's state command/state, no param allowed
 
   // ext devices control
   btnLock = 100,            // Lock button
@@ -107,3 +107,10 @@ enum class yo_event_t:int32_t {
   };
 
 } // namespace evt
+
+// cast enum to int
+template <class E>
+constexpr std::common_type_t<int, std::underlying_type_t<E>>
+e2int(E e) {
+    return static_cast<std::common_type_t<int, std::underlying_type_t<E>>>(e);
+}
