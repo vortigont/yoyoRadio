@@ -9,6 +9,7 @@
 #include "core/controls.h"
 #include "core/mqtt.h"
 #include "core/optionschecker.h"
+#include "core/evtloop.h"
 
 #if DSP_HSPI || TS_HSPI || VS_HSPI
 SPIClass  SPI2(HOOPSENb);
@@ -19,6 +20,10 @@ extern __attribute__((weak)) void yoradio_on_setup();
 void setup() {
   Serial.begin(115200);
   Serial.println("##Setup#");
+
+  // Start event loop task
+  evt::start();
+
   if(REAL_LEDBUILTIN!=255) pinMode(REAL_LEDBUILTIN, OUTPUT);
   if (yoradio_on_setup) yoradio_on_setup();
   pm.on_setup();
