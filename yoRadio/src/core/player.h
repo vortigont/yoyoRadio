@@ -19,7 +19,7 @@
 #define PLERR_LN        64
 #define SET_PLAY_ERROR(...) {char buff[512 + 64]; sprintf(buff,__VA_ARGS__); setError(buff);}
 
-enum playerRequestType_e : uint8_t { /* PR_STOP = 2, */ PR_PREV = 3, PR_NEXT = 4, PR_VOL = 5, PR_CHECKSD = 6, PR_VUTONUS = 7 };
+enum playerRequestType_e : uint8_t { PR_CHECKSD = 6, PR_VUTONUS = 7 };
 struct playerRequestParams_t
 {
   playerRequestType_e type;
@@ -85,7 +85,7 @@ public:
     void next();
     void toggle();
     void stepVol(bool up);
-    void setVol(uint8_t volume);
+    void setVol(int32_t volume);
     uint8_t volToI2S(uint8_t volume);
     void stopInfo();
     void setOutputPins(bool isPlaying);

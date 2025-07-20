@@ -139,23 +139,6 @@ void Player::loop() {
   playerRequestParams_t requestP;
   if(xQueueReceive(playerQueue, &requestP, isRunning()?PL_QUEUE_TICKS:PL_QUEUE_TICKS_ST)){
     switch (requestP.type){
-      /*
-      case PR_STOP: _stop(); break;
-      case PR_PLAY: {
-        if (requestP.payload>0) {
-          config.setLastStation((uint16_t)requestP.payload);
-        }
-        _play((uint16_t)abs(requestP.payload)); 
-        if (player_on_station_change) player_on_station_change(); 
-        pm.on_station_change();
-        break;
-      }
-*/
-      case PR_VOL: {
-        config.setVolume(requestP.payload);
-        Audio::setVolume(volToI2S(requestP.payload));
-        break;
-      }
       #ifdef USE_SD
       case PR_CHECKSD: {
         if(config.getMode()==PM_SDCARD){
@@ -335,10 +318,12 @@ void Player::_loadVol(uint8_t volume) {
   setVolume(volToI2S(volume));
 }
 
-void Player::setVol(uint8_t volume) {
+void Player::setVol(int32_t volume) {
   _volTicks = millis();
   _volTimer = true;
-  player.sendCommand({PR_VOL, volume});
+  config.setVolume(volume);
+  Audio::setVolume(volToI2S(volume));
+  //player.sendCommand({PR_VOL, volume});
 }
 
 void Player::_events_subsribe(){
@@ -370,9 +355,16 @@ void Player::_events_cmd_hndlr(int32_t id, void* data){
       break;
     }
 
+    // Stop player
     case evt::yo_event_t::playerStop :
       _stop();
       break;
+
+    // volume control
+    case evt::yo_event_t::playerVolume :
+      setVol(*reinterpret_cast<int32_t*>(data));
+      break;
+
 
     default:;
   }

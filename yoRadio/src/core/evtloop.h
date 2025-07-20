@@ -51,6 +51,8 @@ enum class yo_event_t:int32_t {
   playerPlay,               // player's state command/state, no param allowed
   playerPause,              // player's state command/state, no param allowed
 
+  playerVolume,             // player's state command/state, param: int n
+
   // ext devices control
   btnLock = 100,            // Lock button
   btnUnLock,                // UnLock button
