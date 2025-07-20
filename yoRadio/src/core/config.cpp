@@ -1221,6 +1221,8 @@ void updateFile(void* param, const char* localFile, const char* onlineFile, cons
 #ifdef UPDATEURL
   void getRequiredFiles(void* param) {
     for (size_t i = 0; i < requiredFilesCount; i++) {
+      player.sendCommand({PR_STOP, 0});
+      display.putRequest(NEWMODE, UPDATING);
       const char* fname = requiredFiles[i];
       char localPath[64];
       char remoteUrl[128];
@@ -1260,8 +1262,6 @@ void startAsyncServices(void* param){
   // if the OTA marker file exists, fetch all web assets immediately, clean up, restart
  #ifdef UPDATEURL
     if (SPIFFS.exists(ONLINEUPDATE_MARKERFILE)) {
-      player.sendCommand({PR_STOP, 0});
-      display.putRequest(NEWMODE, UPDATING);
       getRequiredFiles(param);
       SPIFFS.remove(ONLINEUPDATE_MARKERFILE);
       delay(200);
