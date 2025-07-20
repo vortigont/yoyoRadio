@@ -29,25 +29,46 @@ struct playerRequestParams_t
 enum plStatus_e : uint8_t{ PLAYING = 1, STOPPED = 2 };
 
 class Player: public Audio {
-  private:
+
     uint32_t    _volTicks;   /* delayed volume save  */
     bool        _volTimer;   /* delayed volume save  */
     uint32_t    _resumeFilePos;
     plStatus_e  _status;
     char        _plError[PLERR_LN];
-  private:
+
     void _stop(bool alreadyStopped = false);
     void _play(uint16_t stationId);
     void _loadVol(uint8_t volume);
-  public:
+
+    // event function handlers
+    esp_event_handler_instance_t _hdlr_cmd_evt{nullptr};
+
+    /**
+     * @brief subscribe to event mesage bus
+     * 
+     */
+    void _events_subsribe();
+
+    /**
+     * @brief unregister from event loop
+     * 
+     */
+    void _events_unsubsribe();
+
+    // command events handler
+    void _events_cmd_hndlr(int32_t id, void* data);
+
+public:
     bool lockOutput = true;
     bool resumeAfterUrl = false;
     uint32_t sd_min, sd_max;
     #ifdef MQTT_ROOT_TOPIC
     char      burl[MQTT_BURL_SIZE];  /* buffer for browseUrl  */
     #endif
-  public:
+
     Player();
+    ~Player();
+
     void init();
     void loop();
     void initHeaders(const char *file);

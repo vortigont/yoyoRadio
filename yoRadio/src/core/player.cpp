@@ -5,6 +5,9 @@
 #include "display.h"
 #include "sdmanager.h"
 #include "netserver.h"
+#include "evtloop.h"
+#include "log.h"
+
 
 Player player;
 QueueHandle_t playerQueue;
@@ -29,6 +32,10 @@ QueueHandle_t playerQueue;
     Player::Player(): Audio(true, I2S_DAC_CHANNEL_BOTH_EN)  {}
   #endif
 #endif
+
+Player::~Player(){
+  _events_unsubsribe();
+}
 
 
 void Player::init() {
@@ -326,4 +333,38 @@ void Player::setVol(uint8_t volume) {
   _volTicks = millis();
   _volTimer = true;
   player.sendCommand({PR_VOL, volume});
+}
+
+void Player::_events_subsribe(){
+  // command events
+  esp_event_handler_instance_register_with(evt::get_hndlr(), YO_CMD_EVENTS, ESP_EVENT_ANY_ID,
+    [](void* self, esp_event_base_t base, int32_t id, void* data){ static_cast<Player*>(self)->_events_cmd_hndlr(id, data); },
+    this, &_hdlr_cmd_evt
+  );
+}
+
+void Player::_events_unsubsribe(){
+  esp_event_handler_instance_unregister_with(evt::get_hndlr(), YO_CMD_EVENTS, ESP_EVENT_ANY_ID, _hdlr_cmd_evt);
+
+}
+
+void Player::_events_cmd_hndlr(int32_t id, void* data){
+  switch (static_cast<evt::yo_event_t>(id)){
+
+    // Play radio station from a playlist
+    case evt::yo_event_t::plsStation : {
+      int idx = *reinterpret_cast<int32_t*>(data);
+      if (idx > 0)
+        config.setLastStation(idx);
+      _play((uint16_t)abs(idx));
+      EVT_POST(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerPlay));
+      if (player_on_station_change)   // todo: this should be moved to event handling
+        player_on_station_change();
+      pm.on_station_change();   // todo: this should be moved to event handling
+      break;
+    }
+
+
+    default:;
+  }
 }
