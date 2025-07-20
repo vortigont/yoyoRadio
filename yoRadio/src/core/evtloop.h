@@ -50,8 +50,10 @@ enum class yo_event_t:int32_t {
   playerStop,               // player's state command/state, no param allowed
   playerPlay,               // player's state command/state, no param allowed
   playerPause,              // player's state command/state, no param allowed
-
   playerVolume,             // player's state command/state, param: int n
+  playerMode,               // player mode webradio/sdcard, param int n: 0 - for webradio, 1 - for SDCARD
+  // Device modes
+
 
   // ext devices control
   btnLock = 100,            // Lock button

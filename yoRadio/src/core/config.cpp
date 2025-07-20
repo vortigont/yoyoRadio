@@ -18,6 +18,10 @@ void u8fix(char *src){
   if ((uint8_t)last >= 0xC2) src[strlen(src)-1]='\0';
 }
 
+Config::~Config(){
+  _events_unsubsribe();
+}
+
 bool Config::_isFSempty() {
   const char* reqiredFiles[] = {"dragpl.js.gz","ir.css.gz","irrecord.html.gz","ir.js.gz","logo.svg.gz","options.html.gz","player.html.gz","script.js.gz",
                                 "style.css.gz","updform.html.gz","theme.css"};
@@ -93,6 +97,7 @@ void Config::init() {
   _SDplaylistFS = &LittleFS;
   #endif
   _bootDone=false;
+  _events_subsribe();
 }
 
 void Config::_setupVersion(){
@@ -1020,3 +1025,33 @@ void Config::bootInfo() {
   BOOTLOG("------------------------------------------------");
 }
 
+void Config::_events_subsribe(){
+  // command events
+  esp_event_handler_instance_register_with(evt::get_hndlr(), YO_CMD_EVENTS, ESP_EVENT_ANY_ID,
+    [](void* self, esp_event_base_t base, int32_t id, void* data){ static_cast<Config*>(self)->_events_cmd_hndlr(id, data); },
+    this, &_hdlr_cmd_evt
+  );
+}
+
+void Config::_events_unsubsribe(){
+  esp_event_handler_instance_unregister_with(evt::get_hndlr(), YO_CMD_EVENTS, ESP_EVENT_ANY_ID, _hdlr_cmd_evt);
+
+}
+
+void Config::_events_cmd_hndlr(int32_t id, void* data){
+  switch (static_cast<evt::yo_event_t>(id)){
+
+    #ifdef USE_SD
+    case evt::yo_event_t::playerMode :
+      if(config.getMode()==PM_SDCARD){
+        if(!sdman.cardPresent()){
+          sdman.stop();
+          changeMode(PM_WEB);
+        }
+      }
+      break;
+    #endif  // USE_SD
+
+    default:;
+  }
+}

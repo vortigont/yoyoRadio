@@ -192,6 +192,8 @@ class Config {
     int      newConfigMode;
   public:
     Config() {};
+    ~Config();
+
 #if IR_PIN!=255
     void saveIR();
 #endif
@@ -315,6 +317,24 @@ class Config {
       return station;
     }
     char _stationBuf[BUFLEN/2];
+
+    // event function handlers
+    esp_event_handler_instance_t _hdlr_cmd_evt{nullptr};
+
+    /**
+     * @brief subscribe to event mesage bus
+     * 
+     */
+    void _events_subsribe();
+
+    /**
+     * @brief unregister from event loop
+     * 
+     */
+    void _events_unsubsribe();
+
+    // command events handler
+    void _events_cmd_hndlr(int32_t id, void* data);
 };
 
 extern Config config;

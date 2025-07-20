@@ -95,7 +95,9 @@ void ticks() {
 #ifdef USE_SD
     if(display.mode()!=SDCHANGE) player.sendCommand({PR_CHECKSD, 0});
 #endif
-    player.sendCommand({PR_VUTONUS, 0});
+
+    if(config.vuThreshold > 10)
+      config.vuThreshold -= 10;
   }
 }
 

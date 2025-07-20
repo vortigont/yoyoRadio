@@ -10,7 +10,6 @@
 
 
 Player player;
-QueueHandle_t playerQueue;
 
 #if VS1053_CS!=255 && !I2S_INTERNAL
   #if VS_HSPI
@@ -40,9 +39,7 @@ Player::~Player(){
 
 void Player::init() {
   Serial.print("##[BOOT]#\tplayer.init\t");
-  playerQueue=NULL;
   _resumeFilePos = 0;
-  playerQueue = xQueueCreate( 5, sizeof( playerRequestParams_t ) );
   setOutputPins(false);
   delay(50);
   memset(_plError, 0, PLERR_LN);
@@ -73,15 +70,6 @@ void Player::init() {
   setConnectionTimeout(1700, 3700);
   _events_subsribe();
   Serial.println("done");
-}
-
-void Player::sendCommand(playerRequestParams_t request){
-  if(playerQueue==NULL) return;
-  xQueueSend(playerQueue, &request, PLQ_SEND_DELAY);
-}
-
-void Player::resetQueue(){
-	if(playerQueue!=NULL) xQueueReset(playerQueue);
 }
 
 void Player::stopInfo() {
@@ -135,26 +123,6 @@ void Player::initHeaders(const char *file) {
   #define PL_QUEUE_TICKS_ST 15
 #endif
 void Player::loop() {
-  if(playerQueue==NULL) return;
-  playerRequestParams_t requestP;
-  if(xQueueReceive(playerQueue, &requestP, isRunning()?PL_QUEUE_TICKS:PL_QUEUE_TICKS_ST)){
-    switch (requestP.type){
-      #ifdef USE_SD
-      case PR_CHECKSD: {
-        if(config.getMode()==PM_SDCARD){
-          if(!sdman.cardPresent()){
-            sdman.stop();
-            config.changeMode(PM_WEB);
-          }
-        }
-        break;
-      }
-      #endif
-      case PR_VUTONUS:
-        if(config.vuThreshold>10) config.vuThreshold -=10;
-      default: break;
-    }
-  }
   Audio::loop();
   if(!isRunning() && _status==PLAYING) _stop(true);
   if(_volTimer){

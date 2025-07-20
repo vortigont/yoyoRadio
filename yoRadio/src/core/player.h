@@ -19,13 +19,6 @@
 #define PLERR_LN        64
 #define SET_PLAY_ERROR(...) {char buff[512 + 64]; sprintf(buff,__VA_ARGS__); setError(buff);}
 
-enum playerRequestType_e : uint8_t { PR_CHECKSD = 6, PR_VUTONUS = 7 };
-struct playerRequestParams_t
-{
-  playerRequestType_e type;
-  int payload;
-};
-
 enum plStatus_e : uint8_t{ PLAYING = 1, STOPPED = 2 };
 
 class Player: public Audio {
@@ -74,8 +67,6 @@ public:
     void initHeaders(const char *file);
     void setError(const char *e);
     bool hasError() { return strlen(_plError)>0; }
-    void sendCommand(playerRequestParams_t request);
-    void resetQueue();
     #ifdef MQTT_ROOT_TOPIC
     void browseUrl();
     #endif
