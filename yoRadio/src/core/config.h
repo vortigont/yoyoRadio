@@ -146,7 +146,7 @@ struct config_t // specify defaults here (defaults are NOT saved to Prefs)
   uint16_t  screensaverTimeout = 20;
   bool      screensaverBlank = false;
   bool      screensaverPlayingEnabled = false;
-  uint16_t  screensaverPlayingTimeout = 300;
+  uint16_t  screensaverPlayingTimeout = 5;
   bool      screensaverPlayingBlank = false;
   char      mdnsname[24] = "";
   bool      skipPlaylistUpDown = false;
