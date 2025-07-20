@@ -22,6 +22,35 @@ jobs:
       - name: Install PlatformIO
         run: pip install platformio
 
+      - name: Extract all board environments
+        id: extract_boards
+        run: |
+          # Extract all environments prefixed with 'board' from platformio.ini
+          board_envs=$(grep -oP '(?<=\[env:board_)[^\]]+' platformio.ini | tr '\n' ' ')
+          echo "Board environments: $board_envs"
+          echo "board_envs=$board_envs" >> $GITHUB_ENV
+
+      - name: Build SPIFFS and extract bootloader/partitions for each board environment
+        run: |
+          # Extract all environments prefixed with 'board' from platformio.ini
+          board_envs=$(grep -oP '(?<=\[env:board_)[^\]]+' platformio.ini | tr '\n' ' ')
+          echo "Board environments: $board_envs"
+
+          # Iterate over all board environments
+          for env in $board_envs; do
+            echo "Processing environment: $env"
+
+            # Build SPIFFS
+            pio run --environment board_$env --target buildfs
+
+            # Copy and rename SPIFFS binary
+            cp .pio/build/board_$env/spiffs.bin .pio/build/${env}_spiffs.bin
+
+            # Copy and rename bootloader and partitions binaries
+            cp .pio/build/board_$env/bootloader.bin .pio/build/${env}_bootloader.bin
+            cp .pio/build/board_$env/partitions.bin .pio/build/${env}_partitions.bin
+          done
+
       - name: Build all environments
         run: pio run
 
@@ -81,35 +110,6 @@ jobs:
         with:
           name: firmware
           path: .pio/build/*.bin
-
-      - name: Extract all board environments
-        id: extract_boards
-        run: |
-          # Extract all environments prefixed with 'board' from platformio.ini
-          board_envs=$(grep -oP '(?<=\[env:board_)[^\]]+' platformio.ini | tr '\n' ' ')
-          echo "Board environments: $board_envs"
-          echo "board_envs=$board_envs" >> $GITHUB_ENV
-
-      - name: Build SPIFFS and extract bootloader/partitions for each board environment
-        run: |
-          # Extract all environments prefixed with 'board' from platformio.ini
-          board_envs=$(grep -oP '(?<=\[env:board_)[^\]]+' platformio.ini | tr '\n' ' ')
-          echo "Board environments: $board_envs"
-
-          # Iterate over all board environments
-          for env in $board_envs; do
-            echo "Processing environment: $env"
-
-            # Build SPIFFS
-            pio run --environment board_$env --target buildfs
-
-            # Copy and rename SPIFFS binary
-            cp .pio/build/board_$env/spiffs.bin .pio/build/${env}_spiffs.bin
-
-            # Copy and rename bootloader and partitions binaries
-            cp .pio/build/board_$env/bootloader.bin .pio/build/${env}_bootloader.bin
-            cp .pio/build/board_$env/partitions.bin .pio/build/${env}_partitions.bin
-          done
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
