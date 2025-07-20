@@ -22,13 +22,32 @@ jobs:
       - name: Install PlatformIO
         run: pip install platformio
 
-      - name: Extract all board environments
-        id: extract_boards
+      - name: Build all firmwares
+        run: pio run
+
+      - name: Rename firmware files with env name
+        run: |
+          for d in .pio/build/*/ ; do
+            env=$(basename "$d")
+            if [ -f "$d/firmware.bin" ]; then
+              cp "$d/firmware.bin" ".pio/build/${env}.bin"
+            fi
+          done
+
+      - name: Save bootloader/partitions for each board environment
         run: |
           # Extract all environments prefixed with 'board' from platformio.ini
           board_envs=$(grep -oP '(?<=\[env:board_)[^\]]+' platformio.ini | tr '\n' ' ')
           echo "Board environments: $board_envs"
-          echo "board_envs=$board_envs" >> $GITHUB_ENV
+
+          # Iterate over all board environments
+          for env in $board_envs; do
+            echo "Processing environment: $env"
+
+            # Copy and rename bootloader and partitions binaries
+            cp .pio/build/board_$env/bootloader.bin .pio/build/${env}_bootloader.bin
+            cp .pio/build/board_$env/partitions.bin .pio/build/${env}_partitions.bin
+          done
 
       - name: Build SPIFFS and extract bootloader/partitions for each board environment
         run: |
@@ -43,33 +62,11 @@ jobs:
             # Build SPIFFS
             pio run --environment board_$env --target buildfs
 
-            # Copy and rename SPIFFS binary
+            # Copy and rename SPIFFS binaries
             cp .pio/build/board_$env/spiffs.bin .pio/build/${env}_spiffs.bin
-
-            # Copy and rename bootloader and partitions binaries
-            cp .pio/build/board_$env/bootloader.bin .pio/build/${env}_bootloader.bin
-            cp .pio/build/board_$env/partitions.bin .pio/build/${env}_partitions.bin
-          done
-
-      - name: Build all environments
-        run: pio run
-
-      - name: Rename firmware files with env name
-        run: |
-          for d in .pio/build/*/ ; do
-            env=$(basename "$d")
-            if [ -f "$d/firmware.bin" ]; then
-              cp "$d/firmware.bin" ".pio/build/${env}.bin"
-            fi
           done
 
 # Here we also make some OTA-TEST builds (to be deleted later)
-
-      - name: Backup original options.h
-        run: cp yoRadio/src/core/options.h yoRadio/src/core/options.h.bak
-
-      - name: Backup original platformio.ini
-        run: cp platformio.ini platformio.ini.bak
 
       - name: Prepare TEST-OTA version in options.h
         run: |
@@ -97,19 +94,7 @@ jobs:
             fi
           done
 
-      - name: Restore original options.h
-        run: mv yoRadio/src/core/options.h.bak yoRadio/src/core/options.h
-
-      - name: Restore platformio.ini
-        run: mv platformio.ini.bak platformio.ini
-
 # End of TEST-OTA builds
-
-      - name: Upload firmware artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: firmware
-          path: .pio/build/*.bin
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
