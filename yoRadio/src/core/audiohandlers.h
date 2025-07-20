@@ -1,5 +1,6 @@
 #ifndef AUDIOHANDLERS_H
 #define AUDIOHANDLERS_H
+#include "core/evtloop.h"
 
 //=============================================//
 //              Audio handlers                 //
@@ -118,12 +119,12 @@ void audio_eof_mp3(const char *info){  //end of file
 void audio_eof_stream(const char *info){
   player.sendCommand({PR_STOP, 0});
   if(!player.resumeAfterUrl) return;
-  if (config.getMode()==PM_WEB){
-    player.sendCommand({PR_PLAY, config.lastStation()});
-  }else{
+  if (config.getMode()!=PM_WEB){
     player.setResumeFilePos( config.sdResumePos==0?0:config.sdResumePos-player.sd_min);
-    player.sendCommand({PR_PLAY, config.lastStation()});
   }
+
+  auto v = config.lastStation();
+  EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &v, sizeof(v));
 }
 
 void audio_progress(uint32_t startpos, uint32_t endpos){

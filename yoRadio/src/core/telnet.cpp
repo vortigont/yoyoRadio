@@ -5,6 +5,8 @@
 #include "player.h"
 #include "network.h"
 #include "telnet.h"
+#include "evtloop.h"
+
 
 Telnet telnet;
 
@@ -201,7 +203,8 @@ void Telnet::on_input(const char* str, uint8_t clientId) {
       return;
     }
     if (strcmp(str, "cli.start") == 0 || strcmp(str, "start") == 0 || strcmp(str, "cli.play") == 0 || strcmp(str, "play") == 0) {
-      player.sendCommand({PR_PLAY, config.lastStation()});
+      auto v = config.lastStation();
+      EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &v, sizeof(v));
       return;
     }
     if (strcmp(str, "cli.vol") == 0 || strcmp(str, "vol") == 0) {
@@ -293,7 +296,8 @@ void Telnet::on_input(const char* str, uint8_t clientId) {
       if (sb < 1) sb = 1;
       uint16_t cs = config.playlistLength();
       if (sb >= cs) sb = cs;
-      player.sendCommand({PR_PLAY, (uint16_t)sb});
+      EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &sb, sizeof(sb));
+
       return;
     }
     #ifdef USE_SD

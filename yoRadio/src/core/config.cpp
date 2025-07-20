@@ -9,6 +9,7 @@
 #include "sdmanager.h"
 #endif
 #include <cstddef>
+#include "evtloop.h"
 
 Config config;
 
@@ -162,7 +163,11 @@ void Config::changeMode(int newmode){
   }
   if(!_bootDone) return;
   initPlaylistMode();
-  if (pir) player.sendCommand({PR_PLAY, getMode()==PM_WEB?store.lastStation:store.lastSdStation});
+  if (pir){
+    auto v = getMode()==PM_WEB?store.lastStation:store.lastSdStation;
+    EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &v, sizeof(v));
+  }
+
   netserver.resetQueue();
   //netserver.requestOnChange(GETPLAYERMODE, 0);
   netserver.requestOnChange(GETINDEX, 0);
@@ -389,7 +394,7 @@ void Config::setSDpos(uint32_t val){
     sdResumePos = 0;
     if(!player.isRunning()){
       player.setResumeFilePos(val-player.sd_min);
-      player.sendCommand({PR_PLAY, config.store.lastSdStation});
+      EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &config.store.lastSdStation, sizeof(config.store.lastSdStation));
     }else{
       player.setFilePos(val-player.sd_min);
     }

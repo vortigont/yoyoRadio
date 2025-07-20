@@ -71,6 +71,7 @@ void Player::init() {
   #endif
   _loadVol(config.store.volume);
   setConnectionTimeout(1700, 3700);
+  _events_subsribe();
   Serial.println("done");
 }
 
@@ -139,6 +140,7 @@ void Player::loop() {
   if(xQueueReceive(playerQueue, &requestP, isRunning()?PL_QUEUE_TICKS:PL_QUEUE_TICKS_ST)){
     switch (requestP.type){
       case PR_STOP: _stop(); break;
+/*
       case PR_PLAY: {
         if (requestP.payload>0) {
           config.setLastStation((uint16_t)requestP.payload);
@@ -148,6 +150,7 @@ void Player::loop() {
         pm.on_station_change();
         break;
       }
+*/
       case PR_VOL: {
         config.setVolume(requestP.payload);
         Audio::setVolume(volToI2S(requestP.payload));
@@ -278,10 +281,11 @@ void Player::browseUrl(){
 void Player::prev() {
   
   uint16_t lastStation = config.lastStation();
-  if(config.getMode()==PM_WEB || !config.store.sdsnuffle){
+  if(config.getMode()==PM_WEB || !config.store.sdsnuffle){;
     if (lastStation == 1) config.lastStation(config.playlistLength()); else config.lastStation(lastStation-1);
   }
-  sendCommand({PR_PLAY, config.lastStation()});
+  lastStation = config.lastStation();
+  EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &lastStation, sizeof(lastStation));
 }
 
 void Player::next() {
@@ -291,14 +295,16 @@ void Player::next() {
   }else{
     config.lastStation(random(1, config.playlistLength()));
   }
-  sendCommand({PR_PLAY, config.lastStation()});
+  lastStation = config.lastStation();
+  EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &lastStation, sizeof(lastStation));
 }
 
 void Player::toggle() {
   if (_status == PLAYING) {
     sendCommand({PR_STOP, 0});
   } else {
-    sendCommand({PR_PLAY, config.lastStation()});
+    auto lastStation = config.lastStation();
+    EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &lastStation, sizeof(lastStation));    
   }
 }
 

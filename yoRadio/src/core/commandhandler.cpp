@@ -5,11 +5,12 @@
 #include "config.h"
 #include "controls.h"
 #include "options.h"
+#include "evtloop.h"
 
 CommandHandler cmd;
 
 bool CommandHandler::exec(const char *command, const char *value, uint8_t cid) {
-  if (strEquals(command, "start"))    { player.sendCommand({PR_PLAY, config.lastStation()}); return true; }
+  if (strEquals(command, "start"))    { auto v = config.lastStation(); EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &v, sizeof(v)); return true; }
   if (strEquals(command, "stop"))     { player.sendCommand({PR_STOP, 0}); return true; }
   if (strEquals(command, "toggle"))   { player.toggle(); return true; }
   if (strEquals(command, "prev"))     { player.prev(); return true; }
@@ -26,7 +27,8 @@ bool CommandHandler::exec(const char *command, const char *value, uint8_t cid) {
     if (id < 1) id = 1;
     uint16_t cs = config.playlistLength();
     if (id > cs) id = cs;
-    player.sendCommand({PR_PLAY, id});
+    EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &id, sizeof(id));
+
     return true;
   }
   if (strEquals(command, "vol")){

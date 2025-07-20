@@ -12,6 +12,8 @@
 #include <Update.h>
 #include <ESPmDNS.h>
 #include "ArduinoJson.h"
+#include "core/evtloop.h"
+
 
 #if USE_OTA
 #if ESP_ARDUINO_VERSION >= ESP_ARDUINO_VERSION_VAL(3, 0, 0)
@@ -513,7 +515,11 @@ void NetServer::onWsMessage(void *arg, uint8_t *data, size_t len, uint8_t client
 #ifdef MQTT_ROOT_TOPIC
         mqttplaylistticker.attach(5, mqttplaylistSend);
 #endif
-        if (player.isRunning()) player.sendCommand({PR_PLAY, -config.lastStation()});
+        if (player.isRunning()){
+          auto v = config.lastStation();
+          EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &v, sizeof(v));
+        }
+
         return;
       }
       

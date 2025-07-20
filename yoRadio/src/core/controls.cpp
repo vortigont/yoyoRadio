@@ -6,6 +6,7 @@
 #include "display.h"
 #include "network.h"
 #include "netserver.h"
+#include "evtloop.h"
 
 long encOldPosition  = 0;
 long enc2OldPosition  = 0;
@@ -265,7 +266,8 @@ void irLoop() {
                 irBlink();
                 if (display.mode() == NUMBERS) {
                   display.putRequest(NEWMODE, PLAYER);
-                  player.sendCommand({PR_PLAY, display.numOfNextStation});
+                  EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &display.numOfNextStation, sizeof(display.numOfNextStation));
+
                   display.numOfNextStation = 0;
                   break;
                 }
@@ -503,7 +505,7 @@ void onBtnClick(int id) {
           #ifdef DSP_LCD
             delay(200);
           #endif
-          player.sendCommand({PR_PLAY, display.currentPlItem});
+          EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &display.currentPlItem, sizeof(display.currentPlItem));
         }
         if(network.status==SOFT_AP || display.mode()==LOST){
           #ifdef USE_SD
