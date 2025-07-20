@@ -4,6 +4,7 @@
 #include "player.h"
 #include "network.h"
 #include "netserver.h"
+#include "controls.h"
 #ifdef USE_SD
 #include "sdmanager.h"
 #endif
@@ -17,14 +18,22 @@ void u8fix(char *src){
 }
 
 bool Config::_isFSempty() {
-  const char* reqiredFiles[] = {"dragpl.js.gz","elogo.png","elogo84.png","index.html",
-                                "ir.css.gz","ir.html","ir.js.gz","script.js.gz",
-                                "settings.css.gz","settings.html","style.css.gz","update.html"};
-  const uint8_t reqiredFilesSize = 12;
+  const char* reqiredFiles[] = {"dragpl.js.gz","ir.css.gz","irrecord.html.gz","ir.js.gz","logo.svg.gz","options.html.gz","player.html.gz","script.js.gz",
+                                "style.css.gz","updform.html.gz","theme.css"};
+  const uint8_t reqiredFilesSize = 11;
   char fullpath[28];
+  if(LittleFS.exists("/www/settings.html")) LittleFS.remove("/www/settings.html");
+  if(LittleFS.exists("/www/update.html")) LittleFS.remove("/www/update.html");
+  if(LittleFS.exists("/www/index.html")) LittleFS.remove("/www/index.html");
+  if(LittleFS.exists("/www/ir.html")) LittleFS.remove("/www/ir.html");
+  if(LittleFS.exists("/www/elogo.png")) LittleFS.remove("/www/elogo.png");
+  if(LittleFS.exists("/www/elogo84.png")) LittleFS.remove("/www/elogo84.png");
   for (uint8_t i=0; i<reqiredFilesSize; i++){
     sprintf(fullpath, "/www/%s", reqiredFiles[i]);
-    if(!LittleFS.exists(fullpath)) return true;
+    if(!LittleFS.exists(fullpath)) {
+      Serial.println(fullpath);
+      return true;
+    }
   }
   return false;
 }
@@ -34,6 +43,7 @@ void Config::init() {
   sdResumePos = 0;
   screensaverTicks = 0;
   screensaverPlayingTicks = 0;
+  newConfigMode = 0;
   isScreensaver = false;
   bootInfo();
 #if RTCSUPPORTED
@@ -131,7 +141,7 @@ void Config::changeMode(int newmode){
       return;
     }
   }
-  if(newmode<0){
+  if(newmode<0||newmode>MAX_PLAY_MODE){
     store.play_mode++;
     if(getMode() > MAX_PLAY_MODE) store.play_mode=0;
   }else{
@@ -154,26 +164,28 @@ void Config::changeMode(int newmode){
   initPlaylistMode();
   if (pir) player.sendCommand({PR_PLAY, getMode()==PM_WEB?store.lastStation:store.lastSdStation});
   netserver.resetQueue();
-  netserver.requestOnChange(GETPLAYERMODE, 0);
-  netserver.requestOnChange(GETMODE, 0);
+  //netserver.requestOnChange(GETPLAYERMODE, 0);
+  netserver.requestOnChange(GETINDEX, 0);
+  //netserver.requestOnChange(GETMODE, 0);
+ // netserver.requestOnChange(CHANGEMODE, 0);
   display.resetQueue();
   display.putRequest(NEWMODE, PLAYER);
   display.putRequest(NEWSTATION);
 }
 
 void Config::initSDPlaylist() {
-  store.countStation = 0;
+  //store.countStation = 0;
   bool doIndex = !sdman.exists(INDEX_SD_PATH);
   if(doIndex) sdman.indexSDPlaylist();
   if (SDPLFS()->exists(INDEX_SD_PATH)) {
     File index = SDPLFS()->open(INDEX_SD_PATH, "r");
-    store.countStation = index.size() / 4;
+    //store.countStation = index.size() / 4;
     if(doIndex){
       lastStation(_randomStation());
       sdResumePos = 0;
     }
     index.close();
-    saveValue(&store.countStation, store.countStation, true, true);
+    //saveValue(&store.countStation, store.countStation, true, true);
   }
 }
 
@@ -189,6 +201,7 @@ bool Config::spiffsCleanup(){
 
 void Config::initPlaylistMode(){
   uint16_t _lastStation = 0;
+  uint16_t cs = playlistLength();
   #ifdef USE_SD
     if(getMode()==PM_SDCARD){
       if(!sdman.start()){
@@ -202,7 +215,8 @@ void Config::initPlaylistMode(){
           initSDPlaylist();
           if(_bootDone) Serial.println("done"); else BOOTLOG("done");
           _lastStation = store.lastSdStation;
-          if(_lastStation>store.countStation && store.countStation>0){
+          
+          if(_lastStation>cs && cs>0){
             _lastStation=1;
           }
           if(_lastStation==0) {
@@ -219,7 +233,7 @@ void Config::initPlaylistMode(){
   #endif
   if(getMode()==PM_WEB && !emptyFS) initPlaylist();
   log_i("%d" ,_lastStation);
-  if (_lastStation == 0 && store.countStation > 0) {
+  if (_lastStation == 0 && cs > 0) {
     _lastStation = getMode()==PM_WEB?1:_randomStation();
   }
   lastStation(_lastStation);
@@ -306,6 +320,160 @@ void Config::reset(){
   delay(500);
   ESP.restart();
 }
+void Config::enableScreensaver(bool val){
+  saveValue(&store.screensaverEnabled, val);
+#ifndef DSP_LCD
+  display.putRequest(NEWMODE, PLAYER);
+#endif
+}
+void Config::setScreensaverTimeout(uint16_t val){
+  val=constrain(val,5,65520);
+  saveValue(&store.screensaverTimeout, val);
+#ifndef DSP_LCD
+  display.putRequest(NEWMODE, PLAYER);
+#endif
+}
+void Config::setScreensaverBlank(bool val){
+  saveValue(&store.screensaverBlank, val);
+#ifndef DSP_LCD
+  display.putRequest(NEWMODE, PLAYER);
+#endif
+}
+void Config::setScreensaverPlayingEnabled(bool val){
+  saveValue(&store.screensaverPlayingEnabled, val);
+#ifndef DSP_LCD
+  display.putRequest(NEWMODE, PLAYER);
+#endif
+}
+void Config::setScreensaverPlayingTimeout(uint16_t val){
+  val=constrain(val,1,1080);
+  config.saveValue(&config.store.screensaverPlayingTimeout, val);
+#ifndef DSP_LCD
+  display.putRequest(NEWMODE, PLAYER);
+#endif
+}
+void Config::setScreensaverPlayingBlank(bool val){
+  saveValue(&store.screensaverPlayingBlank, val);
+#ifndef DSP_LCD
+  display.putRequest(NEWMODE, PLAYER);
+#endif
+}
+void Config::setSntpOne(const char *val){
+  bool tzdone = false;
+  if (strlen(val) > 0 && strlen(store.sntp2) > 0) {
+    configTime(store.tzHour * 3600 + store.tzMin * 60, getTimezoneOffset(), val, store.sntp2);
+    tzdone = true;
+  } else if (strlen(val) > 0) {
+    configTime(store.tzHour * 3600 + store.tzMin * 60, getTimezoneOffset(), val);
+    tzdone = true;
+  }
+  if (tzdone) {
+    network.forceTimeSync = true;
+    saveValue(config.store.sntp1, val, 35);
+  }
+}
+void Config::setShowweather(bool val){
+  config.saveValue(&config.store.showweather, val);
+  network.trueWeather=false;
+  network.forceWeather = true;
+  display.putRequest(SHOWWEATHER);
+}
+void Config::setWeatherKey(const char *val){
+  saveValue(store.weatherkey, val, WEATHERKEY_LENGTH);
+  network.trueWeather=false;
+  display.putRequest(NEWMODE, CLEAR);
+  display.putRequest(NEWMODE, PLAYER);
+}
+void Config::setSDpos(uint32_t val){
+  if (getMode()==PM_SDCARD){
+    sdResumePos = 0;
+    if(!player.isRunning()){
+      player.setResumeFilePos(val-player.sd_min);
+      player.sendCommand({PR_PLAY, config.store.lastSdStation});
+    }else{
+      player.setFilePos(val-player.sd_min);
+    }
+  }
+}
+#if IR_PIN!=255
+void Config::setIrBtn(int val){
+  irindex = val;
+  netserver.irRecordEnable = (irindex >= 0);
+  irchck = 0;
+  netserver.irValsToWs();
+  if (irindex < 0) saveIR();
+}
+#endif
+void Config::resetSystem(const char *val, uint8_t clientId){
+  if (strcmp(val, "system") == 0) {
+    saveValue(&store.smartstart, (uint8_t)2, false);
+    saveValue(&store.audioinfo, false, false);
+    saveValue(&store.vumeter, false, false);
+    saveValue(&store.softapdelay, (uint8_t)0, false);
+    snprintf(store.mdnsname, MDNS_LENGTH, "yoradio-%x", getChipId());
+    saveValue(store.mdnsname, store.mdnsname, MDNS_LENGTH, true, true);
+    display.putRequest(NEWMODE, CLEAR); display.putRequest(NEWMODE, PLAYER);
+    netserver.requestOnChange(GETSYSTEM, clientId);
+    return;
+  }
+  if (strcmp(val, "screen") == 0) {
+    saveValue(&store.flipscreen, false, false);
+    display.flip();
+    saveValue(&store.invertdisplay, false, false);
+    display.invert();
+    saveValue(&store.dspon, true, false);
+    store.brightness = 100;
+    setBrightness(false);
+    saveValue(&store.contrast, (uint8_t)55, false);
+    display.setContrast();
+    saveValue(&store.numplaylist, false);
+    saveValue(&store.screensaverEnabled, false);
+    saveValue(&store.screensaverTimeout, (uint16_t)20);
+    saveValue(&store.screensaverBlank, false);
+    saveValue(&store.screensaverPlayingEnabled, false);
+    saveValue(&store.screensaverPlayingTimeout, (uint16_t)5);
+    saveValue(&store.screensaverPlayingBlank, false);
+    display.putRequest(NEWMODE, CLEAR); display.putRequest(NEWMODE, PLAYER);
+    netserver.requestOnChange(GETSCREEN, clientId);
+    return;
+  }
+  if (strcmp(val, "timezone") == 0) {
+    saveValue(&store.tzHour, (int8_t)3, false);
+    saveValue(&store.tzMin, (int8_t)0, false);
+    saveValue(store.sntp1, "pool.ntp.org", 35, false);
+    saveValue(store.sntp2, "0.ru.pool.ntp.org", 35);
+    configTime(store.tzHour * 3600 + store.tzMin * 60, getTimezoneOffset(), store.sntp1, store.sntp2);
+    network.forceTimeSync = true;
+    netserver.requestOnChange(GETTIMEZONE, clientId);
+    return;
+  }
+  if (strcmp(val, "weather") == 0) {
+    saveValue(&store.showweather, false, false);
+    saveValue(store.weatherlat, "55.7512", 10, false);
+    saveValue(store.weatherlon, "37.6184", 10, false);
+    saveValue(store.weatherkey, "", WEATHERKEY_LENGTH);
+    network.trueWeather=false;
+    display.putRequest(NEWMODE, CLEAR); display.putRequest(NEWMODE, PLAYER);
+    netserver.requestOnChange(GETWEATHER, clientId);
+    return;
+  }
+  if (strcmp(val, "controls") == 0) {
+    saveValue(&store.volsteps, (uint8_t)1, false);
+    saveValue(&store.fliptouch, false, false);
+    saveValue(&store.dbgtouch, false, false);
+    saveValue(&store.skipPlaylistUpDown, false);
+    setEncAcceleration(200);
+    setIRTolerance(40);
+    netserver.requestOnChange(GETCONTROLS, clientId);
+    return;
+  }
+  if (strcmp(val, "1") == 0) {
+    config.reset();
+    return;
+  }
+}
+
+
 
 void Config::setDefaults() {
   store.config_set = 4262;
@@ -360,10 +528,12 @@ void Config::setDefaults() {
   store.rotate90 = false;
   store.screensaverEnabled = false;
   store.screensaverTimeout = 20;
+  store.screensaverBlank = false;
   snprintf(store.mdnsname, MDNS_LENGTH, "yoradio-%x", getChipId());
   store.skipPlaylistUpDown = false;
   store.screensaverPlayingEnabled = false;
   store.screensaverPlayingTimeout = 5;
+  store.screensaverPlayingBlank = false;
   eepromWrite(EEPROM_START, store);
 }
 
@@ -406,6 +576,8 @@ void Config::setTone(int8_t bass, int8_t middle, int8_t trebble) {
   saveValue(&store.bass, bass, false);
   saveValue(&store.middle, middle, false);
   saveValue(&store.trebble, trebble);
+  player.setTone(store.bass, store.middle, store.trebble);
+  netserver.requestOnChange(EQUALIZER, 0);
 }
 
 void Config::setSmartStart(uint8_t ss) {
@@ -414,6 +586,8 @@ void Config::setSmartStart(uint8_t ss) {
 
 void Config::setBalance(int8_t balance) {
   saveValue(&store.balance, balance);
+  player.setBalance(store.balance);
+  netserver.requestOnChange(BALANCE, 0);
 }
 
 uint8_t Config::setLastStation(uint16_t val) {
@@ -466,28 +640,37 @@ void Config::indexPlaylist() {
 }
 
 void Config::initPlaylist() {
-  store.countStation = 0;
+  //store.countStation = 0;
   if (!LittleFS.exists(INDEX_PATH)) indexPlaylist();
 
-  if (LittleFS.exists(INDEX_PATH)) {
+  /*if (LittleFS.exists(INDEX_PATH)) {
     File index = LittleFS.open(INDEX_PATH, "r");
     store.countStation = index.size() / 4;
     index.close();
     saveValue(&store.countStation, store.countStation, true, true);
-  }
+  }*/
 }
-
-void Config::loadStation(uint16_t ls) {
+uint16_t Config::playlistLength(){
+  uint16_t out = 0;
+  if (SDPLFS()->exists(REAL_INDEX)) {
+    File index = SDPLFS()->open(REAL_INDEX, "r");
+    out = index.size() / 4;
+    index.close();
+  }
+  return out;
+}
+bool Config::loadStation(uint16_t ls) {
   char sName[BUFLEN], sUrl[BUFLEN];
   int sOvol;
-  if (store.countStation == 0) {
+  uint16_t cs = playlistLength();
+  if (cs == 0) {
     memset(station.url, 0, BUFLEN);
     memset(station.name, 0, BUFLEN);
     strncpy(station.name, "ёRadio", BUFLEN);
     station.ovol = 0;
-    return;
+    return false;
   }
-  if (ls > store.countStation) {
+  if (ls > playlistLength()) {
     ls = 1;
   }
   File playlist = SDPLFS()->open(REAL_PLAYL, "r");
@@ -506,6 +689,7 @@ void Config::loadStation(uint16_t ls) {
     setLastStation(ls);
   }
   playlist.close();
+  return true;
 }
 
 char * Config::stationByNum(uint16_t num){
@@ -526,7 +710,7 @@ uint8_t Config::fillPlMenu(int from, uint8_t count, bool fromNextion) {
   int     ls      = from;
   uint8_t c       = 0;
   bool    finded  = false;
-  if (store.countStation == 0) {
+  if (playlistLength() == 0) {
     return 0;
   }
   File playlist = SDPLFS()->open(REAL_PLAYL, "r");
@@ -566,6 +750,19 @@ uint8_t Config::fillPlMenu(int from, uint8_t count, bool fromNextion) {
   }
   playlist.close();
   return c;
+}
+
+void Config::escapeQuotes(const char* input, char* output, size_t maxLen) {
+  size_t j = 0;
+  for (size_t i = 0; input[i] != '\0' && j < maxLen - 1; ++i) {
+    if (input[i] == '"' && j < maxLen - 2) {
+      output[j++] = '\\';
+      output[j++] = '"';
+    } else {
+      output[j++] = input[i];
+    }
+  }
+  output[j] = '\0';
 }
 
 bool Config::parseCSV(const char* line, char* name, char* url, int &ovol) {
