@@ -198,7 +198,7 @@ void Telnet::on_input(const char* str, uint8_t clientId) {
       return;
     }
     if (strcmp(str, "cli.stop") == 0 || strcmp(str, "stop") == 0) {
-      player.sendCommand({PR_STOP, 0});
+      EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::playerStop));
       //info();
       return;
     }

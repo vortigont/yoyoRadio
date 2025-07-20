@@ -151,7 +151,9 @@ void Config::changeMode(int newmode){
   saveValue(&store.play_mode, store.play_mode, true, true);
   _SDplaylistFS = getMode()==PM_SDCARD?&sdman:(true?&LittleFS:_SDplaylistFS);
   if(getMode()==PM_SDCARD){
-    if(pir) player.sendCommand({PR_STOP, 0});
+    if(pir){
+      EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::playerStop));
+    }
     display.putRequest(NEWMODE, SDCHANGE);
     while(display.mode()!=SDCHANGE)
       delay(10);

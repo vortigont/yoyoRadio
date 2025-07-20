@@ -620,7 +620,7 @@ void handleUpload(AsyncWebServerRequest *request, String filename, size_t index,
     if (!index) {
       int target = (request->getParam("updatetarget", true)->value() == "LittleFS") ? U_SPIFFS : U_FLASH;
       Serial.printf("Update Start: %s\n", filename.c_str());
-      player.sendCommand({PR_STOP, 0});
+      EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::playerStop));
       display.putRequest(NEWMODE, UPDATING);
       if (!Update.begin(UPDATE_SIZE_UNKNOWN, target)) {
         Update.printError(Serial);

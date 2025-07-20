@@ -127,7 +127,10 @@ void MyNetwork::WiFiLostConnection(WiFiEvent_t event, WiFiEventInfo_t info){
       display.putRequest(NEWIP, 0);
     }else{
       network.lostPlaying = player.isRunning();
-      if (network.lostPlaying) { player.lockOutput = true; player.sendCommand({PR_STOP, 0}); }
+      if (network.lostPlaying){
+        player.lockOutput = true;
+        EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::playerStop));
+      }
       display.putRequest(NEWMODE, LOST);
     }
   }

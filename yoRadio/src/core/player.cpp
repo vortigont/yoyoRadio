@@ -139,8 +139,8 @@ void Player::loop() {
   playerRequestParams_t requestP;
   if(xQueueReceive(playerQueue, &requestP, isRunning()?PL_QUEUE_TICKS:PL_QUEUE_TICKS_ST)){
     switch (requestP.type){
+      /*
       case PR_STOP: _stop(); break;
-/*
       case PR_PLAY: {
         if (requestP.payload>0) {
           config.setLastStation((uint16_t)requestP.payload);
@@ -301,7 +301,7 @@ void Player::next() {
 
 void Player::toggle() {
   if (_status == PLAYING) {
-    sendCommand({PR_STOP, 0});
+    _stop();
   } else {
     auto lastStation = config.lastStation();
     EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &lastStation, sizeof(lastStation));    
@@ -370,6 +370,9 @@ void Player::_events_cmd_hndlr(int32_t id, void* data){
       break;
     }
 
+    case evt::yo_event_t::playerStop :
+      _stop();
+      break;
 
     default:;
   }

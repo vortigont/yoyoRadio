@@ -6,6 +6,7 @@
 #include "telnet.h"
 #include "player.h"
 #include "config.h"
+#include "core/evtloop.h"
 
 AsyncMqttClient mqttClient;
 TimerHandle_t mqttReconnectTimer;
@@ -91,7 +92,7 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
     return;
   }
   if (strcmp(buf, "stop") == 0) {
-    player.sendCommand({PR_STOP, 0});
+    EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::playerStop));
     //telnet.info();
     return;
   }
@@ -114,7 +115,7 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
   if (strcmp(buf, "turnoff") == 0) {
     uint8_t sst = config.store.smartstart;
     config.setDspOn(0);
-    player.sendCommand({PR_STOP, 0});
+    EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::playerStop));
     //telnet.info();
     delay(100);
     config.saveValue(&config.store.smartstart, sst);

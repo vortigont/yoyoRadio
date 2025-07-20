@@ -11,7 +11,7 @@ CommandHandler cmd;
 
 bool CommandHandler::exec(const char *command, const char *value, uint8_t cid) {
   if (strEquals(command, "start"))    { auto v = config.lastStation(); EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &v, sizeof(v)); return true; }
-  if (strEquals(command, "stop"))     { player.sendCommand({PR_STOP, 0}); return true; }
+  if (strEquals(command, "stop"))     { EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::playerStop)); return true; }
   if (strEquals(command, "toggle"))   { player.toggle(); return true; }
   if (strEquals(command, "prev"))     { player.prev(); return true; }
   if (strEquals(command, "next"))     { player.next(); return true; }
