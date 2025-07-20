@@ -14,11 +14,8 @@
 #ifndef BUFLEN
   #define BUFLEN            250
 #endif
-#ifdef ESPFILEUPDATER_USERAGENT
-  #undef ESPFILEUPDATER_USERAGENT
-#endif
-#define ESPFILEUPDATER_USERAGENT "yoRadio/" YOVERSION "(" YOURL ")"  // used as a user-agent string for downloading with ESPFileUpdater
 
+#define ESPFILEUPDATER_USERAGENT "yoRadio/" YOVERSION "(" YOURL ")"  // used as a user-agent string for downloading with ESPFileUpdater
 #ifdef ESPFILEUPDATER_DEBUG
   #define ESPFILEUPDATER_VERBOSE true
 #else
@@ -28,6 +25,7 @@
 #ifdef UPDATEURL
   #define ONLINEUPDATE_MARKERFILE "/data/otaupdate.meta"
 #endif
+
 #define PLAYLIST_PATH     "/data/playlist.csv"
 #define SSIDS_PATH        "/data/wifi.csv"
 #define TMP_PATH          "/data/tmpfile.txt"

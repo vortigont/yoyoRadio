@@ -235,7 +235,7 @@ Work is in progress...
 ---
 ## Version history
 
-### 0.9.533 Trip5/2025.07.19
+### 0.9.533 Trip5/2025.07.20
 
 - BREAKING CHANGES
   - requires larger app partitions

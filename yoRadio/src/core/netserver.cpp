@@ -39,7 +39,7 @@
 String g_ipv4_servers[20];
 // For the search task
 TaskHandle_t g_searchTaskHandle = NULL;
-#define FS_REQUIRED_FREE_SPACE 230 // in KB - must be minimum x2.2 of the limit_per_page in search.js (100)
+#define FS_REQUIRED_FREE_SPACE 150 // in KB - must be minimum x1.5 of the limit_per_page in search.js (100)
 
 //#define CORS_DEBUG //Enable CORS policy: 'Access-Control-Allow-Origin' (for testing)
 
@@ -91,8 +91,7 @@ void handleSearch(AsyncWebServerRequest *request) {
       return;
     }
     strcpy(search_str, searchQuery.c_str());
-    // Create a task to run the search
-    xTaskCreatePinnedToCore(vTaskSearchRadioBrowser, "searchRadioBrowser", 8192, (void*)search_str, 0, &g_searchTaskHandle, 0);
+    xTaskCreate(vTaskSearchRadioBrowser, "searchRadioBrowser", 8192, (void*)search_str, 1, &g_searchTaskHandle);
     request->send(200, "application/json", "{\"status\":\"searching\"}");
   }
 }
@@ -770,6 +769,7 @@ useIP:
 void vTaskSearchRadioBrowser(void *pvParameters) {
   char* search_str = (char*)pvParameters;
   Serial.printf("[Search] Starting radio browser search. Search: %s\n", search_str);
+  SPIFFS.remove("/www/searchresults.json");
   // Check SPIFFS free space
   size_t freeSpace = SPIFFS.totalBytes() - SPIFFS.usedBytes();
   if (freeSpace < (FS_REQUIRED_FREE_SPACE * 1024)) {
@@ -806,6 +806,7 @@ void vTaskSearchRadioBrowser(void *pvParameters) {
     return;
   }
   ESPFileUpdater searchResultsFetch(SPIFFS);
+  searchResultsFetch.setUserAgent(ESPFILEUPDATER_USERAGENT);
   const char* localPath = "/www/searchresults.json";
   bool success = false;
   bool server_retried = false;
@@ -928,139 +929,117 @@ void launchPlaybackTask(const String& url, const String& name) {
 }
 
 #ifdef UPDATEURL
-  // Spawn a dedicated task to perform HTTPS version check with ample stack for TLS
   void checkForOnlineUpdate() {
-    if (xTaskCreate(
-        [](void* /*param*/) {
-          const char* versionUrl = CHECKUPDATEURL;
-          HTTPClient http;
-          http.begin(versionUrl);
-          http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
-          http.addHeader("User-Agent", ESPFILEUPDATER_USERAGENT);
-          int httpCode = http.GET();
-          if (httpCode == HTTP_CODE_OK) {
-            WiFiClient* stream = http.getStreamPtr();
-            String line;
-            String remoteVer;
-            while (stream->connected() || stream->available()) {
-              if (stream->available()) {
-                char c = stream->read();
-                if (c == '\n') {
-                  if (line.startsWith(VERSIONSTRING)) {
-                    int q1 = line.indexOf('"');
-                    int q2 = line.indexOf('"', q1 + 1);
-                    if (q1 > 0 && q2 > q1) {
-                      remoteVer = line.substring(q1 + 1, q2);
-                      break;
-                    }
-                  }
-                  line.clear();
-                } else {
-                  line += c;
-                }
+    const char* versionUrl = CHECKUPDATEURL;
+    WiFiClientSecure client;
+    client.setInsecure(); // skip server cert validation
+    HTTPClient http;
+    http.begin(client, versionUrl);
+    http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
+    http.addHeader("User-Agent", ESPFILEUPDATER_USERAGENT);
+    int httpCode = http.GET();
+    if (httpCode == HTTP_CODE_OK) {
+      WiFiClient* stream = http.getStreamPtr();
+      String line;
+      String remoteVer;
+      while (stream->connected() || stream->available()) {
+        if (stream->available()) {
+          char c = stream->read();
+          if (c == '\n') {
+            if (line.startsWith(VERSIONSTRING)) {
+              int q1 = line.indexOf('"');
+              int q2 = line.indexOf('"', q1 + 1);
+              if (q1 > 0 && q2 > q1) {
+                remoteVer = line.substring(q1 + 1, q2);
+                break;
               }
             }
-            http.end();
-            if (remoteVer.length() == 0) {
-              websocket.textAll("{\"onlineupdateerror\": \"Remote YOVERSION not found\"}");
-              return;
-            }
-            char msgBuf[128];
-            if (remoteVer != String(YOVERSION)) {
-              snprintf(msgBuf, sizeof(msgBuf), "{\"onlineupdateavailable\":true,\"remoteVersion\":\"%s\"}", remoteVer.c_str());
-            } else {
-              snprintf(msgBuf, sizeof(msgBuf), "{\"onlineupdateavailable\":false,\"remoteVersion\":\"%s\"}", remoteVer.c_str());
-            }
-            websocket.textAll(msgBuf);
+            line.clear();
           } else {
-            websocket.textAll(String("{\"onlineupdateerror\": \"HTTP code ") + httpCode + "\"}");
-            http.end();
+            line += c;
           }
-          vTaskDelete(NULL);
-        },
-        "OTAHTTPSCheck",
-        8192,  // larger stack for TLS
-        NULL,
-        1,
-        NULL) != pdPASS) {
-      Serial.println("[netserver] ERROR: cannot create OTA update task");
+        }
+      }
+      http.end();
+      if (remoteVer.length() == 0) {
+        websocket.textAll("{\"onlineupdateerror\": \"Remote YOVERSION not found\"}");
+        return;
+      }
+      char msgBuf[128];
+      if (remoteVer != String(YOVERSION)) {
+        snprintf(msgBuf, sizeof(msgBuf), "{\"onlineupdateavailable\":true,\"remoteVersion\":\"%s\"}", remoteVer.c_str());
+      } else {
+        snprintf(msgBuf, sizeof(msgBuf), "{\"onlineupdateavailable\":false,\"remoteVersion\":\"%s\"}", remoteVer.c_str());
+      }
+      websocket.textAll(msgBuf);
+    } else {
+      websocket.textAll(String("{\"onlineupdateerror\": \"HTTP code ") + httpCode + "\"}");
+      http.end();
     }
   }
 
   void startOnlineUpdate() {
-    // Spawn a dedicated task to perform the HTTP update with ample stack for TLS
-    if (xTaskCreatePinnedToCore(
-        [](void* /*param*/) {
-            HTTPClient http;
-            String updateUrl = String(UPDATEURL) + String(FIRMWARE);
-            Serial.printf("[Online Update] Online Update download URL: %s\n", updateUrl.c_str());
-            http.begin(updateUrl);
-            http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
-            http.addHeader("User-Agent", ESPFILEUPDATER_USERAGENT);
-            int httpCode = http.GET();
-            if (httpCode == HTTP_CODE_OK) {
-                int contentLength = http.getSize();
-                Serial.printf("[Online Update] Content-Length: %d\n", contentLength);
-                if (contentLength > 0) {
-                    bool canBegin = Update.begin(contentLength);
-                    if (canBegin) {
-                        player.sendCommand({PR_STOP, 0});
-                        display.putRequest(NEWMODE, UPDATING);
-                        WiFiClient* stream = http.getStreamPtr();
-                        size_t written = 0;
-                        const size_t bufSize = 512;
-                        uint8_t buf[bufSize];
-                        unsigned long lastProgressTime = millis();
-                        while (written < contentLength) {
-                            int len = stream->read(buf, bufSize);
-                            if (len <= 0) {
-                                if (!stream->connected()) break;
-                                vTaskDelay(pdMS_TO_TICKS(10));
-                                continue;
-                            }
-                            size_t w = Update.write(buf, len);
-                            written += w;
-                            int percent = (written * 100) / contentLength;
-                            unsigned long now = millis();
-                            if (percent == 100 || now - lastProgressTime >= 1000) {
-                                lastProgressTime = now;
-                                char progMsg[64];
-                                snprintf(progMsg, sizeof(progMsg), "{\"onlineupdateprogress\":%d}", percent);
-                                websocket.textAll(progMsg);
-                            }
-                        }
-                        bool ended = Update.end();
-                        Serial.printf("[Online Update] Written %u bytes, expected %d, end() returned %s\n", written, contentLength, ended?"true":"false");
-                        if (written == contentLength && ended) {
-                            File markerFile = SPIFFS.open(ONLINEUPDATE_MARKERFILE, "w");
-                            if (markerFile) markerFile.close();
-                            websocket.textAll("{\"onlineupdatestatus\": \"Update successful, rebooting...\"}");
-                            delay(1000);
-                            ESP.restart();
-                        } else {
-                            websocket.textAll("{\"onlineupdateerror\": \"Update failed or incomplete\"}");
-                        }
-                    } else {
-                        websocket.textAll("{\"onlineupdateerror\": \"Cannot begin update (reboot then try again)\"}");
-                    }
-                } else {
-                    websocket.textAll("{\"onlineupdateerror\": \"Invalid firmware size\"}");
-                }
-            } else {
-                websocket.textAll("{\"onlineupdateerror\": \"Failed to download firmware\"}");
+    String updateUrl = String(UPDATEURL) + String(FIRMWARE);
+    Serial.printf("[Online Update] Online Update download URL: %s\n", updateUrl.c_str());
+    WiFiClientSecure client;
+    client.setInsecure(); // skip server cert validation
+    HTTPClient http;
+    http.begin(client, updateUrl);
+    http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
+    http.addHeader("User-Agent", ESPFILEUPDATER_USERAGENT);
+    int httpCode = http.GET();
+    if (httpCode == HTTP_CODE_OK) {
+      int contentLength = http.getSize();
+      Serial.printf("[Online Update] Content-Length: %d\n", contentLength);
+      if (contentLength > 0) {
+        bool canBegin = Update.begin(contentLength);
+        if (canBegin) {
+          player.sendCommand({PR_STOP, 0});
+          display.putRequest(NEWMODE, UPDATING);
+          WiFiClient* stream = http.getStreamPtr();
+          size_t written = 0;
+          const size_t bufSize = 512;
+          uint8_t buf[bufSize];
+          unsigned long lastProgressTime = millis();
+          while (written < contentLength) {
+            int len = stream->read(buf, bufSize);
+            if (len <= 0) {
+              if (!stream->connected()) break;
+              vTaskDelay(pdMS_TO_TICKS(10));
+              continue;
             }
-            http.end();
-            vTaskDelete(NULL);
-        },
-        "OTAHTTPSUpdate",
-        16384,
-        nullptr,
-        1,
-        nullptr,
-        1
-    ) != pdPASS) {
-        Serial.println("[netserver] ERROR: cannot create OTA update task");
+            size_t w = Update.write(buf, len);
+            written += w;
+            int percent = (written * 100) / contentLength;
+            unsigned long now = millis();
+            if (percent == 100 || now - lastProgressTime >= 1000) {
+              lastProgressTime = now;
+              char progMsg[64];
+              snprintf(progMsg, sizeof(progMsg), "{\"onlineupdateprogress\":%d}", percent);
+              websocket.textAll(progMsg);
+            }
+          }
+          bool ended = Update.end();
+          Serial.printf("[Online Update] Written %u bytes, expected %d, end() returned %s\n", written, contentLength, ended?"true":"false");
+          if (written == contentLength && ended) {
+            File markerFile = SPIFFS.open(ONLINEUPDATE_MARKERFILE, "w");
+            if (markerFile) markerFile.close();
+            websocket.textAll("{\"onlineupdatestatus\": \"Update successful, rebooting...\"}");
+            delay(1000);
+            ESP.restart();
+          } else {
+            websocket.textAll("{\"onlineupdateerror\": \"Update failed or incomplete\"}");
+          }
+        } else {
+         websocket.textAll("{\"onlineupdateerror\": \"Cannot begin update (reboot then try again)\"}");
+        }
+      } else {
+        websocket.textAll("{\"onlineupdateerror\": \"Invalid firmware size\"}");
+      }
+    } else {
+      websocket.textAll("{\"onlineupdateerror\": \"Failed to download firmware\"}");
     }
+    http.end();
   }
 #endif //#ifdef UPDATEURL
 
@@ -1081,9 +1060,12 @@ void handleNotFound(AsyncWebServerRequest * request) {
   if (request->method() == HTTP_POST && request->url() == "/search") { handleSearchPost(request); return; }
 
   #ifdef UPDATEURL
-    if (request->method() == HTTP_GET && request->url() == "/onlineupdatecheck") { checkForOnlineUpdate(); request->send(200, "text/plain", "Update check initiated"); return; }
+    if (request->method() == HTTP_GET && request->url() == "/onlineupdatecheck") {
+      xTaskCreate([](void*) { checkForOnlineUpdate(); vTaskDelete(NULL); }, "checkForOnlineUpdateTask", 8096, nullptr, 1, nullptr);
+      request->send(200, "text/plain", "Update check started"); return;
+    }
     if (request->method() == HTTP_GET && request->url() == "/onlineupdatestart") {
-      xTaskCreatePinnedToCore([](void*) { startOnlineUpdate(); vTaskDelete(NULL); }, "otaUpdateTask", 16384, nullptr, 1, nullptr, 1);
+      xTaskCreate([](void*) { startOnlineUpdate(); vTaskDelete(NULL); }, "startOnlineUpdateTask", 16384, nullptr, 3, nullptr);
       request->send(200, "text/plain", "Update started"); return;
     }
   #endif

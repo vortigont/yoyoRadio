@@ -27,6 +27,7 @@
 #if defined(BOARD_ESP32) & not defined(DEBUG_MYOPTIONS)
 #undef FIRMWARE
 #define FIRMWARE "board_esp32.bin"
+//#undef UPDATEURL // if an ESP does not have the memory to do online updates from https sources (this will disable it)
 #elif defined(BOARD_ESP32_S3_N16R8)
 #undef FIRMWARE
 #define FIRMWARE "board_esp32_s3_n16r8.bin"
@@ -47,11 +48,11 @@
 #undef FIRMWARE
 #define FIRMWARE "esp32_s3_trip5_sh1106_vs1053_3buttons.bin"
 #define ARDUINO_ESP32S3_DEV
-#elif defined(ESP32_S3_TRIP5_ILI9488_PCM_1BUTTON)
+#elif defined(ESP32_S3_TRIP5_ST7735_PCM_1BUTTON)
 #undef FIRMWARE
 #define FIRMWARE "esp32_s3_trip5_st7735_pcm_1button.bin"
 #define ARDUINO_ESP32S3_DEV
-#elif defined(ESP32_S3_TRIP5_ST7735_PCM_1BUTTON)
+#elif defined(ESP32_S3_TRIP5_ILI9488_PCM_1BUTTON)
 #undef FIRMWARE
 #define FIRMWARE "esp32_s3_trip5_ili9488_pcm_1button.bin"
 #define ARDUINO_ESP32S3_DEV
@@ -234,19 +235,19 @@
 /* --- REGIONAL DEFAULTS --- */
 
 /* Make sure Timezone options conform to TZDB standards */
-/* https://github.com/trip5/timezones.json/blob/master/timezones.json */
 #define TIMEZONES_JSON_URL "https://raw.githubusercontent.com/trip5/timezones.json/master/timezones.json.gz"
+//#define TIMEZONES_JSON_URL "https://github.com/trip5/timezones.json/releases/latest/download/timezones.json.gz"
 #define TIMEZONE_NAME "Asia/Seoul"
 #define TIMEZONE_POSIX "KST-9"
-#define SNTP1 "pool.ntp.org"
-#define SNTP2 "north-america.pool.ntp.org"
+#define SNTP1 "kr.pool.ntp.org"
+#define SNTP2 "pool.ntp.org"
 
 /* Weather Co-ordinates */
-#define WEATHERLAT "55.7512" /* latitude */
-#define WEATHERLON "37.6184" /* longitude */
+#define WEATHERLAT "37.5503" /* latitude */
+#define WEATHERLON "126.9971" /* longitude */
 
 /* Use https://www.radio-browser.info/ API to get JSON of radio streams */
-//#define RADIO_BROWSER_SERVERS_URL "https://all.api.radio-browser.info/json/servers"
+#define RADIO_BROWSER_SERVERS_URL "https://all.api.radio-browser.info/json/servers"
 
 /* --- MORE, UNUSED, UNKNOWN --- */
 

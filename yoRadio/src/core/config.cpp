@@ -11,9 +11,7 @@
 #endif
 #include <cstddef>
 #include "../ESPFileUpdater/ESPFileUpdater.h"
-#ifdef UPDATEURL
-  #define ONLINEUPDATE_MARKERFILE "/data/otaupdate.meta"
-#endif
+
 // List of required web asset files
 static const char* requiredFiles[] = {"dragpl.js.gz","ir.css.gz","irrecord.html.gz","ir.js.gz","logo.svg.gz","options.html.gz","script.js.gz",
                                      "timezones.json.gz","rb_srvrs.json","search.html.gz","search.js.gz","search.css.gz",
@@ -1220,45 +1218,47 @@ void updateFile(void* param, const char* localFile, const char* onlineFile, cons
   }
 }
 
-void getRequiredFiles(void* param) {
-  for (size_t i = 0; i < requiredFilesCount; i++) {
-    const char* fname = requiredFiles[i];
-    char localPath[64];
-    char remoteUrl[128];
-    snprintf(localPath, sizeof(localPath), "/www/%s", fname);
-    snprintf(remoteUrl, sizeof(remoteUrl), "%s%s", UPDATEURL, fname);
-    updateFile(param, localPath, remoteUrl, "", fname);
-  }
-  // Delete any files in /www that are not in the requiredFiles list
-  File root = SPIFFS.open("/www");
-  if (root && root.isDirectory()) {
-    File file = root.openNextFile();
-    while (file) {
-      const char* path = file.name();
-      // Extract filename from full path
-      const char* name = path;
-      const char* slash = strrchr(path, '/');
-      if (slash) name = slash + 1;
-      bool found = false;
-      for (size_t j = 0; j < requiredFilesCount; j++) {
-        if (strcmp(name, requiredFiles[j]) == 0) {
-          found = true;
-          break;
+#ifdef UPDATEURL
+  void getRequiredFiles(void* param) {
+    for (size_t i = 0; i < requiredFilesCount; i++) {
+      const char* fname = requiredFiles[i];
+      char localPath[64];
+      char remoteUrl[128];
+      snprintf(localPath, sizeof(localPath), "/www/%s", fname);
+      snprintf(remoteUrl, sizeof(remoteUrl), "%s%s", UPDATEURL, fname);
+      updateFile(param, localPath, remoteUrl, "", fname);
+    }
+    // Delete any files in /www that are not in the requiredFiles list
+    File root = SPIFFS.open("/www");
+    if (root && root.isDirectory()) {
+      File file = root.openNextFile();
+      while (file) {
+        const char* path = file.name();
+        // Extract filename from full path
+        const char* name = path;
+        const char* slash = strrchr(path, '/');
+        if (slash) name = slash + 1;
+        bool found = false;
+        for (size_t j = 0; j < requiredFilesCount; j++) {
+          if (strcmp(name, requiredFiles[j]) == 0) {
+            found = true;
+            break;
+          }
         }
+        if (!found) {
+          Serial.printf("[File: /www/%s] Deleting - not in required file list.\n", path);
+          SPIFFS.remove(path);
+        }
+        file = root.openNextFile();
       }
-      if (!found) {
-        Serial.printf("[File: /www/%s] Deleting - not in required file list.\n", path);
-        SPIFFS.remove(path);
-      }
-      file = root.openNextFile();
     }
   }
-}
+#endif //#ifdef UPDATEURL
 
 void startAsyncServices(void* param){
   fixPlaylistFileEnding();
-  // if the OTA marker file exists, fetch all web assets immediately and clean up
-  #ifdef ONLINEUPDATE_MARKERFILE
+  // if the OTA marker file exists, fetch all web assets immediately, clean up, restart
+ #ifdef UPDATEURL
     if (SPIFFS.exists(ONLINEUPDATE_MARKERFILE)) {
       player.sendCommand({PR_STOP, 0});
       display.putRequest(NEWMODE, UPDATING);
@@ -1278,7 +1278,9 @@ void Config::startAsyncServicesButWait() {
   if (WiFi.status() != WL_CONNECTED) return;
   ESPFileUpdater* updater = nullptr;
   updater = new ESPFileUpdater(SPIFFS);
-  xTaskCreate(startAsyncServices, "startAsyncServices", 8192, updater, 1, NULL); // pass pointer
+  updater->setMaxSize(1024);
+  updater->setUserAgent(ESPFILEUPDATER_USERAGENT);
+  xTaskCreate(startAsyncServices, "startAsyncServices", 8192, updater, 2, NULL);
 }
 
 void Config::bootInfo() {
@@ -1312,9 +1314,9 @@ void Config::bootInfo() {
   BOOTLOG("encoders:\tl1=%d, b1=%d, r1=%d, pullup=%s, l2=%d, b2=%d, r2=%d, pullup=%s", 
           ENC_BTNL, ENC_BTNB, ENC_BTNR, ENC_INTERNALPULLUP?"true":"false", ENC2_BTNL, ENC2_BTNB, ENC2_BTNR, ENC2_INTERNALPULLUP?"true":"false");
   BOOTLOG("ir:\t\t%d", IR_PIN);
-  if(SDC_CS!=255) BOOTLOG("SD:\t\t%d", SDC_CS);
+  if(SDC_CS!=255) BOOTLOG("SD:\t%d", SDC_CS);
   #ifdef FIRMWARE
-    BOOTLOG("Firmware:\t\t%s", FIRMWARE);
+    BOOTLOG("firmware:\t%s", FIRMWARE);
   #endif
   BOOTLOG("------------------------------------------------");
 }
