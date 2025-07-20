@@ -2,6 +2,19 @@
   "type":"interface",
   "version":7,
   "descr":"yoRadio UI objects",
+  "menu":{
+    "section": "menu",
+    "block": [
+      {
+        "label": "Радио",
+        "value": "ui_page_radio"
+      },
+      {
+        "label": "Настройки",
+        "value": "sys_page_settings"
+      }
+    ]
+  },
   "pages":{
     "radio":{
       "section":"yo_main",
@@ -13,7 +26,8 @@
         },
         {
           "id":"playerbuttons",
-          "html":"playerbuttons"
+          "html":"playerbuttons",
+          "class":"container_centered"
         },
         {
           "id":"equalizerwrap",
@@ -26,6 +40,7 @@
         {
           "id":"podval",
           "html":"comment",
+          "class": "yo_body",
           "label":"some comment"
         }
       ]

@@ -20,6 +20,11 @@ a:hover { text-decoration: underline }
   height: 90%;
 }
 
+.container_centered {
+  display: flex;
+  justify-content: center;
+}
+
 .logo {
   display: block;
   width: 130px;
@@ -57,11 +62,11 @@ input[type=range]::-moz-range-track {
 
 .content {
   display: flex;
-  max-width: 960px;
+  /* max-width: 960px; */
   margin: 0 auto;
   flex-direction: column;
   align-items: center;
-  padding: 30px;
+  /* padding: 30px; */
   height: 100%;
   box-sizing: border-box;
   position: relative;
@@ -380,7 +385,8 @@ input[type=range]::-moz-range-track {
 .playerbyttonwrap {
   display: flex;
   width: 400px;
-  justify-content: space-between;
+  justify-content: center;
+/*  justify-content: space-between; */
   margin-top: 14px;
 }
 .playerbytton, .stopped, .playing {

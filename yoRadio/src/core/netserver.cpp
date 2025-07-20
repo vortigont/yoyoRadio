@@ -3,6 +3,7 @@
 #include "AsyncUDP.h"
 #include "EmbUI.h"
 #include "basicui.h"
+#include "const_strings.h"
 #include "config.h"
 #include "player.h"
 #include "telnet.h"
@@ -24,6 +25,15 @@
 
 //#define CORS_DEBUG
 
+/**
+ * @brief numeric indexes for pages
+ * it MUST not overlap with basicui::page index
+ */
+enum class page_t : uint16_t {
+  radio = 50,         // radio playback (front page)
+
+};
+
 NetServer netserver;
 
 AsyncUDP udp;
@@ -39,9 +49,9 @@ void send_playlist(AsyncWebServerRequest * request);
 
 // **************
 // EmbUI handlers declarations
+void ui_page_selector(Interface *interf, JsonObjectConst data, const char* action);
 void ui_page_main(Interface *interf, JsonVariantConst data, const char* action);
-void ui_section_menu(Interface *interf, JsonVariantConst data, const char* action);
-void ui_page_radio(Interface *interf);
+void ui_page_radio(Interface *interf, JsonObjectConst data, const char* action);
 
 
 // **************
@@ -59,35 +69,40 @@ void ui_page_main(Interface *interf, JsonVariantConst data, const char* action){
   interf->json_section_end();
 
   // build side menu
-  ui_section_menu(interf, data, action);
-  interf->json_frame_flush();     // close frame
-
-  // generate effect's list
-  //interf->json_frame_jscall("make_effect_list");
+  interf->json_section_uidata();
+    interf->uidata_pick( "yo.menu" );
+  //implicit interf->json_frame_flush();
 
   if(WiFi.getMode() & WIFI_MODE_STA){
-    ui_page_radio(interf);
+    ui_page_radio(interf, {}, NULL);
   } else {
     // открываем страницу с настройками WiFi если контроллер не подключен к внешней AP
     basicui::page_settings_netw(interf, {}, NULL);
   }
 }
 
-// build left-side menu section
-void ui_section_menu(Interface *interf, JsonVariantConst data, const char* action){
-  if (!interf) return;
-  // создаем меню
-  interf->json_section_menu();
 
-  //interf->option(A_ui_page_effects, TINTF_000);           //  Эффекты
-  //interf->option(A_ui_page_modules, "🏗 Модули");         //  Modules
-  basicui::menuitem_settings(interf);                     //  настройки
+/**
+ * @brief when action is called to display a specific page
+ * this selector picks and calls correspoding method
+ * using common selector simplifes and reduces a number of registered actions required 
+ * 
+ */
+void ui_page_selector(Interface *interf, JsonObjectConst data, const char* action){
+  // get a page index
+  int idx = data;
 
-  interf->json_section_end();
+  switch (static_cast<page_t>(idx)){
+      case page_t::radio :        // страница воспроизведения радио
+        return ui_page_radio(interf, {}, NULL);
+
+      default:;                   // by default do nothing
+  }
 }
 
-// build page with radio (main page that opens )
-void ui_page_radio(Interface *interf){
+
+// build page with radio (default page that opens on new conects)
+void ui_page_radio(Interface *interf, JsonObjectConst data, const char* action){
   interf->json_frame_interface();
   interf->json_section_uidata();
     interf->uidata_pick( "yo.pages.radio" );
@@ -95,10 +110,12 @@ void ui_page_radio(Interface *interf){
 }
 
 
+// register web action handlers
 void embui_actions_register(){
-  // регистрируем обработчики активностей
   embui.action.set_mainpage_cb(ui_page_main);                             // index page callback
-  //embui.action.set_settings_cb(block_user_settings);                      // "settings" page options callback
+  embui.action.add(T_ui_page_any, ui_page_selector);                      // ui page switcher
+  embui.action.add(T_ui_page_radio, ui_page_radio);                       // build page "radio"
+  //embui.action.set_settings_cb(block_user_settings);                    // "settings" page options callback
 }
 
 

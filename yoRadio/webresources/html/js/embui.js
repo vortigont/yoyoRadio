@@ -1027,9 +1027,11 @@ var render = function(){
       if (type == "range") go("#"+id+"-val").html(": " + value);
       if (type == "text" || type == "password") go("#"+id+"-val").html(" ("+value.length+")");
       if (type == "color") go("#"+id+"-val").html(" ("+value+")");
+/*
       if (this.id != id){
         custom_hook(this.id, d, id);
       }
+*/
     },
     // handle dynamicaly changed elements on a page which should send value to WS server on each change
     on_change: function(d, id, val) {
@@ -1057,9 +1059,11 @@ var render = function(){
             value = this.value;
         }
       }
+/*
       if (this.id != id){
         custom_hook(this.id, d, id);
       }
+*/
       ws.send_post(id, value);
     },
     // show or hide section on a page
@@ -1129,11 +1133,15 @@ var render = function(){
         go("#main").append(tmpl_section_main.parse(obj));
         if (!out.lockhist) out.history(obj.section);
       } else {
-        if ( Object.keys(go("#"+obj.section)).length === 0 && !obj.replace ){
-          go("#main").append(tmpl_section_main.parse(obj));
-        } else {
+        if (obj.replace){
           console.log("replacing section:", obj.section)
           go("#"+obj.section).replace(tmpl_section.parse(obj));
+        } else if (obj.append){
+          console.log("Append to section:", obj.section)
+          go("#"+obj.append).append(tmpl_section.parse(obj));
+        } else {
+          // ( Object.keys(go("#"+obj.section)).length === 0 && !obj.replace )
+          go("#main").append(tmpl_section_main.parse(obj));
         }
       }
     },

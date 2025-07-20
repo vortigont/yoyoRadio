@@ -38,6 +38,55 @@ function handlePlaylistData(id, fileData) {
 }
 
 function build_radio_playlist(id, arg){
+	console.log("build_radio_playlist:", id, arg)
+	let xhr = new XMLHttpRequest();
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState == 4) {
+      if (xhr.status == 200) {
+        let lines = xhr.responseText.split('\n');
+        let items = []
+      
+        for(var i = 0;i < lines.length;i++){
+          let line = lines[i].split('\t');
+          if(line.length==3){
+            let item = {"action":"someaction"}
+
+            item["idx"] = i+1 //li.setAttribute('attr-id', i+1);
+            item["label"] = line[0].trim()  // li.setAttribute('attr-name', line[0].trim());
+            item["url"] = line[1].trim()    // li.setAttribute('attr-url', line[1].trim());
+            //item["label"] =       li.setAttribute('attr-ovol', line[2].trim());
+            if(i+1==uiblocks.radio.playlist_pos){
+              item["class"] = "active" //li.setAttribute("class","active");
+            }
+            items.push(item)
+          }
+        }
+
+        let pls = {"html":"playlist","id":"playlist", "class":"flex", "block":items}
+        //let content = {"section":"content", "block":[pls]}
+        let content = {"section":"pls", "append":id, "nodiv":true, "class":"flex", "block":[pls]}
+        // send object to templater
+        let r = render();
+        //r.make(obj);
+        r.section(content)
+        //r.content(content)
+    
+      } else {
+				console.log("Can't fetch playlist", arg)
+        let container = document.getElementById(id);
+        container.innerHTML = '';
+        let t = document.createElement('span');
+        t.innerText = "playlist not available, err: " + xhr.status
+        container.appendChild(t);
+      }
+    }
+  };
+  xhr.open("GET", arg);
+  xhr.send(null);
+
+}
+
+function build_radio_playlist_old(id, arg){
 	console.log("build_radio arg:", arg)
 	var xhr = new XMLHttpRequest();
   xhr.onreadystatechange = function() {
@@ -54,7 +103,8 @@ function build_radio_playlist(id, arg){
           let line = lines[i].split('\t');
           if(line.length==3){
             li = document.createElement('li');
-            li.setAttribute('onclick','playStation(this);');
+            li.setAttribute('onclick','on_change(i);');
+            //li.setAttribute('onclick','playStation(this);');
             li.setAttribute('attr-id', i+1);
             li.setAttribute('attr-name', line[0].trim());
             li.setAttribute('attr-url', line[1].trim());
