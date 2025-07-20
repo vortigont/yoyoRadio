@@ -22,6 +22,9 @@ jobs:
       - name: Install PlatformIO
         run: pip install platformio
 
+      - name: Make binaries folder to stash .bin files
+        run: mkdir -p binaries
+
       - name: Build all firmwares
         run: pio run
 
@@ -30,7 +33,7 @@ jobs:
           for d in .pio/build/*/ ; do
             env=$(basename "$d")
             if [ -f "$d/firmware.bin" ]; then
-              cp "$d/firmware.bin" ".pio/build/${env}.bin"
+              cp "$d/firmware.bin" "binaries/${env}.bin"
             fi
           done
 
@@ -45,8 +48,8 @@ jobs:
             echo "Processing environment: $env"
 
             # Copy and rename bootloader and partitions binaries
-            cp .pio/build/board_$env/bootloader.bin .pio/build/${env}_bootloader.bin
-            cp .pio/build/board_$env/partitions.bin .pio/build/${env}_partitions.bin
+            cp .pio/build/board_$env/bootloader.bin binaries/${env}_bootloader.bin
+            cp .pio/build/board_$env/partitions.bin binaries/${env}_partitions.bin
           done
 
       - name: Build SPIFFS and extract bootloader/partitions for each board environment
@@ -63,7 +66,8 @@ jobs:
             pio run --environment board_$env --target buildfs
 
             # Copy and rename SPIFFS binaries
-            cp .pio/build/board_$env/spiffs.bin .pio/build/${env}_spiffs.bin
+            cp .pio/build/board_$env/spiffs.bin binaries/${env}_spiffs.bin
+
           done
 
 # Here we also make some OTA-TEST builds (to be deleted later)
@@ -90,9 +94,15 @@ jobs:
           for d in .pio/build/*/ ; do
             env=$(basename "$d")
             if [ -f "$d/firmware.bin" ]; then
-              cp "$d/firmware.bin" ".pio/build/${env}.bin"
+              cp "$d/firmware.bin" "binaries/${env}.bin"
             fi
           done
+
+      - name: Upload firmware artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware
+          path: .pio/build/*.bin
 
 # End of TEST-OTA builds
 
@@ -132,7 +142,7 @@ jobs:
             ### Add Yours
               - you can either fork my `trip5` repo and edit these files or request a build be added
           files: |
-            .pio/build/*.bin
+            binaries/*.bin
             yoRadio/data/www/*
             version.txt
         env:
