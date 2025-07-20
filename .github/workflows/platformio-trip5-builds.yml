@@ -34,6 +34,44 @@ jobs:
             fi
           done
 
+# Here we also make some OTA-TEST builds (to be deleted later)
+
+      - name: Backup original options.h
+        run: cp yoRadio/src/core/options.h yoRadio/src/core/options.h.bak
+
+      - name: Backup original platformio.ini
+        run: cp platformio.ini platformio.ini.bak
+
+      - name: Prepare TEST-OTA version in options.h
+        run: |
+          # append “-OTA-TEST” inside the quotes of the YOVERSION line
+          sed -i '/#define YOVERSION/ s/"\([^"]*\)"/"\1-OTA-TEST"/' yoRadio/src/core/options.h
+
+      - name: Prepare TEST-OTA PlatformIO env names
+        run: |
+          # for every “[env:…]” line, append “_ota_test” before the closing bracket
+          sed -i '/^\[env:/ s/]/_ota_test]/' platformio.ini
+
+      - name: Build TEST-OTA firmwares
+        run: pio run
+
+      - name: Rename firmware files with env name
+        run: |
+          for d in .pio/build/*/ ; do
+            env=$(basename "$d")
+            if [ -f "$d/firmware.bin" ]; then
+              cp "$d/firmware.bin" ".pio/build/${env}.bin"
+            fi
+          done
+
+      - name: Restore original options.h
+        run: mv yoRadio/src/core/options.h.bak yoRadio/src/core/options.h
+
+      - name: Restore platformio.ini
+        run: mv platformio.ini.bak platformio.ini
+
+# End of TEST-OTA builds
+
       - name: Upload firmware artifacts
         uses: actions/upload-artifact@v4
         with:

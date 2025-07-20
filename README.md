@@ -283,12 +283,12 @@ Work is in progress...
     - check out `platformio-trip5-builds.yml` to see how firmwares are built and files made available online
       - First commit your changes to Github
       - Tag your local most recent commit and push it to Github:
-        - `git tag 2025.07.19`
-        - `git push origin 2025.07.19`
+        - `git tag 2025.07.20`
+        - `git push origin 2025.07.20`
       - Re-doing a tagged release:
-        - `git tag -d 2025.07.19`
-        - `git tag -a 2025.07.19 -m "2025.07.19"`
-        - `git push origin 2025.07.19 --force`
+        - `git tag -d 2025.07.20`
+        - `git tag -a 2025.07.20 -m "2025.07.20"`
+        - `git push origin 2025.07.20 --force`
     - this means you can just download a .bin file and flash from a command line
       - for example, for ESP32-S3
         - `esptool --chip esp32s3 --port com14 --baud 460800 write_flash -z 0x0000 bootloader.bin 0x8000 partitions.bin 0x10000 firmware.bin`
@@ -375,7 +375,7 @@ Work is in progress...
     - `#define BRIGHTNESS_PIN` must be in your `myoptions.h`
     - `#define DOWN_LEVEL 2` (brightness level 0 to 255, default 2 )
     - `#define DOWN_INTERVAL 60` (seconds to dim, default 60 = 60 seconds)
-  - use `#define HIDE_VOLPAGE` to hide the seperate page showing volume (uses the progress bar instead)
+  - use `#define HIDE_VOLPAGE` to hide the separate page showing volume (uses the progress bar instead)
 
 ### 0.9.533
 - fixed compilation error for esp32 core version lower than 3.0.0
