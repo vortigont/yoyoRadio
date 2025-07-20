@@ -52,9 +52,9 @@ jobs:
           # for every “[env:…]” line, append “_ota_test” before the closing bracket
           sed -i '/^\[env:/ s/]/_ota_test]/' platformio.ini
           # also update any ${env:…​.lib_deps} macros to include _ota_test
-          sed -Ei 's/\$\{env:([^}]*)\.lib_deps\}/\${env:\1_ota_test.lib_deps}/g' platformio.ini
-           # update any extends = env:… lines to include _ota_test
-          sed -Ei 's/^\(extends[[:space:]]*=[[:space:]]*env:[^[:space:]]*\)/\1_ota_test/' platformio.ini
+          sed -Ei 's|\$\{env:([^}]+)\.lib_deps\}|\$\{env:\1_ota_test.lib_deps\}|g' platformio.ini
+          # update any extends = env:… lines to include _ota_test
+          sed -i 's/^\(extends[[:space:]]*=[[:space:]]*env:[^[:space:]]*\)/\1_ota_test/' platformio.ini
 
       - name: Build TEST-OTA firmwares
         run: pio run
