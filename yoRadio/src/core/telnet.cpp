@@ -5,6 +5,8 @@
 #include "player.h"
 #include "network.h"
 #include "telnet.h"
+#include "evtloop.h"
+
 
 Telnet telnet;
 
@@ -107,7 +109,6 @@ void Telnet::loop() {
     delay(1000);
   }
   handleSerial();
-  yield();
 }
 
 void Telnet::print(const char *buf) {
@@ -197,12 +198,13 @@ void Telnet::on_input(const char* str, uint8_t clientId) {
       return;
     }
     if (strcmp(str, "cli.stop") == 0 || strcmp(str, "stop") == 0) {
-      player->sendCommand({PR_STOP, 0});
+      EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::playerStop));
       //info();
       return;
     }
     if (strcmp(str, "cli.start") == 0 || strcmp(str, "start") == 0 || strcmp(str, "cli.play") == 0 || strcmp(str, "play") == 0) {
-      player->sendCommand({PR_PLAY, config.lastStation()});
+      auto v = config.lastStation();
+      EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &v, sizeof(v));
       return;
     }
     if (strcmp(str, "cli.vol") == 0 || strcmp(str, "vol") == 0) {
@@ -292,8 +294,10 @@ void Telnet::on_input(const char* str, uint8_t clientId) {
     int sb;
     if (sscanf(str, "play(%d)", &sb) == 1 || sscanf(str, "cli.play(\"%d\")", &sb) == 1 || sscanf(str, "play %d", &sb) == 1 ) {
       if (sb < 1) sb = 1;
-      if (sb >= config.store.countStation) sb = config.store.countStation;
-      player->sendCommand({PR_PLAY, (uint16_t)sb});
+      uint16_t cs = config.playlistLength();
+      if (sb >= cs) sb = cs;
+      EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &sb, sizeof(sb));
+
       return;
     }
     #ifdef USE_SD
@@ -460,6 +464,11 @@ void Telnet::on_input(const char* str, uint8_t clientId) {
     return;
   }
   if (strcmp(str, "sys.heap") == 0 || strcmp(str, "heap") == 0) {
+    printf(clientId, "Free heap:\t%d bytes\n> ", xPortGetFreeHeapSize());
+    return;
+  }
+  if (strcmp(str, "sys.config") == 0 || strcmp(str, "config") == 0) {
+    config.bootInfo();
     printf(clientId, "Free heap:\t%d bytes\n> ", xPortGetFreeHeapSize());
     return;
   }

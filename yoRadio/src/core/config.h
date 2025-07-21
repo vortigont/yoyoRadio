@@ -7,6 +7,7 @@
 #include <EEPROM.h>
 //#include "SD.h"
 #include "options.h"
+#include "telnet.h"
 #include "rtcsupport.h"
 #include "../pluginsManager/pluginsManager.h"
 
@@ -32,7 +33,7 @@
 #define DBGVB( ... )
 #define DBGH()
 #endif
-#define BOOTLOG( ... ) { char buf[120]; sprintf( buf, __VA_ARGS__ ) ; Serial.print("##[BOOT]#\t"); Serial.println(buf); }
+#define BOOTLOG( ... ) { char buf[120]; sprintf( buf, __VA_ARGS__ ) ; telnet.print("##[BOOT]#\t"); telnet.printf("%s\n",buf); }
 #define EVERY_MS(x)  static uint32_t tmr; bool flag = millis() - tmr >= (x); if (flag) tmr += (x); if (flag)
 #define REAL_PLAYL   getMode()==PM_WEB?PLAYLIST_PATH:PLAYLIST_SD_PATH
 #define REAL_INDEX   getMode()==PM_WEB?INDEX_PATH:INDEX_SD_PATH
@@ -188,8 +189,11 @@ class Config {
     uint16_t screensaverTicks;
     uint16_t screensaverPlayingTicks;
     bool     isScreensaver;
-
+    int      newConfigMode;
+  public:
     Config() {};
+    ~Config();
+
 #if IR_PIN!=255
     void saveIR();
 #endif
@@ -204,11 +208,12 @@ class Config {
     uint8_t setLastSSID(uint8_t val);
     void setTitle(const char* title);
     void setStation(const char* station);
+    void escapeQuotes(const char* input, char* output, size_t maxLen);
     bool parseCSV(const char* line, char* name, char* url, int &ovol);
     bool parseJSON(const char* line, char* name, char* url, int &ovol);
     bool parseWsCommand(const char* line, char* cmd, char* val, uint8_t cSize);
     bool parseSsid(const char* line, char* ssid, char* pass);
-    void loadStation(uint16_t station);
+    bool loadStation(uint16_t station);
     bool initNetwork();
     bool saveWifi();
     bool saveWifiFromNextion(const char* post);
@@ -220,6 +225,7 @@ class Config {
       void initSDPlaylist();
       void changeMode(int newmode=-1);
     #endif
+    uint16_t playlistLength();
     uint16_t lastStation(){
       return getMode()==PM_WEB?store.lastStation:store.lastSdStation;
     }
@@ -241,6 +247,21 @@ class Config {
     uint8_t getMode() { return store.play_mode/* & 0b11*/; }
     void initPlaylistMode();
     void reset();
+    void enableScreensaver(bool val);
+    void setScreensaverTimeout(uint16_t val);
+    void setScreensaverBlank(bool val);
+    void setScreensaverPlayingEnabled(bool val);
+    void setScreensaverPlayingTimeout(uint16_t val);
+    void setScreensaverPlayingBlank(bool val);
+    void setSntpOne(const char *val);
+    void setShowweather(bool val);
+    void setWeatherKey(const char *val);
+    void setSDpos(uint32_t val);
+#if IR_PIN!=255
+    void setIrBtn(int val);
+#endif
+    void resetSystem(const char *val, uint8_t clientId);
+    
     bool spiffsCleanup();
     FS* SDPLFS(){ return _SDplaylistFS; }
     #if RTCSUPPORTED
@@ -296,6 +317,24 @@ class Config {
       return station;
     }
     char _stationBuf[BUFLEN/2];
+
+    // event function handlers
+    esp_event_handler_instance_t _hdlr_cmd_evt{nullptr};
+
+    /**
+     * @brief subscribe to event mesage bus
+     * 
+     */
+    void _events_subsribe();
+
+    /**
+     * @brief unregister from event loop
+     * 
+     */
+    void _events_unsubsribe();
+
+    // command events handler
+    void _events_cmd_hndlr(int32_t id, void* data);
 };
 
 extern Config config;

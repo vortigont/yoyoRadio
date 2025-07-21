@@ -6,6 +6,7 @@
 #include "../displays/dspcore.h"
 #include "network.h"
 #include "netserver.h"
+#include "evtloop.h"
 
 long encOldPosition  = 0;
 long enc2OldPosition  = 0;
@@ -223,7 +224,7 @@ void irNumber(uint8_t num) {
   display.putRequest(NEWMODE, NUMBERS);
   if (display.numOfNextStation > UINT16_MAX / 10) return;
   s = display.numOfNextStation * 10 + num;
-  if (s > config.store.countStation) return;
+  if (s > config.playlistLength()) return;
   display.numOfNextStation = s;
   display.putRequest(NEXTSTATION, s);
 }
@@ -265,7 +266,12 @@ void irLoop() {
                 irBlink();
                 if (display.mode() == NUMBERS) {
                   display.putRequest(NEWMODE, PLAYER);
+<<<<<<< HEAD
                   player->sendCommand({PR_PLAY, display.numOfNextStation});
+=======
+                  EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &display.numOfNextStation, sizeof(display.numOfNextStation));
+
+>>>>>>> evt_bus
                   display.numOfNextStation = 0;
                   break;
                 }
@@ -464,8 +470,9 @@ void controlsEvent(bool toRight, int8_t volDelta) {
   if (display.mode() == STATIONS) {
     display.resetQueue();
     int p = toRight ? display.currentPlItem + 1 : display.currentPlItem - 1;
-    if (p < 1) p = config.store.countStation;
-    if (p > config.store.countStation) p = 1;
+    uint16_t cs = config.playlistLength();
+    if (p < 1) p = cs;
+    if (p > cs) p = 1;
     display.currentPlItem = p;
     display.putRequest(DRAWPLAYLIST, p);
   }
@@ -502,7 +509,7 @@ void onBtnClick(int id) {
           #ifdef DSP_LCD
             delay(200);
           #endif
-          player->sendCommand({PR_PLAY, display.currentPlItem});
+          EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &display.currentPlItem, sizeof(display.currentPlItem));
         }
         if(network.status==SOFT_AP || display.mode()==LOST){
           #ifdef USE_SD

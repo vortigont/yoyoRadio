@@ -234,6 +234,44 @@ Work is in progress...
 
 ---
 ## Version history
+### 0.9.533
+- fixed compilation error for esp32 core version lower than 3.0.0
+- fixed error setting display brightness to 1
+- fixed error setting IR tolerance value (upload a new file `options.html.gz` via WEB Board Uploader and press Ctrl+F5 on the settings page)
+
+### 0.9.530
+- optimization of webserver/socket code in netserver.cpp, part#1
+- added support for ArduinoOTA (OTA update from Arduino IDE) (disabled by default)\
+  to enable you need to add to myoptions.h: `#define USE_OTA true`\
+  set password: in myoptions.h `#define OTA_PASS "myotapassword12345"`
+- in web interface added basic HTTP authentication capability (disabled by default)\
+  to enable you need to add to myoptions.h:\
+  `#define HTTP_USER "user"`\
+  `#define HTTP_PASS "password"`
+- added "emergency firmware uploader" form (for unforeseen cases) http://ipaddress/emergency
+- added config (sys.config) telnet command that displays the same information usually shown over serial at boot.
+- bug fixes 🪲
+
+### 0.9.515
+- fixed a bug with resetting all parameters when resetting only one section of parameters
+
+### 0.9.512
+- fixed bug with saving ntp server #1 value
+
+### 0.9.511
+In this version, the contents of the data/www directory have changed, so that the first time you flash it, you will be greeted by WEB Board Uploader. Just upload all the files from data/www (11 pcs) to it\
+or -> **!!! a [full update](#update-over-web-interface) with Sketch data upload is required. After updating please press CTRL+F5 in browser !!!**
+- fixed a bug with saving smartstart mode
+- fixed a bug with no restart when initially uploading files to spiffs
+- fixed a bug with hanging on unavailable hosts
+- fixed a bug with attempting to connect with an empty playlist
+- fixed a bug with passing strings with quotes in mqtt
+- fixing some other bugs
+- web interface rewritten from scratch (well, almost), bugs added 👍
+- added listening to links in the browser in playlistEditor
+- buttons reboot (reboot) format (spiffs format) and reset (reset settings to default) have been added to the settings
+- the beginnings of theming (theme.css) (just a list of global colors that can be changed, and then uploaded to theme.css via WB uploader)
+
 ### 0.9.434
 - fixed the issue with exiting Screensaver Blank Screen mode via button presses and IR commands.
 - reduced the minimum frequency for tone control on I2S modules to 80Hz.

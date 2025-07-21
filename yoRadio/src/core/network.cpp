@@ -7,6 +7,7 @@
 #include "netserver.h"
 #include "player.h"
 #include "mqtt.h"
+#include "core/evtloop.h"
 
 #ifndef WIFI_ATTEMPTS
   #define WIFI_ATTEMPTS  16
@@ -95,7 +96,9 @@ void ticks() {
 #ifdef USE_SD
     if(display.mode()!=SDCHANGE) player->sendCommand({PR_CHECKSD, 0});
 #endif
-    player->sendCommand({PR_VUTONUS, 0});
+
+    if(config.vuThreshold > 10)
+      config.vuThreshold -= 10;
   }
 }
 
@@ -107,9 +110,12 @@ void MyNetwork::WiFiReconnected(WiFiEvent_t event, WiFiEventInfo_t info){
   if(config.getMode()==PM_SDCARD) {
     network.status=CONNECTED;
     display.putRequest(NEWIP, 0);
-  }else{
+  } else {
     display.putRequest(NEWMODE, PLAYER);
-    if (network.lostPlaying) player->sendCommand({PR_PLAY, config.lastStation()});
+    if (network.lostPlaying){
+      auto v = config.lastStation();
+      EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &v, sizeof(v));
+    }
   }
   #ifdef MQTT_ROOT_TOPIC
     connectToMqtt();
@@ -123,8 +129,11 @@ void MyNetwork::WiFiLostConnection(WiFiEvent_t event, WiFiEventInfo_t info){
       network.status=SDREADY;
       display.putRequest(NEWIP, 0);
     }else{
-      network.lostPlaying = player->isRunning();
-      if (network.lostPlaying) { player->lockOutput = true; player->sendCommand({PR_STOP, 0}); }
+      network.lostPlaying = player.isRunning();
+      if (network.lostPlaying){
+        player.lockOutput = true;
+        EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::playerStop));
+      }
       display.putRequest(NEWMODE, LOST);
     }
   }

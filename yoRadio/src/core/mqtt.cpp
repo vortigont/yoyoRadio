@@ -6,6 +6,7 @@
 #include "telnet.h"
 #include "player.h"
 #include "config.h"
+#include "core/evtloop.h"
 
 AsyncMqttClient mqttClient;
 TimerHandle_t mqttReconnectTimer;
@@ -39,7 +40,11 @@ void mqttPublishStatus() {
     memset(topic, 0, 140);
     memset(status, 0, BUFLEN*3);
     sprintf(topic, "%s%s", MQTT_ROOT_TOPIC, "status");
-    sprintf(status, "{\"status\": %d, \"station\": %d, \"name\": \"%s\", \"title\": \"%s\", \"on\": %d}", player.status()==PLAYING?1:0, config.lastStation(), config.station.name, config.station.title, config.store.dspon);
+    char name[BUFLEN*2];
+    char title[BUFLEN*2];
+    config.escapeQuotes(config.station.name, name, sizeof(name));
+    config.escapeQuotes(config.station.title, title, sizeof(name));
+    sprintf(status, "{\"status\": %d, \"station\": %d, \"name\": \"%s\", \"title\": \"%s\", \"on\": %d}", player.status()==PLAYING?1:0, config.lastStation(), name, title, config.store.dspon);
     mqttClient.publish(topic, 0, true, status);
   }
 }
@@ -87,7 +92,7 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
     return;
   }
   if (strcmp(buf, "stop") == 0) {
-    player.sendCommand({PR_STOP, 0});
+    EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::playerStop));
     //telnet.info();
     return;
   }
@@ -110,7 +115,7 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
   if (strcmp(buf, "turnoff") == 0) {
     uint8_t sst = config.store.smartstart;
     config.setDspOn(0);
-    player.sendCommand({PR_STOP, 0});
+    EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::playerStop));
     //telnet.info();
     delay(100);
     config.saveValue(&config.store.smartstart, sst);
@@ -131,7 +136,8 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
   int sb;
   if (sscanf(buf, "play %d", &sb) == 1 ) {
     if (sb < 1) sb = 1;
-    if (sb >= config.store.countStation) sb = config.store.countStation;
+    uint16_t cs = config.playlistLength();
+    if (sb >= cs) sb = cs;
     player.sendCommand({PR_PLAY, (uint16_t)sb});
     return;
   }

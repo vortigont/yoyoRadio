@@ -9,6 +9,7 @@
 #include "core/controls.h"
 #include "core/mqtt.h"
 #include "core/optionschecker.h"
+#include "core/evtloop.h"
 
 #if DSP_HSPI || TS_HSPI || VS_HSPI
 SPIClass  SPI2(HOOPSENb);
@@ -23,6 +24,10 @@ void setup() {
   delay(2000);
 #endif
   Serial.println("##[BOOT]#\tSetup");
+
+  // Start event loop task
+  evt::start();
+
   if(REAL_LEDBUILTIN!=255) pinMode(REAL_LEDBUILTIN, OUTPUT);
   if (yoradio_on_setup) yoradio_on_setup();
   config.init();
@@ -65,9 +70,13 @@ void setup() {
   #ifdef MQTT_ROOT_TOPIC
     mqttInit();
   #endif
-  if (config.getMode()==PM_SDCARD) player->initHeaders(config.station.url);
-  player->lockOutput=false;
-  //if (config.store.smartstart == 1) player->sendCommand({PR_PLAY, config.lastStation()});
+  if (config.getMode()==PM_SDCARD) player.initHeaders(config.station.url);
+  player.lockOutput=false;
+  if (config.store.smartstart == 1) {
+    delay(99);
+    auto v = config.lastStation();
+    EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &v, sizeof(v));
+  }
   pm.on_end_setup();
   Serial.println("##[BOOT]#\tSetup done!");
 }

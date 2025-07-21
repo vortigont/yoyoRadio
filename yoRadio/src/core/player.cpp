@@ -6,9 +6,11 @@
 #include "../displays/tools/l10n.h"
 #include "sdmanager.h"
 #include "netserver.h"
+#include "evtloop.h"
+#include "log.h"
+
 
 Player* player{nullptr};
-QueueHandle_t playerQueue;
 
 #if VS1053_CS!=255 && !I2S_INTERNAL
   #if VS_HSPI
@@ -34,6 +36,10 @@ QueueHandle_t playerQueue;
 */
 #endif
 
+Player::~Player(){
+  _events_unsubsribe();
+}
+
 
 void create_player(dac_type_t dac){
   switch (dac){
@@ -49,9 +55,7 @@ void create_player(dac_type_t dac){
 
 void Player::init() {
   Serial.print("##[BOOT]#\tplayer.init\t");
-  playerQueue=NULL;
   _resumeFilePos = 0;
-  playerQueue = xQueueCreate( 5, sizeof( playerRequestParams_t ) );
   setOutputPins(false);
   delay(50);
   memset(_plError, 0, PLERR_LN);
@@ -72,6 +76,7 @@ void Player::init() {
   #endif
   _loadVol(config.store.volume);
   setConnectionTimeout(1700, 3700);
+  _events_subsribe();
   Serial.println("done");
 }
 
@@ -85,15 +90,6 @@ void Player::dac_init(){
     if(VS1053_RST>0) ResetChip();
     begin();
   #endif  
-}
-
-void Player::sendCommand(playerRequestParams_t request){
-  if(playerQueue==NULL) return;
-  xQueueSend(playerQueue, &request, PLQ_SEND_DELAY);
-}
-
-void Player::resetQueue(){
-	if(playerQueue!=NULL) xQueueReset(playerQueue);
 }
 
 void Player::stopInfo() {
@@ -147,45 +143,6 @@ void Player::initHeaders(const char *file) {
   #define PL_QUEUE_TICKS_ST 15
 #endif
 void Player::loop() {
-  if(playerQueue==NULL) return;
-  playerRequestParams_t requestP;
-  // do NOT block on mgs receive, we are in arduino's loop!!!
-  if(xQueueReceive(playerQueue, &requestP, 0)){  // isRunning()?PL_QUEUE_TICKS:PL_QUEUE_TICKS_ST)){
-    switch (requestP.type){
-      case PR_STOP: _stop(); break;
-      case PR_PLAY: {
-        if (requestP.payload>0) {
-          config.setLastStation((uint16_t)requestP.payload);
-        }
-        _play((uint16_t)abs(requestP.payload)); 
-        // callback
-        if (player_on_station_change)
-          player_on_station_change(); 
-        pm.on_station_change();
-        break;
-      }
-      case PR_VOL: {
-        config.setVolume(requestP.payload);
-        Audio::setVolume(volToI2S(requestP.payload));
-        break;
-      }
-      #ifdef USE_SD
-      case PR_CHECKSD: {
-        if(config.getMode()==PM_SDCARD){
-          if(!sdman.cardPresent()){
-            sdman.stop();
-            config.changeMode(PM_WEB);
-          }
-        }
-        break;
-      }
-      #endif
-      case PR_VUTONUS:
-        if(config.vuThreshold>10) config.vuThreshold -=10;
-      default: break;
-    }
-  }
-
   Audio::loop();
   if(!isRunning() && _status==PLAYING)
     _stop(true);
@@ -213,6 +170,7 @@ void Player::setOutputPins(bool isPlaying) {
 void Player::_play(uint16_t stationId) {
   log_i("%s called, stationId=%d", __func__, stationId);
   setError("");
+  setDefaults();
   remoteStationName = false;
   config.setDspOn(1);
   config.vuThreshold = 0;
@@ -220,20 +178,23 @@ void Player::_play(uint16_t stationId) {
   config.screensaverTicks=SCREENSAVERSTARTUPDELAY;
   config.screensaverPlayingTicks=SCREENSAVERSTARTUPDELAY;
   if(config.getMode()!=PM_SDCARD) {
-  	display.putRequest(PSTOP);
+    display.putRequest(PSTOP);
   }
   setOutputPins(false);
   //config.setTitle(config.getMode()==PM_WEB?const_PlConnect:"");
+  if(!config.loadStation(stationId)) return;
   config.setTitle(config.getMode()==PM_WEB?const_PlConnect:"[next track]");
   config.station.bitrate=0;
   config.setBitrateFormat(BF_UNCNOWN);
-  config.loadStation(stationId);
+  
   _loadVol(config.store.volume);
   display.putRequest(DBITRATE);
   display.putRequest(NEWSTATION);
   netserver.requestOnChange(STATION, 0);
   netserver.loop();
-  config.setSmartStart(0);
+  netserver.loop();
+  if(config.store.smartstart!=2)
+    config.setSmartStart(0);
   bool isConnected = false;
   stopSong();
   if(config.getMode()==PM_SDCARD && SDC_CS!=255){
@@ -250,7 +211,8 @@ void Player::_play(uint16_t stationId) {
       config.saveValue(&config.store.lastSdStation, stationId);
     }
     //config.setTitle("");
-    config.setSmartStart(1);
+    if(config.store.smartstart!=2)
+      config.setSmartStart(1);
     netserver.requestOnChange(MODE, 0);
     setOutputPins(true);
     display.putRequest(NEWMODE, PLAYER);
@@ -294,27 +256,30 @@ void Player::browseUrl(){
 void Player::prev() {
   
   uint16_t lastStation = config.lastStation();
-  if(config.getMode()==PM_WEB || !config.store.sdsnuffle){
-    if (lastStation == 1) config.lastStation(config.store.countStation); else config.lastStation(lastStation-1);
+  if(config.getMode()==PM_WEB || !config.store.sdsnuffle){;
+    if (lastStation == 1) config.lastStation(config.playlistLength()); else config.lastStation(lastStation-1);
   }
-  sendCommand({PR_PLAY, config.lastStation()});
+  lastStation = config.lastStation();
+  EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &lastStation, sizeof(lastStation));
 }
 
 void Player::next() {
   uint16_t lastStation = config.lastStation();
   if(config.getMode()==PM_WEB || !config.store.sdsnuffle){
-    if (lastStation == config.store.countStation) config.lastStation(1); else config.lastStation(lastStation+1);
+    if (lastStation == config.playlistLength()) config.lastStation(1); else config.lastStation(lastStation+1);
   }else{
-    config.lastStation(random(1, config.store.countStation));
+    config.lastStation(random(1, config.playlistLength()));
   }
-  sendCommand({PR_PLAY, config.lastStation()});
+  lastStation = config.lastStation();
+  EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &lastStation, sizeof(lastStation));
 }
 
 void Player::toggle() {
   if (_status == PLAYING) {
-    sendCommand({PR_STOP, 0});
+    _stop();
   } else {
-    sendCommand({PR_PLAY, config.lastStation()});
+    auto lastStation = config.lastStation();
+    EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &lastStation, sizeof(lastStation));    
   }
 }
 
@@ -345,10 +310,56 @@ void Player::_loadVol(uint8_t volume) {
   setVolume(volToI2S(volume));
 }
 
-void Player::setVol(uint8_t volume) {
+void Player::setVol(int32_t volume) {
   _volTicks = millis();
   _volTimer = true;
-  player->sendCommand({PR_VOL, volume});
+  config.setVolume(volume);
+  Audio::setVolume(volToI2S(volume));
+  //player.sendCommand({PR_VOL, volume});
+}
+
+void Player::_events_subsribe(){
+  // command events
+  esp_event_handler_instance_register_with(evt::get_hndlr(), YO_CMD_EVENTS, ESP_EVENT_ANY_ID,
+    [](void* self, esp_event_base_t base, int32_t id, void* data){ static_cast<Player*>(self)->_events_cmd_hndlr(id, data); },
+    this, &_hdlr_cmd_evt
+  );
+}
+
+void Player::_events_unsubsribe(){
+  esp_event_handler_instance_unregister_with(evt::get_hndlr(), YO_CMD_EVENTS, ESP_EVENT_ANY_ID, _hdlr_cmd_evt);
+
+}
+
+void Player::_events_cmd_hndlr(int32_t id, void* data){
+  switch (static_cast<evt::yo_event_t>(id)){
+
+    // Play radio station from a playlist
+    case evt::yo_event_t::plsStation : {
+      int idx = *reinterpret_cast<int32_t*>(data);
+      if (idx > 0)
+        config.setLastStation(idx);
+      _play((uint16_t)abs(idx));
+      EVT_POST(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerPlay));
+      if (player_on_station_change)   // todo: this should be moved to event handling
+        player_on_station_change();
+      pm.on_station_change();   // todo: this should be moved to event handling
+      break;
+    }
+
+    // Stop player
+    case evt::yo_event_t::playerStop :
+      _stop();
+      break;
+
+    // volume control
+    case evt::yo_event_t::playerVolume :
+      setVol(*reinterpret_cast<int32_t*>(data));
+      break;
+
+
+    default:;
+  }
 }
 
 
