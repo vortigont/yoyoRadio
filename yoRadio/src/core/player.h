@@ -20,6 +20,11 @@
 #define PLERR_LN        64
 #define SET_PLAY_ERROR(...) {char buff[512 + 64]; sprintf(buff,__VA_ARGS__); setError(buff);}
 
+enum class dac_type_t {
+  generic = 0,
+  ES8311
+};
+
 enum plStatus_e : uint8_t{ PLAYING = 1, STOPPED = 2 };
 
 class Player: public Audio {
@@ -65,7 +70,7 @@ public:
     #endif
 
     Player();
-    virtual ~Player(){};
+    virtual ~Player();
 
     virtual void init();
     void loop();

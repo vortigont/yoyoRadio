@@ -399,11 +399,11 @@ void Config::setWeatherKey(const char *val){
 void Config::setSDpos(uint32_t val){
   if (getMode()==PM_SDCARD){
     sdResumePos = 0;
-    if(!player.isRunning()){
-      player.setResumeFilePos(val-player.sd_min);
+    if(!player->isRunning()){
+      player->setResumeFilePos(val - player->sd_min);
       EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &config.store.lastSdStation, sizeof(config.store.lastSdStation));
     }else{
-      player.setFilePos(val-player.sd_min);
+      player->setFilePos(val - player->sd_min);
     }
   }
 }
@@ -588,7 +588,7 @@ void Config::setTone(int8_t bass, int8_t middle, int8_t trebble) {
   saveValue(&store.bass, bass, false);
   saveValue(&store.middle, middle, false);
   saveValue(&store.trebble, trebble);
-  player.setTone(store.bass, store.middle, store.trebble);
+  player->setTone(store.bass, store.middle, store.trebble);
   netserver.requestOnChange(EQUALIZER, 0);
 }
 
@@ -598,7 +598,7 @@ void Config::setSmartStart(uint8_t ss) {
 
 void Config::setBalance(int8_t balance) {
   saveValue(&store.balance, balance);
-  player.setBalance(store.balance);
+  player->setBalance(store.balance);
   netserver.requestOnChange(BALANCE, 0);
 }
 

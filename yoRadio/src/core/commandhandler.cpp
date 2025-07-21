@@ -1,6 +1,6 @@
 #include "commandhandler.h"
 #include "player.h"
-#include "display.h"
+#include "../displays/dspcore.h"
 #include "netserver.h"
 #include "config.h"
 #include "controls.h"
@@ -12,11 +12,11 @@ CommandHandler cmd;
 bool CommandHandler::exec(const char *command, const char *value, uint8_t cid) {
   if (strEquals(command, "start"))    { auto v = config.lastStation(); EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &v, sizeof(v)); return true; }
   if (strEquals(command, "stop"))     { EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::playerStop)); return true; }
-  if (strEquals(command, "toggle"))   { player.toggle(); return true; }
-  if (strEquals(command, "prev"))     { player.prev(); return true; }
-  if (strEquals(command, "next"))     { player.next(); return true; }
-  if (strEquals(command, "volm"))     { player.stepVol(false); return true; }
-  if (strEquals(command, "volp"))     { player.stepVol(true); return true; }
+  if (strEquals(command, "toggle"))   { player->toggle(); return true; }
+  if (strEquals(command, "prev"))     { player->prev(); return true; }
+  if (strEquals(command, "next"))     { player->next(); return true; }
+  if (strEquals(command, "volm"))     { player->stepVol(false); return true; }
+  if (strEquals(command, "volp"))     { player->stepVol(true); return true; }
 #ifdef USE_SD
   if (strEquals(command, "mode"))     { config.changeMode(atoi(value)); return true; }
 #endif
@@ -34,7 +34,7 @@ bool CommandHandler::exec(const char *command, const char *value, uint8_t cid) {
   if (strEquals(command, "vol")){
     int v = atoi(value);
     config.store.volume = v < 0 ? 0 : (v > 254 ? 254 : v);
-    player.setVol(v);
+    player->setVol(v);
     return true;
   }
   if (strEquals(command, "dspon"))     { config.setDspOn(atoi(value)!=0); return true; }
@@ -82,7 +82,7 @@ bool CommandHandler::exec(const char *command, const char *value, uint8_t cid) {
   if (strEquals(command, "lon"))              { config.saveValue(config.store.weatherlon, value, 10, false); return true; }
   if (strEquals(command, "key"))              { config.setWeatherKey(value); return true; }
   //<-----TODO
-  if (strEquals(command, "volume"))  { player.setVol(static_cast<uint8_t>(atoi(value))); return true; }
+  if (strEquals(command, "volume"))  { player->setVol(static_cast<uint8_t>(atoi(value))); return true; }
   if (strEquals(command, "sdpos"))   { config.setSDpos(static_cast<uint32_t>(atoi(value))); return true; }
   if (strEquals(command, "snuffle")) { config.setSnuffle(strcmp(value, "true") == 0); return true; }
   if (strEquals(command, "balance")) { config.setBalance(static_cast<uint8_t>(atoi(value))); return true; }
@@ -97,7 +97,7 @@ bool CommandHandler::exec(const char *command, const char *value, uint8_t cid) {
 #endif
   if (strEquals(command, "reset"))  { config.resetSystem(value, cid); return true; }
   
-  if (strEquals(command, "smartstart")){ uint8_t ss = atoi(value) == 1 ? 1 : 2; if (!player.isRunning() && ss == 1) ss = 0; config.setSmartStart(ss); return true; }
+  if (strEquals(command, "smartstart")){ uint8_t ss = atoi(value) == 1 ? 1 : 2; if (!player->isRunning() && ss == 1) ss = 0; config.setSmartStart(ss); return true; }
   if (strEquals(command, "audioinfo")) { config.saveValue(&config.store.audioinfo, static_cast<bool>(atoi(value))); display.putRequest(AUDIOINFO); return true; }
   if (strEquals(command, "vumeter"))   { config.saveValue(&config.store.vumeter, static_cast<bool>(atoi(value))); display.putRequest(SHOWVUMETER); return true; }
   if (strEquals(command, "softap"))    { config.saveValue(&config.store.softapdelay, static_cast<uint8_t>(atoi(value))); return true; }

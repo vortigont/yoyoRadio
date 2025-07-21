@@ -123,9 +123,9 @@ void audio_eof_mp3(const char *info){  //end of file
 void audio_eof_stream(const char *info){
   EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::playerStop));
 
-  if(!player.resumeAfterUrl) return;
+  if(!player->resumeAfterUrl) return;
   if (config.getMode()!=PM_WEB){
-    player.setResumeFilePos( config.sdResumePos==0?0:config.sdResumePos-player.sd_min);
+    player->setResumeFilePos( config.sdResumePos==0?0:config.sdResumePos - player->sd_min);
   }
 
   auto v = config.lastStation();

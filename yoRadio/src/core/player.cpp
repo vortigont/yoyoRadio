@@ -170,7 +170,7 @@ void Player::setOutputPins(bool isPlaying) {
 void Player::_play(uint16_t stationId) {
   log_i("%s called, stationId=%d", __func__, stationId);
   setError("");
-  setDefaults();
+  //setDefaults();    this is private in a new version of ESP32-audioI2S lib
   remoteStationName = false;
   config.setDspOn(1);
   config.vuThreshold = 0;
@@ -315,7 +315,6 @@ void Player::setVol(int32_t volume) {
   _volTimer = true;
   config.setVolume(volume);
   Audio::setVolume(volToI2S(volume));
-  //player.sendCommand({PR_VOL, volume});
 }
 
 void Player::_events_subsribe(){

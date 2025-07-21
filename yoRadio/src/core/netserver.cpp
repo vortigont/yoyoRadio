@@ -367,15 +367,15 @@ void NetServer::processQueue(){
         break;
       }
       case SDPOS:
-        obj["sdpos"] = player.getFilePos();
-        obj["sdend"] = player.getFileSize();
-        obj["sdtpos"] = player.getAudioCurrentTime();
-        obj["sdtend"] = player.getAudioFileDuration();
+        obj["sdpos"] = player->getFilePos();
+        obj["sdend"] = player->getFileSize();
+        obj["sdtpos"] = player->getAudioCurrentTime();
+        obj["sdtend"] = player->getAudioFileDuration();
         break;
 
       case SDLEN:
-        obj["sdmin"] = player.sd_min;
-        obj["sdmax"] = player.sd_max;
+        obj["sdmin"] = player->sd_min;
+        obj["sdmax"] = player->sd_max;
         break;
 
       case SDSNUFFLE:
@@ -396,7 +396,7 @@ void NetServer::processQueue(){
         JsonArray a = obj[P_payload].to<JsonArray>();
         JsonObject o = a.add<JsonObject>();
           o["id"] = "playerwrap";
-          o["value"] = player.status() == PLAYING ? "playing" : "stopped";
+          o["value"] = player->status() == PLAYING ? "playing" : "stopped";
           telnet.info();
           break;
       }
@@ -515,7 +515,7 @@ void NetServer::onWsMessage(void *arg, uint8_t *data, size_t len, uint8_t client
 #ifdef MQTT_ROOT_TOPIC
         mqttplaylistticker.attach(5, mqttplaylistSend);
 #endif
-        if (player.isRunning()){
+        if (player->isRunning()){
           auto v = config.lastStation();
           EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &v, sizeof(v));
         }

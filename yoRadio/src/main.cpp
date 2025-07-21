@@ -70,8 +70,8 @@ void setup() {
   #ifdef MQTT_ROOT_TOPIC
     mqttInit();
   #endif
-  if (config.getMode()==PM_SDCARD) player.initHeaders(config.station.url);
-  player.lockOutput=false;
+  if (config.getMode()==PM_SDCARD) player->initHeaders(config.station.url);
+  player->lockOutput=false;
   if (config.store.smartstart == 1) {
     delay(99);
     auto v = config.lastStation();

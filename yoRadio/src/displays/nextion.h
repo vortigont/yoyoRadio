@@ -2,7 +2,7 @@
 #define NEXTION_H
 
 #include <HardwareSerial.h>
-#include "../core/display.h"
+#include "dspcore.h"
 
 #define TXBUFLEN  255
 #define RXBUFLEN  50
