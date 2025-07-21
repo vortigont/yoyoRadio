@@ -72,11 +72,13 @@ void setup() {
   #endif
   if (config.getMode()==PM_SDCARD) player->initHeaders(config.station.url);
   player->lockOutput=false;
+  #ifndef NO_AUTOPLAY_ONBOOT
   if (config.store.smartstart == 1) {
     delay(99);
     auto v = config.lastStation();
     EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &v, sizeof(v));
   }
+  #endif
   pm.on_end_setup();
   Serial.println("##[BOOT]#\tSetup done!");
 }
