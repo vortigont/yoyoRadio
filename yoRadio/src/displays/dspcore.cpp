@@ -4,6 +4,8 @@
 #include "../core/player.h"
 #include "Audio.h"
 #include "tools/l10n.h"
+#include "../core/evtloop.h"
+#include "../core/log.h"
 
 char* DspCoreBase::utf8Rus(const char* str, bool uppercase) {
     int index = 0;
@@ -201,8 +203,11 @@ Page *pages[] = { new Page(), new Page(), new Page(), new Page() };
   #define CORE_STACK_SIZE  1024*3
 #endif
 #ifndef DSP_TASK_DELAY
-  #define DSP_TASK_DELAY  pdMS_TO_TICKS(10)
+  #define DSP_TASK_DELAY  pdMS_TO_TICKS(20)   // cap for 50 fps
 #endif
+// will use DSP_QUEUE_TICKS as delay interval for display task runner when there are no msgs in a queue to process
+#define DSP_QUEUE_TICKS DSP_TASK_DELAY
+
 #if !((DSP_MODEL==DSP_ST7735 && DTYPE==INITR_BLACKTAB) || DSP_MODEL==DSP_ST7789 || DSP_MODEL==DSP_ST7796 || DSP_MODEL==DSP_ILI9488 || DSP_MODEL==DSP_ILI9486 || DSP_MODEL==DSP_ILI9341 || DSP_MODEL==DSP_ILI9225)
   #undef  BITRATE_FULL
   #define BITRATE_FULL     false
@@ -214,15 +219,23 @@ void returnPlayer(){
   display.putRequest(NEWMODE, PLAYER);
 }
 
+Display::~Display(){
+  _events_unsubsribe();
+}
+
 void Display::_createDspTask(){
   xTaskCreatePinnedToCore(loopDspTask, "DspTask", CORE_STACK_SIZE,  NULL,  4, &DspTask, !xPortGetCoreID());
 }
 
 void loopDspTask(void * pvParameters){
   while(true){
-    if(displayQueue==NULL) break;
+    if(displayQueue==NULL){
+      LOGE(T_Display, println, "msg queue is NULL, killing display thread!");
+      break;
+    }
     display.loop();
-    vTaskDelay(DSP_TASK_DELAY);
+    // will NOT delay here, would use message dequeue timeout instead
+    //vTaskDelay(DSP_TASK_DELAY);
   }
   vTaskDelete( NULL );
   DspTask=NULL;
@@ -243,20 +256,16 @@ void Display::init() {
     Serial.println("##[BOOT]#\tdisplay.init FAILED!");
     return;
   }
-  Serial.println("bb1");
 
   displayQueue=NULL;
   displayQueue = xQueueCreate( 5, sizeof( requestParams_t ) );
   while(displayQueue==NULL){;}
-  Serial.println("bb2");
 
   while(!_bootStep==0) { delay(10); }
-  Serial.println("bb3");
   _pager.begin();
-  Serial.println("bb4");
   _bootScreen();
-  Serial.println("bb5");
   _createDspTask();
+  _events_subsribe();
   Serial.println("done");
 }
 
@@ -562,22 +571,8 @@ void Display::_layoutChange(bool played){
     }
   }
 }
-#ifndef DSP_QUEUE_TICKS
-  #define DSP_QUEUE_TICKS 0
-#endif
+
 void Display::loop() {
-/*
-  if(_bootStep==0) {
-    _pager.begin();
-    _bootScreen();
-    return;
-  }
-*/
-  if(displayQueue==NULL) return;
-  _pager.loop();
-#ifdef USE_NEXTION
-  nextion.loop();
-#endif
   requestParams_t request;
   if(xQueueReceive(displayQueue, &request, DSP_QUEUE_TICKS)){
     bool pm_result = true;
@@ -659,7 +654,17 @@ void Display::loop() {
         }
         default: break;
       }
+
+    // check if there are more messages waiting in the Q, in this case break the loop() and go
+    // for another round to evict next message, do not waste time to redraw the screen, etc...
+    if (uxQueueMessagesWaiting(displayQueue))
+      return;
   }
+
+  _pager.loop();
+#ifdef USE_NEXTION
+  nextion.loop();
+#endif
   dsp->loop();
   #if I2S_DOUT==255
   player.computeVUlevel();
@@ -783,6 +788,152 @@ void Display::wakeup(){
   dsp->wake();
 #endif
 }
+
+void Display::_events_subsribe(){
+  // command events
+  esp_event_handler_instance_register_with(evt::get_hndlr(), YO_CMD_EVENTS, ESP_EVENT_ANY_ID,
+    [](void* self, esp_event_base_t base, int32_t id, void* data){ static_cast<Display*>(self)->_events_cmd_hndlr(id, data); },
+    this, &_hdlr_cmd_evt
+  );
+}
+
+void Display::_events_unsubsribe(){
+  esp_event_handler_instance_unregister_with(evt::get_hndlr(), YO_CMD_EVENTS, ESP_EVENT_ANY_ID, _hdlr_cmd_evt);
+
+}
+
+void Display::_events_cmd_hndlr(int32_t id, void* data){
+  switch (static_cast<evt::yo_event_t>(id)){
+
+    // Play radio station from a playlist
+    case evt::yo_event_t::displayNewMode :
+      _swichMode(*reinterpret_cast<displayMode_e*>(data));
+      break;
+
+    case evt::yo_event_t::displayClock :
+      if(_mode==PLAYER || _mode==SCREENSAVER) _time(); 
+      break;
+
+    case evt::yo_event_t::displayNewTitle :
+      _title();
+      break;
+
+    case evt::yo_event_t::displayNewStation :
+      _station();
+      break;
+
+    case evt::yo_event_t::displayNextStation :
+      _drawNextStationNum(*reinterpret_cast<int32_t*>(data));
+      break;
+
+    case evt::yo_event_t::displayDrawPlaylist :
+      _drawPlaylist();
+      break;
+
+    case evt::yo_event_t::displayDrawVol :
+      _volume();
+      break;
+
+    case evt::yo_event_t::displayDrawBitRatte : {
+      char buf[20]; 
+      snprintf(buf, 20, bitrateFmt, config.station.bitrate); 
+      if (_bitrate)
+        { _bitrate->setText(config.station.bitrate == 0 ? "n/a" : buf); }
+      if(_fullbitrate) {
+        _fullbitrate->setBitrate(config.station.bitrate); 
+        _fullbitrate->setFormat(config.configFmt); 
+      } 
+    }
+      break;
+
+    case evt::yo_event_t::displayAudioInfo :
+      if(_heapbar){
+        _heapbar->lock(!config.store.audioinfo);
+        _heapbar->setValue(player->inBufferFilled());
+      }
+      break;
+
+    case evt::yo_event_t::displayShowVUMeter : {
+      if(_vuwidget){
+        _vuwidget->lock(!config.store.vumeter); 
+        _layoutChange(player->isRunning());
+      }
+      break;
+    }
+
+    case evt::yo_event_t::displayShowWeather : {
+      if(_weather)
+        _weather->lock(!config.store.showweather);
+      if(!config.store.showweather){
+        #ifndef HIDE_IP
+        if(_volip) _volip->setText(WiFi.localIP().toString().c_str(), iptxtFmt);
+        #endif
+      } else {
+        if(_weather) _weather->setText(const_getWeather);
+      }
+      break;
+    }
+
+    case evt::yo_event_t::displayNewWeather :
+      if(_weather && network.weatherBuf)
+        _weather->setText(network.weatherBuf);
+      break;
+
+    case evt::yo_event_t::displayBootstring : {
+      auto idx = *reinterpret_cast<int32_t*>(data);
+      if (idx >= sizeof(config.ssids)/sizeof(neworkItem) || idx < 0)
+        return;
+      if(_bootstring)
+        _bootstring->setText(config.ssids[idx].ssid, bootstrFmt);
+      /*#ifdef USE_NEXTION
+        char buf[50];
+        snprintf(buf, 50, bootstrFmt, config.ssids[request.payload].ssid);
+        nextion.bootString(buf);
+      #endif*/
+      break;
+    }
+
+    case evt::yo_event_t::displayWait4SD :
+      if(_bootstring)
+        _bootstring->setText(const_waitForSD);
+      break;
+
+    case evt::yo_event_t::displaySDFileIndex :
+      if (_mode == SDCHANGE)
+        _nums.setText(*reinterpret_cast<int32_t*>(data), "%d");
+      break;
+
+    case evt::yo_event_t::displayShowRSSI :
+      if(_rssi)
+        { _setRSSI(*reinterpret_cast<int32_t*>(data)); }
+      if (_heapbar && config.store.audioinfo)
+        _heapbar->setValue(player->isRunning() ? player->inBufferFilled() : 0);
+      break;
+
+    case evt::yo_event_t::displayPStart :
+      _layoutChange(true);
+      break;
+
+    case evt::yo_event_t::displayPStop :
+      _layoutChange(false);
+      break;
+
+    case evt::yo_event_t::displayStart :
+      _start();
+      break;
+
+    #ifndef HIDE_IP
+    case evt::yo_event_t::displayNewIP :
+      if(_volip)
+        _volip->setText(WiFi.localIP().toString().c_str(), iptxtFmt);
+      break;
+    #endif
+
+    default:;
+  }
+}
+
+
 //============================================================================================================================
 #else // !DUMMYDISPLAY
 //============================================================================================================================

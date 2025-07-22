@@ -54,6 +54,28 @@ enum class yo_event_t:int32_t {
   playerMode,               // player mode webradio/sdcard, param int n: 0 - for webradio, 1 - for SDCARD
   // Device modes
 
+  // Display events
+  displayBootstring = 60,
+  displayNewMode,
+  displayClock,
+  displayNewTitle,
+  displayNewStation,
+  displayNextStation,
+  displayDrawPlaylist,
+  displayDrawVol,
+  displayDrawBitRatte,
+  displayAudioInfo,
+  displayShowVUMeter,
+  displayShowRSSI,
+  displayShowWeather,
+  displayNewWeather,
+  displayPStop,
+  displayPStart,
+  displayStart,
+  displayWait4SD,
+  displaySDFileIndex,
+  displayNewIP,
+  displayNope,
 
   // ext devices control
   btnLock = 100,            // Lock button

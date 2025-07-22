@@ -164,6 +164,7 @@ class Display {
     displayMode_e _mode;
   public:
     Display() {};
+    ~Display();
     displayMode_e mode() { return _mode; }
     void mode(displayMode_e m) { _mode=m; }
     void init();
@@ -178,7 +179,8 @@ class Display {
     void wakeup();
     void setContrast();
     void printPLitem(uint8_t pos, const char* item);
-  private:
+
+private:
     ScrollWidget _meta, _title1, _plcurrent;
     ScrollWidget *_weather;
     ScrollWidget *_title2;
@@ -210,6 +212,25 @@ class Display {
     void _setReturnTicker(uint8_t time_s);
     void _layoutChange(bool played);
     void _setRSSI(int rssi);
+
+    // event function handlers
+    esp_event_handler_instance_t _hdlr_cmd_evt{nullptr};
+
+    /**
+     * @brief subscribe to event mesage bus
+     * 
+     */
+    void _events_subsribe();
+
+    /**
+     * @brief unregister from event loop
+     * 
+     */
+    void _events_unsubsribe();
+
+    // command events handler
+    void _events_cmd_hndlr(int32_t id, void* data);
+
 };
 
 #else
