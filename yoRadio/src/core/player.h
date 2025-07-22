@@ -1,6 +1,7 @@
 #ifndef player_h
 #define player_h
 #include "options.h"
+#include <mutex>
 
 #if I2S_DOUT!=255 || I2S_INTERNAL
   #include "Audio.h"
@@ -42,7 +43,9 @@ class Player: public Audio {
   protected:
     virtual void dac_init();
 
-  public:
+  private:
+    std::mutex _mtx;
+
     // event function handlers
     esp_event_handler_instance_t _hdlr_cmd_evt{nullptr};
 

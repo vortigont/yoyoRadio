@@ -108,9 +108,11 @@ void Player::setError(const char *e){
 
 void Player::_stop(bool alreadyStopped){
   log_i("%s called", __func__);
-  if(config.getMode()==PM_SDCARD && !alreadyStopped) config.sdResumePos = player->getFilePos();
-   stopSong(); 
+  std::lock_guard<std::mutex> lock(_mtx);
+  if(config.getMode()==PM_SDCARD && !alreadyStopped)
+    config.sdResumePos = player->getFilePos();
   _status = STOPPED;
+  stopSong();
   setOutputPins(false);
   if(!hasError()) config.setTitle((display.mode()==LOST || display.mode()==UPDATING)?"":const_PlStopped);
   config.station.bitrate = 0;
@@ -144,7 +146,7 @@ void Player::initHeaders(const char *file) {
 #endif
 void Player::loop() {
   Audio::loop();
-  if(!isRunning() && _status==PLAYING)
+  if(!isRunning() && _status==PLAYING)    // todo: remove this and rely on internal logical state instead. It may lead to problems with async events
     _stop(true);
 
   // some volume save timer
@@ -168,7 +170,11 @@ void Player::setOutputPins(bool isPlaying) {
 }
 
 void Player::_play(uint16_t stationId) {
+  // todo - this mutex here is taking too much, need to split this method into more atomic calls
+  std::lock_guard<std::mutex> lock(_mtx);
   log_i("%s called, stationId=%d", __func__, stationId);
+  LOGD("PLR: ", printf, "_play:%u\n", stationId);
+
   setError("");
   //setDefaults();    this is private in a new version of ESP32-audioI2S lib
   remoteStationName = false;
@@ -260,6 +266,7 @@ void Player::prev() {
     if (lastStation == 1) config.lastStation(config.playlistLength()); else config.lastStation(lastStation-1);
   }
   lastStation = config.lastStation();
+  // todo - no sense to send message to yourselv, replace it with notify message and calling respective method
   EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &lastStation, sizeof(lastStation));
 }
 
@@ -271,6 +278,7 @@ void Player::next() {
     config.lastStation(random(1, config.playlistLength()));
   }
   lastStation = config.lastStation();
+  // todo - no sense to send message to yourselv, replace it with notify message and calling respective method
   EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &lastStation, sizeof(lastStation));
 }
 
@@ -279,6 +287,7 @@ void Player::toggle() {
     _stop();
   } else {
     auto lastStation = config.lastStation();
+    // todo - no sense to send message to yourselv, replace it with notify message and calling respective method
     EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &lastStation, sizeof(lastStation));    
   }
 }

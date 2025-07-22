@@ -13,6 +13,7 @@
 #include <ESPmDNS.h>
 #include "ArduinoJson.h"
 #include "core/evtloop.h"
+#include "log.h"
 
 
 #if USE_OTA
@@ -494,6 +495,8 @@ void NetServer::onWsMessage(void *arg, uint8_t *data, size_t len, uint8_t client
   AwsFrameInfo *info = (AwsFrameInfo*)arg;
   if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT) {
     data[len] = 0;
+    // pring received message in debug mode
+    LOGD("WS MSG: ", println, reinterpret_cast<const char*>(data));
     char comnd[65], val[65];
     if (config.parseWsCommand((const char*)data, comnd, val, 65)) {
       if (strcmp(comnd, "trebble") == 0) {

@@ -6,10 +6,12 @@
 #include "controls.h"
 #include "options.h"
 #include "evtloop.h"
+#include "log.h"
 
 CommandHandler cmd;
 
 bool CommandHandler::exec(const char *command, const char *value, uint8_t cid) {
+  LOGD("CMD: ", printf, "%s:%s\n", command, value);
   if (strEquals(command, "start"))    { auto v = config.lastStation(); EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &v, sizeof(v)); return true; }
   if (strEquals(command, "stop"))     { EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::playerStop)); return true; }
   if (strEquals(command, "toggle"))   { player->toggle(); return true; }
