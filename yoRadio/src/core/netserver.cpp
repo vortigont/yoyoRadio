@@ -688,7 +688,7 @@ void send_playlist(AsyncWebServerRequest * request){
     return request->redirect(PLAYLIST_SD_PATH);
 
   // last resort - send playlist from LittleFS
-  request->send(LittleFS, request->url().c_str());
+  request->send(LittleFS, request->url().c_str(), asyncsrv::T_text_plain);
 }
 
 void handleNotFound(AsyncWebServerRequest * request) {
@@ -745,7 +745,7 @@ void handleNotFound(AsyncWebServerRequest * request) {
   if (request->url() == "/variables.js") {
     char varjsbuf[BUFLEN];
     sprintf (varjsbuf, "var yoVersion='%s';\nvar formAction='%s';\nvar playMode='%s';\n", YOVERSION, (network.status == CONNECTED && !config.emptyFS)?"webboard":"", (network.status == CONNECTED)?"player":"ap");
-    request->send(200, asyncsrv::T_text_html, varjsbuf);
+    request->send(200, asyncsrv::T_application_javascript, varjsbuf);
     return;
   }
   if (strcmp(request->url().c_str(), "/settings.html") == 0 || strcmp(request->url().c_str(), "/update.html") == 0 || strcmp(request->url().c_str(), "/ir.html") == 0){
