@@ -43,27 +43,6 @@ class Player: public Audio {
   protected:
     virtual void dac_init();
 
-  private:
-    std::mutex _mtx;
-
-    // event function handlers
-    esp_event_handler_instance_t _hdlr_cmd_evt{nullptr};
-
-    /**
-     * @brief subscribe to event mesage bus
-     * 
-     */
-    void _events_subsribe();
-
-    /**
-     * @brief unregister from event loop
-     * 
-     */
-    void _events_unsubsribe();
-
-    // command events handler
-    void _events_cmd_hndlr(int32_t id, void* data);
-
 public:
     bool lockOutput = true;
     bool resumeAfterUrl = false;
@@ -94,6 +73,35 @@ public:
     void stopInfo();
     void setOutputPins(bool isPlaying);
     void setResumeFilePos(uint32_t pos) { _resumeFilePos = pos; }
+
+private:
+    std::mutex _mtx;
+
+    /**
+     * @brief play station from a playlist by index
+     * index is resolved via Config instance
+     * 
+     * @param idx 
+     */
+    void _play_station_from_playlist(int idx);
+
+    // event function handlers
+    esp_event_handler_instance_t _hdlr_cmd_evt{nullptr};
+
+    /**
+     * @brief subscribe to event mesage bus
+     * 
+     */
+    void _events_subsribe();
+
+    /**
+     * @brief unregister from event loop
+     * 
+     */
+    void _events_unsubsribe();
+
+    // command events handler
+    void _events_cmd_hndlr(int32_t id, void* data);
 };
 
 

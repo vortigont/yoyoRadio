@@ -197,6 +197,7 @@ void Player::_play(uint16_t stationId) {
   display.putRequest(DBITRATE);
   display.putRequest(NEWSTATION);
   netserver.requestOnChange(STATION, 0);
+  // todo: why do this netserver loop calls from here??? 
   netserver.loop();
   netserver.loop();
   if(config.store.smartstart!=2)
@@ -260,35 +261,34 @@ void Player::browseUrl(){
 #endif
 
 void Player::prev() {
-  
   uint16_t lastStation = config.lastStation();
   if(config.getMode()==PM_WEB || !config.store.sdsnuffle){;
-    if (lastStation == 1) config.lastStation(config.playlistLength()); else config.lastStation(lastStation-1);
+    if (lastStation == 1)
+      config.lastStation(config.playlistLength());
+    else
+      config.lastStation(lastStation - 1);
   }
-  lastStation = config.lastStation();
-  // todo - no sense to send message to yourselv, replace it with notify message and calling respective method
-  EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &lastStation, sizeof(lastStation));
+  _play_station_from_playlist(config.lastStation());
 }
 
 void Player::next() {
   uint16_t lastStation = config.lastStation();
   if(config.getMode()==PM_WEB || !config.store.sdsnuffle){
-    if (lastStation == config.playlistLength()) config.lastStation(1); else config.lastStation(lastStation+1);
-  }else{
+    if (lastStation == config.playlistLength())
+      config.lastStation(1);
+    else
+      config.lastStation(lastStation + 1);
+  } else {
     config.lastStation(random(1, config.playlistLength()));
   }
-  lastStation = config.lastStation();
-  // todo - no sense to send message to yourselv, replace it with notify message and calling respective method
-  EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &lastStation, sizeof(lastStation));
+  _play_station_from_playlist(config.lastStation());
 }
 
 void Player::toggle() {
   if (_status == PLAYING) {
     _stop();
   } else {
-    auto lastStation = config.lastStation();
-    // todo - no sense to send message to yourselv, replace it with notify message and calling respective method
-    EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &lastStation, sizeof(lastStation));    
+    _play_station_from_playlist(config.lastStation());
   }
 }
 
@@ -344,14 +344,7 @@ void Player::_events_cmd_hndlr(int32_t id, void* data){
 
     // Play radio station from a playlist
     case evt::yo_event_t::plsStation : {
-      int idx = *reinterpret_cast<int32_t*>(data);
-      if (idx > 0)
-        config.setLastStation(idx);
-      _play((uint16_t)abs(idx));
-      EVT_POST(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerPlay));
-      if (player_on_station_change)   // todo: this should be moved to event handling
-        player_on_station_change();
-      pm.on_station_change();   // todo: this should be moved to event handling
+      _play_station_from_playlist(*reinterpret_cast<int32_t*>(data));
       break;
     }
 
@@ -368,6 +361,18 @@ void Player::_events_cmd_hndlr(int32_t id, void* data){
 
     default:;
   }
+}
+
+void Player::_play_station_from_playlist(int idx){
+  if (idx > 0)
+    config.setLastStation(idx);
+
+  _play(abs(idx));
+
+  EVT_POST(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerPlay));
+  if (player_on_station_change)   // todo: this should be moved to event handling
+    player_on_station_change();
+  pm.on_station_change();   // todo: this should be moved to event handling  
 }
 
 
