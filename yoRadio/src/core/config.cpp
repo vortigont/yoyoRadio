@@ -31,7 +31,7 @@ bool Config::_isFSempty() {
   char fullpath[32];
   for (size_t i = 0; i < requiredFilesCount; i++) {
     sprintf(fullpath, "/www/%s", requiredFiles[i]);
-    if(!SPIFFS.exists(fullpath)) {
+    if(!LittleFS.exists(fullpath)) {
       Serial.println(fullpath);
       return true;
     }
@@ -82,10 +82,10 @@ void Config::init() {
   emptyFS = _isFSempty();
   if(emptyFS) {
     #ifndef FILESURL
-      BOOTLOG("SPIFFS is empty!");
+      BOOTLOG("LittleFS is empty!");
     #else
-      BOOTLOG("SPIFFS is empty.  Will attempt to get files from online...");
-      File markerFile = SPIFFS.open(ONLINEUPDATE_MARKERFILE, "w");
+      BOOTLOG("LittleFS is empty.  Will attempt to get files from online...");
+      File markerFile = LittleFS.open(ONLINEUPDATE_MARKERFILE, "w");
       if (markerFile) markerFile.close();
       display.putRequest(NEWMODE, UPDATING);
     #endif
@@ -559,10 +559,10 @@ void Config::indexPlaylist() {
 
 void Config::initPlaylist() {
   //store.countStation = 0;
-  if (!SPIFFS.exists(INDEX_PATH)) indexPlaylist();
+  if (!LittleFS.exists(INDEX_PATH)) indexPlaylist();
 
-  /*if (SPIFFS.exists(INDEX_PATH)) {
-    File index = SPIFFS.open(INDEX_PATH, "r");
+  /*if (LittleFS.exists(INDEX_PATH)) {
+    File index = LittleFS.open(INDEX_PATH, "r");
     store.countStation = index.size() / 4;
     index.close();
     saveValue(&store.countStation, store.countStation, true, true);
@@ -1162,8 +1162,8 @@ void Config::sleepForAfter(uint16_t sf, uint16_t sa){
 
 void cleanStaleSearchResults() {
   const char* metaPath = "/data/searchresults.json.meta";
-  if (SPIFFS.exists(metaPath)) {
-    File metaFile = SPIFFS.open(metaPath, "r");
+  if (LittleFS.exists(metaPath)) {
+    File metaFile = LittleFS.open(metaPath, "r");
     metaFile.readStringUntil('\n'); // 1st line query
     String timeStr = metaFile.readStringUntil('\n'); //2nd line is time
     metaFile.close();
@@ -1172,9 +1172,9 @@ void cleanStaleSearchResults() {
       time_t now = time(nullptr);
       if (now < 100000000 || (now - fileTime) > 86400) {
         Serial.print("Cleaning stale search results.\n");
-        SPIFFS.remove(metaPath);
-        SPIFFS.remove("/data/searchresults.json");
-        SPIFFS.remove("/data/search.txt");
+        LittleFS.remove(metaPath);
+        LittleFS.remove("/data/searchresults.json");
+        LittleFS.remove("/data/search.txt");
       }
     }
   }
@@ -1182,8 +1182,8 @@ void cleanStaleSearchResults() {
 
 void fixPlaylistFileEnding() {
   const char* playlistPath = PLAYLIST_PATH;
-  if (!SPIFFS.exists(playlistPath)) return;
-  File playlistfile = SPIFFS.open(playlistPath, "r+");
+  if (!LittleFS.exists(playlistPath)) return;
+  File playlistfile = LittleFS.open(playlistPath, "r+");
   if (!playlistfile) return;
   size_t sz = playlistfile.size();
   if (sz < 2) { playlistfile.close(); return; }
@@ -1230,7 +1230,7 @@ void updateFile(void* param, const char* localFile, const char* onlineFile, cons
       updateFile(param, localPath, remoteUrl, "", fname);
     }
     // Delete any files in /www that are not in the requiredFiles list
-    File root = SPIFFS.open("/www");
+    File root = LittleFS.open("/www");
     if (root && root.isDirectory()) {
       File file = root.openNextFile();
       while (file) {
@@ -1248,7 +1248,7 @@ void updateFile(void* param, const char* localFile, const char* onlineFile, cons
         }
         if (!found) {
           Serial.printf("[File: /www/%s] Deleting - not in required file list.\n", path);
-          SPIFFS.remove(path);
+          LittleFS.remove(path);
         }
         file = root.openNextFile();
       }
@@ -1260,9 +1260,9 @@ void startAsyncServices(void* param){
   fixPlaylistFileEnding();
   // if the OTA marker file exists, fetch all web assets immediately, clean up, restart
  #ifdef UPDATEURL
-    if (SPIFFS.exists(ONLINEUPDATE_MARKERFILE)) {
+    if (LittleFS.exists(ONLINEUPDATE_MARKERFILE)) {
       getRequiredFiles(param);
-      SPIFFS.remove(ONLINEUPDATE_MARKERFILE);
+      LittleFS.remove(ONLINEUPDATE_MARKERFILE);
       delay(200);
       ESP.restart();
     }
@@ -1276,7 +1276,7 @@ void startAsyncServices(void* param){
 void Config::startAsyncServicesButWait() {
   if (WiFi.status() != WL_CONNECTED) return;
   ESPFileUpdater* updater = nullptr;
-  updater = new ESPFileUpdater(SPIFFS);
+  updater = new ESPFileUpdater(LittleFS);
   updater->setMaxSize(1024);
   updater->setUserAgent(ESPFILEUPDATER_USERAGENT);
   xTaskCreate(startAsyncServices, "startAsyncServices", 8192, updater, 2, NULL);

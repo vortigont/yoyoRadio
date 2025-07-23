@@ -5,8 +5,6 @@
 #include <SPI.h>
 #include <LittleFS.h>
 #include <Preferences.h>
-#include <EEPROM.h>
-//#include "SD.h"
 #include "options.h"
 #include "telnet.h"
 #include "rtcsupport.h"
