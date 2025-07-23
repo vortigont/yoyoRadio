@@ -159,7 +159,8 @@ void Config::changeMode(int newmode){
     if(pir){
       EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::playerStop));
     }
-    display.putRequest(NEWMODE, SDCHANGE);
+    int32_t d = SDCHANGE;
+    EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
     while(display.mode()!=SDCHANGE)
       delay(10);
     delay(50);
@@ -181,8 +182,10 @@ void Config::changeMode(int newmode){
   //netserver.requestOnChange(GETMODE, 0);
  // netserver.requestOnChange(CHANGEMODE, 0);
   display.resetQueue();
-  display.putRequest(NEWMODE, PLAYER);
-  display.putRequest(NEWSTATION);
+  
+  int32_t d = SDCHANGE;
+  EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
+  EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewStation));
 }
 
 void Config::initSDPlaylist() {
@@ -335,39 +338,45 @@ void Config::reset(){
 void Config::enableScreensaver(bool val){
   saveValue(&store.screensaverEnabled, val);
 #ifndef DSP_LCD
-  display.putRequest(NEWMODE, PLAYER);
+  int32_t d = PLAYER;
+  EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
 #endif
 }
 void Config::setScreensaverTimeout(uint16_t val){
   val=constrain(val,5,65520);
   saveValue(&store.screensaverTimeout, val);
 #ifndef DSP_LCD
-  display.putRequest(NEWMODE, PLAYER);
+  int32_t d = PLAYER;
+  EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
 #endif
 }
 void Config::setScreensaverBlank(bool val){
   saveValue(&store.screensaverBlank, val);
 #ifndef DSP_LCD
-  display.putRequest(NEWMODE, PLAYER);
+  int32_t d = PLAYER;
+  EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
 #endif
 }
 void Config::setScreensaverPlayingEnabled(bool val){
   saveValue(&store.screensaverPlayingEnabled, val);
 #ifndef DSP_LCD
-  display.putRequest(NEWMODE, PLAYER);
+  int32_t d = PLAYER;
+  EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
 #endif
 }
 void Config::setScreensaverPlayingTimeout(uint16_t val){
   val=constrain(val,1,1080);
   config.saveValue(&config.store.screensaverPlayingTimeout, val);
 #ifndef DSP_LCD
-  display.putRequest(NEWMODE, PLAYER);
+  int32_t d = PLAYER;
+  EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
 #endif
 }
 void Config::setScreensaverPlayingBlank(bool val){
   saveValue(&store.screensaverPlayingBlank, val);
 #ifndef DSP_LCD
-  display.putRequest(NEWMODE, PLAYER);
+  int32_t d = PLAYER;
+  EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
 #endif
 }
 void Config::setSntpOne(const char *val){
@@ -388,13 +397,16 @@ void Config::setShowweather(bool val){
   config.saveValue(&config.store.showweather, val);
   network.trueWeather=false;
   network.forceWeather = true;
-  display.putRequest(SHOWWEATHER);
+  EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayShowWeather));
+
 }
 void Config::setWeatherKey(const char *val){
   saveValue(store.weatherkey, val, WEATHERKEY_LENGTH);
   network.trueWeather=false;
-  display.putRequest(NEWMODE, CLEAR);
-  display.putRequest(NEWMODE, PLAYER);
+  int32_t d = CLEAR;
+  EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
+  d = PLAYER;
+  EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
 }
 void Config::setSDpos(uint32_t val){
   if (getMode()==PM_SDCARD){
@@ -424,7 +436,10 @@ void Config::resetSystem(const char *val, uint8_t clientId){
     saveValue(&store.softapdelay, (uint8_t)0, false);
     snprintf(store.mdnsname, MDNS_LENGTH, "yoradio-%x", getChipId());
     saveValue(store.mdnsname, store.mdnsname, MDNS_LENGTH, true, true);
-    display.putRequest(NEWMODE, CLEAR); display.putRequest(NEWMODE, PLAYER);
+    int32_t d = CLEAR;
+    EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
+    d = PLAYER;
+    EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
     netserver.requestOnChange(GETSYSTEM, clientId);
     return;
   }
@@ -445,7 +460,10 @@ void Config::resetSystem(const char *val, uint8_t clientId){
     saveValue(&store.screensaverPlayingEnabled, false);
     saveValue(&store.screensaverPlayingTimeout, (uint16_t)5);
     saveValue(&store.screensaverPlayingBlank, false);
-    display.putRequest(NEWMODE, CLEAR); display.putRequest(NEWMODE, PLAYER);
+    int32_t d = CLEAR;
+    EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
+    d = PLAYER;
+    EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
     netserver.requestOnChange(GETSCREEN, clientId);
     return;
   }
@@ -465,7 +483,10 @@ void Config::resetSystem(const char *val, uint8_t clientId){
     saveValue(store.weatherlon, "37.6184", 10, false);
     saveValue(store.weatherkey, "", WEATHERKEY_LENGTH);
     network.trueWeather=false;
-    display.putRequest(NEWMODE, CLEAR); display.putRequest(NEWMODE, PLAYER);
+    int32_t d = CLEAR;
+    EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
+    d = PLAYER;
+    EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
     netserver.requestOnChange(GETWEATHER, clientId);
     return;
   }
@@ -579,7 +600,7 @@ void Config::saveVolume(){
 
 uint8_t Config::setVolume(uint8_t val) {
   store.volume = val;
-  display.putRequest(DRAWVOL);
+  EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayDrawVol));
   netserver.requestOnChange(VOLUME, 0);
   return store.volume;
 }
@@ -624,7 +645,7 @@ void Config::setTitle(const char* title) {
   u8fix(config.station.title);
   netserver.requestOnChange(TITLE, 0);
   netserver.loop();
-  display.putRequest(NEWTITLE);
+  EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewTitle));
 }
 
 void Config::setStation(const char* station) {
@@ -1050,6 +1071,7 @@ void Config::_events_cmd_hndlr(int32_t id, void* data){
   switch (static_cast<evt::yo_event_t>(id)){
 
     #ifdef USE_SD
+    // check player mode (ex. PR_CHECKSD)
     case evt::yo_event_t::playerMode :
       if(config.getMode()==PM_SDCARD){
         if(!sdman.cardPresent()){

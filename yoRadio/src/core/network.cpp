@@ -56,9 +56,11 @@ void ticks() {
     config.screensaverTicks++;
     if(config.screensaverTicks > config.store.screensaverTimeout+SCREENSAVERSTARTUPDELAY){
       if(config.store.screensaverBlank){
-        display.putRequest(NEWMODE, SCREENBLANK);
-      }else{
-        display.putRequest(NEWMODE, SCREENSAVER);
+        int32_t d = SCREENBLANK;
+        EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
+      } else {
+        int32_t d = SCREENSAVER;
+        EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
       }
     }
   }
@@ -66,9 +68,11 @@ void ticks() {
     config.screensaverPlayingTicks++;
     if(config.screensaverPlayingTicks > config.store.screensaverPlayingTimeout*60+SCREENSAVERSTARTUPDELAY){
       if(config.store.screensaverPlayingBlank){
-        display.putRequest(NEWMODE, SCREENBLANK);
-      }else{
-        display.putRequest(NEWMODE, SCREENSAVER);
+        int32_t d = SCREENBLANK;
+        EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
+      } else {
+        int32_t d = SCREENSAVER;
+        EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
       }
     }
   }
@@ -77,13 +81,13 @@ void ticks() {
   if(config.isRTCFound()){
     rtc.getTime(&network.timeinfo);
     mktime(&network.timeinfo);
-    display.putRequest(CLOCK);
+    EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayClock));
   }
 #else
   if(network.timeinfo.tm_year>100 || network.status == SDREADY) {
     network.timeinfo.tm_sec++;
     mktime(&network.timeinfo);
-    display.putRequest(CLOCK);
+    EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayClock));
   }
 #endif
   if(player->isRunning() && config.getMode()==PM_SDCARD) netserver.requestOnChange(SDPOS, 0);
@@ -91,10 +95,14 @@ void ticks() {
     if(network.status == CONNECTED){
       netserver.setRSSI(WiFi.RSSI());
       netserver.requestOnChange(NRSSI, 0);
-      display.putRequest(DSPRSSI, netserver.getRSSI());
+      int32_t d = netserver.getRSSI();
+      EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayShowRSSI), &d, sizeof(d));
     }
 #ifdef USE_SD
-    if(display.mode()!=SDCHANGE) player->sendCommand({PR_CHECKSD, 0});
+// зачем это здесь в области rssi???
+    if(display.mode()!=SDCHANGE)
+      EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayClock));
+      EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::playerMode));
 #endif
 
     if(config.vuThreshold > 10)
@@ -105,13 +113,14 @@ void ticks() {
 void MyNetwork::WiFiReconnected(WiFiEvent_t event, WiFiEventInfo_t info){
   network.beginReconnect = false;
   player->lockOutput = false;
-  delay(100);
-  display.putRequest(NEWMODE, PLAYER);
+  int32_t d = PLAYER;
+  EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
   if(config.getMode()==PM_SDCARD) {
     network.status=CONNECTED;
-    display.putRequest(NEWIP, 0);
+    EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewIP));
   } else {
-    display.putRequest(NEWMODE, PLAYER);
+    int32_t d = PLAYER;
+    EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
     if (network.lostPlaying){
       auto v = config.lastStation();
       EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &v, sizeof(v));
@@ -127,14 +136,15 @@ void MyNetwork::WiFiLostConnection(WiFiEvent_t event, WiFiEventInfo_t info){
     Serial.printf("Lost connection, reconnecting to %s...\n", config.ssids[config.store.lastSSID-1].ssid);
     if(config.getMode()==PM_SDCARD) {
       network.status=SDREADY;
-      display.putRequest(NEWIP, 0);
-    }else{
+      EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewIP));
+    } else {
       network.lostPlaying = player->isRunning();
       if (network.lostPlaying){
         player->lockOutput = true;
         EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::playerStop));
       }
-      display.putRequest(NEWMODE, LOST);
+      int32_t d = LOST;
+      EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
     }
   }
   network.beginReconnect = true;
@@ -142,7 +152,7 @@ void MyNetwork::WiFiLostConnection(WiFiEvent_t event, WiFiEventInfo_t info){
 }
 
 bool MyNetwork::wifiBegin(bool silent){
-  uint8_t ls = (config.store.lastSSID == 0 || config.store.lastSSID > config.ssidsCount) ? 0 : config.store.lastSSID - 1;
+  int32_t ls = (config.store.lastSSID == 0 || config.store.lastSSID > config.ssidsCount) ? 0 : config.store.lastSSID - 1;
   uint8_t startedls = ls;
   uint8_t errcnt = 0;
   WiFi.mode(WIFI_STA);
@@ -160,7 +170,7 @@ bool MyNetwork::wifiBegin(bool silent){
     if(!silent){
       Serial.printf("##[BOOT]#\tAttempt to connect to %s\n", config.ssids[ls].ssid);
       Serial.print("##[BOOT]#\t");
-      display.putRequest(BOOTSTRING, ls);
+      EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayBootstring), &ls, sizeof(ls));
     }
     WiFi.begin(config.ssids[ls].ssid, config.ssids[ls].password);
     while (WiFi.status() != WL_CONNECTED) {
@@ -196,7 +206,7 @@ void searchWiFi(void * pvParameters){
     netserver.begin(true);
     telnet.begin(true);
     network.setWifiParams();
-    display.putRequest(NEWIP, 0);
+    EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewIP));
   }
   vTaskDelete( NULL );
 }
@@ -233,7 +243,7 @@ void MyNetwork::begin() {
   if(config.isRTCFound()){
     rtc.getTime(&network.timeinfo);
     mktime(&network.timeinfo);
-    display.putRequest(CLOCK);
+    EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayClock));
   }
 #endif
   ctimer.attach(1, ticks);
@@ -289,7 +299,8 @@ void MyNetwork::raiseSoftAP() {
 }
 
 void MyNetwork::requestWeatherSync(){
-  display.putRequest(NEWWEATHER);
+  // todo: событие от погоды уходит в дисплей? 8-0
+  EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewWeather));
 }
 
 
@@ -302,7 +313,7 @@ void doSync( void * pvParameters ) {
       tsFailCnt = 0;
       network.forceTimeSync = false;
       mktime(&network.timeinfo);
-      display.putRequest(CLOCK);
+      EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayClock));
       network.requestTimeSync(true);
       #if RTCSUPPORTED
         if (config.isRTCFound()) rtc.setTime(&network.timeinfo);

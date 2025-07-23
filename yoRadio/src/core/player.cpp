@@ -357,7 +357,6 @@ void Player::_events_cmd_hndlr(int32_t id, void* data){
       setVol(*reinterpret_cast<int32_t*>(data));
       break;
 
-
     default:;
   }
 }

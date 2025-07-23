@@ -10,6 +10,7 @@
 #include "core/mqtt.h"
 #include "core/optionschecker.h"
 #include "core/evtloop.h"
+#include "core/log.h"
 
 #if DSP_HSPI || TS_HSPI || VS_HSPI
 SPIClass  SPI2(HOOPSENb);
@@ -22,51 +23,63 @@ void setup() {
 #if ARDUINO_USB_CDC_ON_BOOT==1
   // let USB serial to settle
   delay(2000);
+    LOGD(T_BOOT, println, "Start NetServer");
 #endif
-  Serial.println("##[BOOT]#\tSetup");
+  LOGD(T_BOOT, println, "Setup...");
 
   // Start event loop task
   evt::start();
 
-  if(REAL_LEDBUILTIN!=255) pinMode(REAL_LEDBUILTIN, OUTPUT);
-  if (yoradio_on_setup) yoradio_on_setup();
+  if(REAL_LEDBUILTIN!=255)
+    pinMode(REAL_LEDBUILTIN, OUTPUT);
+  if (yoradio_on_setup)
+    yoradio_on_setup();
+
+  LOGD(T_BOOT, println, "Init Config");
   config.init();
+  LOGD(T_BOOT, println, "Init Display");
   display.init();
 
   pm.on_setup();
 
   // cerate and init Player object
+  LOGD(T_BOOT, println, "Init Player");
   create_player(dac_type_t::DAC_TYPE);
   player->init();
 
+  LOGD(T_BOOT, println, "Start NetWork");
   network.begin();
   if (network.status != CONNECTED && network.status!=SDREADY) {
+    LOGD(T_BOOT, println, "Start NetServer");
     netserver.begin();
-    Serial.println("##[BOOT]#\tsn1");
+    LOGD(T_BOOT, println, "Init Controls");
     initControls();
-    Serial.println("##[BOOT]#\tsn2");
+
+    LOGD(T_BOOT, println, "Wait for Display");
     display.putRequest(DSP_START);
-    Serial.println("##[BOOT]#\tsn3");
     while(!display.ready()) delay(10);
-    Serial.println("##[BOOT]#\tsn4");
     return;
   }
+
   if(SDC_CS!=255) {
-    Serial.println("##[BOOT]#\ts sd1");
+    Serial.println("Wait for SDCARD");
     display.putRequest(WAITFORSD, 0);
-    Serial.print("##[BOOT]#\tSD search\t");
   }
-  Serial.println("##[BOOT]#\ts 2");
+  Serial.println("Load playlist");
   config.initPlaylistMode();
-  Serial.println("##[BOOT]#\ts 3");
+
+  Serial.println("Starting WebServer");
   netserver.begin();
-  Serial.println("##[BOOT]#\ts 4");
   telnet.begin();
+
+  LOGD(T_BOOT, println, "Init Controls");
   initControls();
-  Serial.println("##[BOOT]#\ts 5");
+
+  LOGD(T_BOOT, println, "Start Display");
   display.putRequest(DSP_START);
+  LOGD(T_BOOT, println, "Wait for Display");
   while(!display.ready()) delay(10);
-  Serial.println("##[BOOT]#\ts 6");
+
   #ifdef MQTT_ROOT_TOPIC
     mqttInit();
   #endif
@@ -80,7 +93,7 @@ void setup() {
   }
   #endif
   pm.on_end_setup();
-  Serial.println("##[BOOT]#\tSetup done!");
+  LOGD(T_BOOT, println, "Setup complete");
 }
 
 void loop() {

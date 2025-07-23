@@ -185,7 +185,8 @@ void encodersLoop(yoEncoder *enc, bool first){
           if(encoderDelta > 0) player->next(); else player->prev();
           return;
         }
-        display.putRequest(NEWMODE, STATIONS);
+        int32_t d = STATIONS;
+        EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
         while(display.mode() != STATIONS) {delay(10);}
       }
       controlsEvent(encoderDelta > 0, encoderDelta);
@@ -219,14 +220,17 @@ void irBlink() {
 }
 
 void irNumber(uint8_t num) {
-  uint16_t s;
+  int32_t s;
   if (display.numOfNextStation == 0 && num == 0) return;
-  display.putRequest(NEWMODE, NUMBERS);
+
+  int32_t d = NUMBERS;
+  EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
+
   if (display.numOfNextStation > UINT16_MAX / 10) return;
   s = display.numOfNextStation * 10 + num;
   if (s > config.playlistLength()) return;
   display.numOfNextStation = s;
-  display.putRequest(NEXTSTATION, s);
+  EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNextStation), &s, sizeof(s));
 }
 
 void irLoop() {
@@ -258,20 +262,17 @@ void irLoop() {
           if (network.status != CONNECTED && network.status!=SDREADY && target!=IR_AST) return;
           if(target!=IR_AST && display.mode()==LOST) return;
           if (display.mode() == SCREENSAVER || display.mode() == SCREENBLANK) {
-            display.putRequest(NEWMODE, PLAYER);
+            int32_t d = PLAYER;
+            EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
             return;
           }
           switch (target){
             case IR_PLAY: {
                 irBlink();
                 if (display.mode() == NUMBERS) {
-                  display.putRequest(NEWMODE, PLAYER);
-<<<<<<< HEAD
-                  player->sendCommand({PR_PLAY, display.numOfNextStation});
-=======
+                  int32_t d = PLAYER;
+                  EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
                   EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &display.numOfNextStation, sizeof(display.numOfNextStation));
-
->>>>>>> evt_bus
                   display.numOfNextStation = 0;
                   break;
                 }
@@ -298,11 +299,13 @@ void irLoop() {
               }
             case IR_HASH: {
                 if (display.mode() == NUMBERS) {
-                  display.putRequest(NEWMODE, PLAYER);
+                  int32_t d = PLAYER;
+                  EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
                   display.numOfNextStation = 0;
                   break;
                 }
-                display.putRequest(NEWMODE, display.mode() == PLAYER ? STATIONS : PLAYER);
+                int32_t d = display.mode() == PLAYER ? STATIONS : PLAYER;
+                EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
                 break;
               }
             case IR_0: {
@@ -374,19 +377,22 @@ void onBtnLongPressStart(int id) {
 #       if defined(DUMMYDISPLAY) && !defined(USE_NEXTION)
         break;
 #       endif
-        display.putRequest(NEWMODE, display.mode() == PLAYER ? STATIONS : PLAYER);
+        int32_t d = display.mode() == PLAYER ? STATIONS : PLAYER;
+        EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
         break;
       }
     case EVT_ENC2BTNB: {
 #       if defined(DUMMYDISPLAY) && !defined(USE_NEXTION)
         break;
 #       endif
-        display.putRequest(NEWMODE, display.mode() == PLAYER ? VOL : PLAYER);
+        int32_t d = display.mode() == PLAYER ? VOL : PLAYER;
+        EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
         break;
       }
     case EVT_BTNMODE: {
         //config.doSleepW();
-        display.putRequest(NEWMODE, SLEEPING);
+        int32_t d = SLEEPING;
+        EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
         break;
       }
     default: break;
@@ -436,7 +442,8 @@ void onBtnDuringLongPress(int id) {
       case EVT_BTNUP:
       case EVT_BTNDOWN: {
           if (display.mode() == PLAYER) {
-            display.putRequest(NEWMODE, STATIONS);
+            int32_t d = STATIONS;
+            EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
           }
           if (display.mode() == STATIONS) {
             controlsEvent(id == EVT_BTNDOWN);
@@ -452,11 +459,13 @@ void onBtnDuringLongPress(int id) {
 void controlsEvent(bool toRight, int8_t volDelta) {
   if (display.mode() == NUMBERS) {
     display.numOfNextStation = 0;
-    display.putRequest(NEWMODE, PLAYER);
+    int32_t d = PLAYER;
+    EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
   }
   if (display.mode() != STATIONS) {
     #if !defined(DUMMYDISPLAY) || defined(USE_NEXTION)
-      display.putRequest(NEWMODE, VOL);
+      int32_t d = VOL;
+      EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
     #endif
     if(volDelta!=0){
       int nv = config.store.volume+volDelta;
@@ -474,7 +483,7 @@ void controlsEvent(bool toRight, int8_t volDelta) {
     if (p < 1) p = cs;
     if (p > cs) p = 1;
     display.currentPlItem = p;
-    display.putRequest(DRAWPLAYLIST, p);
+    EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayDrawPlaylist), &p, sizeof(p));
   }
 }
 
@@ -493,19 +502,22 @@ void onBtnClick(int id) {
     case EVT_ENC2BTNB: {
         if (display.mode() == NUMBERS) {
           display.numOfNextStation = 0;
-          display.putRequest(NEWMODE, PLAYER);
+          int32_t d = PLAYER;
+          EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
         }
         if (display.mode() == PLAYER) {
           player->toggle();
         }
         if (display.mode() == SCREENSAVER || display.mode() == SCREENBLANK) {
-          display.putRequest(NEWMODE, PLAYER);
+          int32_t d = PLAYER;
+          EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
           #ifdef DSP_LCD
             delay(200);
           #endif
         }
         if (display.mode() == STATIONS) {
-          display.putRequest(NEWMODE, PLAYER);
+          int32_t d = PLAYER;
+          EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
           #ifdef DSP_LCD
             delay(200);
           #endif
@@ -539,7 +551,8 @@ void onBtnClick(int id) {
                 player->next();
               }
             }else{
-              display.putRequest(NEWMODE, STATIONS);
+              int32_t d = STATIONS;
+              EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
             }
           }
           if (display.mode() == STATIONS) {
@@ -560,7 +573,8 @@ void onBtnClick(int id) {
 
 void onBtnDoubleClick(int id) {
   if (display.mode() == SCREENSAVER || display.mode() == SCREENBLANK) {
-    display.putRequest(NEWMODE, PLAYER);
+    int32_t d = PLAYER;
+    EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
     return;
   }
   switch ((controlEvt_e)id) {
@@ -573,7 +587,6 @@ void onBtnDoubleClick(int id) {
     case EVT_BTNCENTER:
     case EVT_ENCBTNB:
     case EVT_ENC2BTNB: {
-        //display.putRequest(NEWMODE, display.mode() == PLAYER ? VOL : PLAYER);
         onBtnClick(EVT_BTNMODE);
         break;
       }

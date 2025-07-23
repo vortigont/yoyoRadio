@@ -69,6 +69,7 @@ static constexpr const char* S_E = "E: ";
 
 
 // LOG tags
+static constexpr const char* T_BOOT = "##[BOOT]#";
 static constexpr const char* T_Player = "Player";
 static constexpr const char* T_Module = "Module";
 static constexpr const char* T_WebUI = "WebUI";

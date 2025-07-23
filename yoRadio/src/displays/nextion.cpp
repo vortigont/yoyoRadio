@@ -8,6 +8,8 @@
 #include "../core/controls.h"
 #include "../core/netserver.h"
 #include "../core/network.h"
+#include "tools/l10n.h"
+#include "../core/evtloop.h"
 
 #ifndef CORE_STACK_SIZE
   #define CORE_STACK_SIZE  1024*3
@@ -222,15 +224,15 @@ void Nextion::loop() {
           }
           if(strcmp(scanBuf, "go") == 0) {
             display.putRequest(NEWMODE, PLAYER);
-            player.sendCommand({PR_PLAY, display.currentPlItem});
+            EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &display.currentPlItem, sizeof(display.currentPlItem));
           }
           if(strcmp(scanBuf, "toggle") == 0) {
-            player.toggle();
+            player->toggle();
           }
         }
         if (sscanf(rxbuf, "vol=%d", &scanDigit) == 1){
           _volInside = true;
-          player.sendCommand({PR_VOL, scanDigit});
+          EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::playerVolume), &scanDigit, sizeof(scanDigit));
         }
         if (sscanf(rxbuf, "balance=%d", &scanDigit) == 1){
           config.setBalance((int8_t)scanDigit);
@@ -286,16 +288,17 @@ void Nextion::drawVU(){
   //if(mode!=PLAYER) return;
   if(mode!=PLAYER && mode!=VOL) return;
   static uint8_t measL, measR;
-  //player.getVUlevel();
+  //player->getVUlevel();
   
-  uint16_t vulevel = player.get_VUlevel((uint16_t)100);
+  //uint16_t vulevel = player->get_VUlevel((uint16_t)100);
+  uint16_t vulevel = player->getVUlevel();
   
   uint8_t L = (vulevel >> 8) & 0xFF;
   uint8_t R = vulevel & 0xFF;
   
-  //uint8_t L = map(player.vuLeft, 0, 255, 0, 100);
-  //uint8_t R = map(player.vuRight, 0, 255, 0, 100);
-  if(player.isRunning()){
+  //uint8_t L = map(player->vuLeft, 0, 255, 0, 100);
+  //uint8_t R = map(player->vuRight, 0, 255, 0, 100);
+  if(player->isRunning()){
     measL=(L<=measL)?measL-5:L;
     measR=(R<=measR)?measR-5:R;
   }else{
@@ -337,9 +340,9 @@ void Nextion::putcmdf(const char* fmt, int val, uint16_t dl) {
 
 void Nextion::bitrate(int bpm){
   if(bpm>0){
-    putcmd("player.bitrate.txt", bpm, true);
+    putcmd("player->bitrate.txt", bpm, true);
   }else{
-    putcmd("player.bitrate.txt=\" \"");
+    putcmd("player->bitrate.txt=\" \"");
   }
 }
 
@@ -359,7 +362,7 @@ void Nextion::weatherVisible(uint8_t vis){
 }
 
 void Nextion::bitratePic(uint8_t pic){
-  putcmd("player.bitrate.pic", pic);
+  putcmd("player->bitrate.pic", pic);
 }
 
 void Nextion::audioinfo(const char* info){
@@ -378,20 +381,20 @@ void Nextion::bootString(const char* bs) {
 void Nextion::newNameset(const char* meta){
   char newnameset[59] = { 0 };
   strlcpy(newnameset, meta, 59);
-  putcmd("player.meta.txt", utf8Rus(newnameset, true));
+  putcmd("player->meta.txt", utf8Rus(newnameset, true));
 }
 
 void Nextion::setVol(uint8_t vol, bool dialog){
   if(dialog){
     putcmd("dialog.text.txt", vol, true);
   }
-  putcmd("player.volText.txt", vol, true);
-  putcmd("player.volumeSlider.val", vol);
+  putcmd("player->volText.txt", vol, true);
+  putcmd("player->volumeSlider.val", vol);
 }
 
 void Nextion::fillVU(uint8_t LC, uint8_t RC){
-  putcmd("player.vul.val", LC);
-  putcmd("player.vur.val", RC);
+  putcmd("player->vul.val", LC);
+  putcmd("player->vur.val", RC);
 }
 
 void Nextion::newTitle(const char* title){
@@ -406,17 +409,17 @@ void Nextion::newTitle(const char* title){
       strlcpy(ttl, title, 50);
       sng[0] = '\0';
     }
-    putcmd("player.title1.txt", utf8Rus(ttl, true));
-    putcmd("player.title2.txt", utf8Rus(sng, true));
+    putcmd("player->title1.txt", utf8Rus(ttl, true));
+    putcmd("player->title2.txt", utf8Rus(sng, true));
   }
 }
 
 void Nextion::printClock(struct tm timeinfo){
   char timeStringBuff[100] = { 0 };
-  strftime(timeStringBuff, sizeof(timeStringBuff), "player.clock.txt=\"%H:%M\"", &timeinfo);
+  strftime(timeStringBuff, sizeof(timeStringBuff), "player->clock.txt=\"%H:%M\"", &timeinfo);
   putcmd(timeStringBuff);
-  putcmdf("player.secText.txt=\"%02d\"", timeinfo.tm_sec);
-  snprintf(timeStringBuff, sizeof(timeStringBuff), "player.dateText.txt=\"%s, %d %s %d\"", dowf[timeinfo.tm_wday], timeinfo.tm_mday, mnths[timeinfo.tm_mon], timeinfo.tm_year+1900);
+  putcmdf("player->secText.txt=\"%02d\"", timeinfo.tm_sec);
+  snprintf(timeStringBuff, sizeof(timeStringBuff), "player->dateText.txt=\"%s, %d %s %d\"", dowf[timeinfo.tm_wday], timeinfo.tm_mday, mnths[timeinfo.tm_mon], timeinfo.tm_year+1900);
   putcmd(utf8Rus(timeStringBuff, false));
   if(mode==TIMEZONE) localTime(network.timeinfo);
   if(mode==INFO)     rssi();

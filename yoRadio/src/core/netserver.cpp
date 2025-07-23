@@ -115,7 +115,8 @@ bool NetServer::begin(bool quiet) {
 #endif
   ArduinoOTA
     .onStart([]() {
-      display.putRequest(NEWMODE, UPDATING);
+      int32_t d = UPDATING;
+      EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
       telnet.printf("Start OTA updating %s\n", ArduinoOTA.getCommand() == U_FLASH?"firmware":"filesystem");
     })
     .onEnd([]() {
@@ -624,7 +625,8 @@ void handleUpload(AsyncWebServerRequest *request, String filename, size_t index,
       int target = (request->getParam("updatetarget", true)->value() == "LittleFS") ? U_SPIFFS : U_FLASH;
       Serial.printf("Update Start: %s\n", filename.c_str());
       EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::playerStop));
-      display.putRequest(NEWMODE, UPDATING);
+      int32_t d = UPDATING;
+      EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
       if (!Update.begin(UPDATE_SIZE_UNKNOWN, target)) {
         Update.printError(Serial);
         String err;
