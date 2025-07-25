@@ -17,8 +17,9 @@
 
 HardwareSerial hSerial(1); // use UART1
 
-Nextion::Nextion() {
 
+Nextion::~Nextion(){
+  _events_unsubsribe();
 }
 
 void nextionCore0( void * pvParameters ){
@@ -71,6 +72,7 @@ void Nextion::start(){
   putRequest({NEWSTATION, 0});
   putRequest({NEWTITLE, 0});
   putRequest({DRAWVOL, 0});
+  _events_subsribe();
   Serial.println("done");
 }
 
@@ -161,14 +163,21 @@ void Nextion::loop() {
         rxbuf[rx_pos] = '\0';
         rx_pos = 0;
         if (sscanf(rxbuf, "page=%s", scanBuf) == 1){
-          if(strcmp(scanBuf, "player") == 0) display.putRequest(NEWMODE, PLAYER);
-          if(strcmp(scanBuf, "playlist") == 0) display.putRequest(NEWMODE, STATIONS);
+          if(strcmp(scanBuf, "player") == 0){
+            int32_t d = PLAYER;
+            EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
+          }
+          if(strcmp(scanBuf, "playlist") == 0){
+            int32_t d = STATIONS;
+            EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
+          }
           if(strcmp(scanBuf, "info") == 0) {
             putcmd("yoversion.txt", YOVERSION);
             putcmd("espcore.txt", _espcoreversion);
             putcmd("ipaddr.txt", WiFi.localIP().toString().c_str());
             putcmd("ssid.txt", WiFi.SSID().c_str());
-            display.putRequest(NEWMODE, INFO);
+            int32_t d = INFO;
+            EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
           }
           if(strcmp(scanBuf, "eq") == 0) {
             putcmd("t4.txt", config.store.balance, true);
@@ -179,7 +188,8 @@ void Nextion::loop() {
             putcmd("h2.val", config.store.middle+16);
             putcmd("t7.txt", config.store.bass, true);
             putcmd("h3.val", config.store.bass+16);
-            display.putRequest(NEWMODE, SETTINGS);
+            int32_t d = SETTINGS;
+            EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
           }
           if(strcmp(scanBuf, "wifi") == 0) {
             if(mode != WIFI){
@@ -191,7 +201,8 @@ void Nextion::loop() {
                 snprintf(cell, sizeof(cell) - 1, "t%d.txt", i*2+1);
                 putcmd(cell, config.ssids[i].password);
               }
-              display.putRequest(NEWMODE, WIFI);
+              int32_t d = WIFI;
+              EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
             }
           }
           if(strcmp(scanBuf, "time") == 0) {
@@ -199,12 +210,14 @@ void Nextion::loop() {
             putcmd("tzHour.val", config.store.tzHour);
             putcmdf("tzMinText.txt=\"%02d\"", config.store.tzMin);
             putcmd("tzMin.val", config.store.tzMin);
-            display.putRequest(NEWMODE, TIMEZONE);
+            int32_t d = TIMEZONE;
+            EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
           }
           if(strcmp(scanBuf, "sys") == 0) {
             putcmd("smartstart.val", config.store.smartstart==2?0:1);
             putcmd("audioinfo.val", config.store.audioinfo);
-            display.putRequest(NEWMODE, SETTINGS);
+            int32_t d = SETTINGS;
+            EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
           }
         }
         if (sscanf(rxbuf, "ctrls=%s", scanBuf) == 1){
@@ -213,17 +226,19 @@ void Nextion::loop() {
             int p = display.currentPlItem - 1;
             if (p < 1) p = config.playlistLength();
             display.currentPlItem = p;
-            display.putRequest(DRAWPLAYLIST, p);
+            EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayDrawPlaylist), &p, sizeof(p));
           }
           if(strcmp(scanBuf, "dn") == 0) {
             display.resetQueue();
             int p = display.currentPlItem + 1;
             if (p > config.playlistLength()) p = 1;
             display.currentPlItem = p;
-            display.putRequest(DRAWPLAYLIST, p);
+            EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayDrawPlaylist), &p, sizeof(p));
           }
           if(strcmp(scanBuf, "go") == 0) {
-            display.putRequest(NEWMODE, PLAYER);
+            int32_t d = PLAYER;
+            EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
+            // todo: this is so weird to send a msg to consumer with the data from that same consumer 8-0
             EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &display.currentPlItem, sizeof(display.currentPlItem));
           }
           if(strcmp(scanBuf, "toggle") == 0) {
@@ -573,6 +588,88 @@ char* Nextion::utf8Rus(char* str, bool uppercase) {
   }
   out[strlen(out)+1]=0;
   return out;
+}
+
+void Nextion::_events_subsribe(){
+  // command events
+  esp_event_handler_instance_register_with(evt::get_hndlr(), YO_CMD_EVENTS, ESP_EVENT_ANY_ID,
+    [](void* self, esp_event_base_t base, int32_t id, void* data){ static_cast<Nextion*>(self)->_events_cmd_hndlr(id, data); },
+    this, &_hdlr_cmd_evt
+  );
+}
+
+void Nextion::_events_unsubsribe(){
+  esp_event_handler_instance_unregister_with(evt::get_hndlr(), YO_CMD_EVENTS, ESP_EVENT_ANY_ID, _hdlr_cmd_evt);
+
+}
+
+void Nextion::_events_cmd_hndlr(int32_t id, void* data){
+  switch (static_cast<evt::yo_event_t>(id)){
+
+    // Play radio station from a playlist
+    case evt::yo_event_t::displayNewMode :
+      swichMode(*reinterpret_cast<displayMode_e*>(data));
+      break;
+
+    case evt::yo_event_t::displayClock :
+      printClock(network.timeinfo);
+      break;
+
+    case evt::yo_event_t::displayShowRSSI :
+      rssi();
+      break;
+
+    case evt::yo_event_t::displayNewTitle :
+      newTitle(config.station.title);
+      break;
+
+    case evt::yo_event_t::displayBootstring : {
+      auto idx = *reinterpret_cast<int32_t*>(data);
+      if (idx >= sizeof(config.ssids)/sizeof(neworkItem) || idx < 0)
+        return;
+      char buf[50];
+      snprintf(buf, 50, bootstrFmt, config.ssids[idx].ssid);
+      bootString(buf);
+      break;
+    }
+
+    case evt::yo_event_t::displayNewStation :
+      newNameset(config.station.name);
+      bitrate(config.station.bitrate);
+      bitratePic(ICON_NA);
+      break;
+
+    case evt::yo_event_t::displayShowWeather :
+      weatherVisible(strlen(config.store.weatherkey)>0 && config.store.showweather);
+      break;
+
+    case evt::yo_event_t::displayNextStation :
+      drawNextStationNum(*reinterpret_cast<int32_t*>(data));
+      break;
+
+    case evt::yo_event_t::displayDrawPlaylist :
+      drawPlaylist(*reinterpret_cast<int32_t*>(data));
+      break;
+
+    case evt::yo_event_t::displayDrawVol : {
+      if(!_volInside){
+        setVol(config.store.volume, mode == VOL);
+      }
+      _volInside=false;
+      break;
+    }
+
+    default:;
+  }
+
+  #ifdef DUMMYDISPLAY
+  if(mode==VOL || mode==STATIONS || mode==NUMBERS ){
+    if (millis() - _volDelay > (mode==VOL?3000:30000)) {
+      _volDelay = millis();
+      swichMode(PLAYER);
+    }
+  }
+#endif
 }
 
 #endif //NEXTION_RX!=255 && NEXTION_TX!=255

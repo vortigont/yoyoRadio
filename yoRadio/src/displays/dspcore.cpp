@@ -803,6 +803,7 @@ void Display::_events_unsubsribe(){
 }
 
 void Display::_events_cmd_hndlr(int32_t id, void* data){
+  LOGV(T_Display, printf, "event rcv:%d\n", id);
   switch (static_cast<evt::yo_event_t>(id)){
 
     // Play radio station from a playlist

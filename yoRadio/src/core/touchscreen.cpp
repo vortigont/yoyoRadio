@@ -129,7 +129,8 @@ void TouchScreen::loop(){
             touchLongPress=millis();
             if(display.mode()==PLAYER || display.mode()==VOL){
               int16_t xDelta = map(abs(touchVol - touchX), 0, _width, 0, TS_STEPS);
-              display.putRequest(NEWMODE, VOL);
+              int32_t d = VOL;
+              EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
               if (xDelta>1) {
                 controlsEvent((touchVol - touchX)<0);
                 touchVol = touchX;
@@ -142,7 +143,8 @@ void TouchScreen::loop(){
             touchLongPress=millis();
             if(display.mode()==PLAYER || display.mode()==STATIONS){
               int16_t yDelta = map(abs(touchStation - touchY), 0, _height, 0, TS_STEPS);
-              display.putRequest(NEWMODE, STATIONS);
+              int32_t d = STATIONS;
+              EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
               if (yDelta>1) {
                 controlsEvent((touchStation - touchY)<0);
                 touchStation = touchY;
@@ -166,8 +168,9 @@ void TouchScreen::loop(){
         uint32_t pressTicks = millis()-touchLongPress;
         if( pressTicks < BTN_PRESS_TICKS*2){
           if(pressTicks > 50) onBtnClick(EVT_BTNCENTER);
-        }else{
-          display.putRequest(NEWMODE, display.mode() == PLAYER ? STATIONS : PLAYER);
+        } else {
+          int32_t d = display.mode() == PLAYER ? STATIONS : PLAYER;
+          EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
         }
       }
       direct = TSD_STAY;
