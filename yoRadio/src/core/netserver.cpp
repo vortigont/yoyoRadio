@@ -11,7 +11,6 @@
 #include "commandhandler.h"
 #include <Update.h>
 #include <ESPmDNS.h>
-#include "ArduinoJson.h"
 #include "core/evtloop.h"
 #include "log.h"
 
@@ -70,6 +69,10 @@ void updateError(String& s) {
   s += Update.getError();
   s += ", err:";
   s += Update.errorString();
+}
+
+NetServer::~NetServer(){
+  _events_unsubsribe();
 }
 
 bool NetServer::begin(bool quiet) {
@@ -142,6 +145,7 @@ bool NetServer::begin(bool quiet) {
   ArduinoOTA.begin();
 #endif
 
+  _events_subsribe();
   if(!quiet) Serial.println("done");
   return true;
 }
@@ -192,7 +196,7 @@ void NetServer::chunkedHtmlPage(const String& contentType, AsyncWebServerRequest
 #ifndef NS_QUEUE_TICKS
   #define NS_QUEUE_TICKS 0
 #endif
-
+/*
 const char *getFormat(BitrateFormat _format) {
   switch (_format) {
     case BF_MP3:  return "MP3";
@@ -203,6 +207,7 @@ const char *getFormat(BitrateFormat _format) {
     default:      return "bitrate";
   }
 }
+*/
 
 void NetServer::processQueue(){
   if(nsQueue==NULL) return;
@@ -269,13 +274,12 @@ void NetServer::processQueue(){
         }
       //case STARTUP:       sprintf (wsbuf, "{\"command\":\"startup\", \"payload\": {\"mode\":\"%s\", \"version\":\"%s\"}}", network.status == CONNECTED ? "player" : "ap", YOVERSION); break;
       case GETINDEX:      {
-          requestOnChange(STATION, clientId); 
-          requestOnChange(TITLE, clientId); 
-          requestOnChange(VOLUME, clientId); 
-          requestOnChange(EQUALIZER, clientId); 
-          requestOnChange(BALANCE, clientId); 
-          requestOnChange(BITRATE, clientId); 
-          requestOnChange(MODE, clientId); 
+          requestOnChange(STATION, clientId);
+          requestOnChange(TITLE, clientId);
+          requestOnChange(VOLUME, clientId);
+          requestOnChange(EQUALIZER, clientId);
+          requestOnChange(BALANCE, clientId);
+          requestOnChange(MODE, clientId);
           requestOnChange(SDINIT, clientId);
           requestOnChange(GETPLAYERMODE, clientId); 
           if (config.getMode()==PM_SDCARD) { requestOnChange(SDPOS, clientId); requestOnChange(SDLEN, clientId); requestOnChange(SDSNUFFLE, clientId); } 
@@ -384,16 +388,6 @@ void NetServer::processQueue(){
         obj["snuffle"] = config.store.sdsnuffle;
         break;
 
-      case BITRATE: {
-        JsonArray a = obj[P_payload].to<JsonArray>();
-        JsonObject o = a.add<JsonObject>();
-          o["id"] = "bitrate";
-          o["value"] = config.station.bitrate;
-        JsonObject o2 = a.add<JsonObject>();
-          o["id"] = "fmt";
-          o["value"] = getFormat(config.configFmt);
-          break;
-      }
       case MODE: {
         JsonArray a = obj[P_payload].to<JsonArray>();
         JsonObject o = a.add<JsonObject>();
@@ -440,7 +434,10 @@ void NetServer::processQueue(){
 
       default:;
     }
+
+    _send_ws_message(obj, clientId);
     if (!doc.isNull()){
+/*
       size_t length = measureJson(obj);
       auto buffer = websocket.makeBuffer(length);
       if (buffer){
@@ -450,7 +447,7 @@ void NetServer::processQueue(){
         { websocket.textAll(buffer); }
       else
         { websocket.text(clientId, buffer); }
-
+*/
       #ifdef MQTT_ROOT_TOPIC
         if (clientId == 0 && (request.type == STATION || request.type == ITEM || request.type == TITLE || request.type == MODE)) mqttPublishStatus();
         if (clientId == 0 && request.type == VOLUME) mqttPublishVolume();
@@ -598,6 +595,67 @@ void NetServer::requestOnChange(requestType_e request, uint8_t clientId) {
 void NetServer::resetQueue(){
   if(nsQueue!=NULL) xQueueReset(nsQueue);
 }
+
+void NetServer::_send_ws_message(JsonVariantConst v, int32_t clientId){
+  if (v.isNull()) return;
+
+  size_t length = measureJson(v);
+  auto buffer = websocket.makeBuffer(length);
+  if (buffer){
+    serializeJson(v, (char*)buffer->get(), length);
+  }
+  if (clientId == 0)
+    { websocket.textAll(buffer); }
+  else
+    { websocket.text(clientId, buffer); }
+}
+
+void NetServer::_events_subsribe(){
+  // command events
+/*  esp_event_handler_instance_register_with(evt::get_hndlr(), YO_CMD_EVENTS, ESP_EVENT_ANY_ID,
+    [](void* self, esp_event_base_t base, int32_t id, void* data){ static_cast<NetServer*>(self)->_events_cmd_hndlr(id, data); },
+    this, &_hdlr_cmd_evt
+  );
+*/
+  // state change events
+  esp_event_handler_instance_register_with(evt::get_hndlr(), YO_CHG_STATE_EVENTS, ESP_EVENT_ANY_ID,
+    [](void* self, esp_event_base_t base, int32_t id, void* data){ static_cast<NetServer*>(self)->_events_chg_hndlr(id, data); },
+    this, &_hdlr_chg_evt
+  );
+}
+
+void NetServer::_events_unsubsribe(){
+  //esp_event_handler_instance_unregister_with(evt::get_hndlr(), YO_CMD_EVENTS, ESP_EVENT_ANY_ID, _hdlr_cmd_evt);
+  esp_event_handler_instance_unregister_with(evt::get_hndlr(), YO_CHG_STATE_EVENTS, ESP_EVENT_ANY_ID, _hdlr_chg_evt);
+}
+
+void NetServer::_events_chg_hndlr(int32_t id, void* data){
+  JsonDocument doc;
+  JsonObject obj = doc.to<JsonObject>();
+
+  switch (static_cast<evt::yo_event_t>(id)){
+
+    // process metadata about playing codec
+    case evt::yo_event_t::playerAudioInfo : {
+      evt::audio_into_t* i = reinterpret_cast<evt::audio_into_t*>(data);
+      JsonArray a = doc[P_payload].to<JsonArray>();
+      JsonObject o = a.add<JsonObject>();
+        o[P_id] = "bitrate";
+        o[P_value] = i->bitRate;
+      JsonObject o2 = a.add<JsonObject>();
+        o2[P_id] = "fmt";
+        o2[P_value] = i->codecName;
+        break;
+    }
+
+    default:;
+  }
+
+  _send_ws_message(obj);
+}
+
+
+
 
 int freeSpace;
 void handleUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) {

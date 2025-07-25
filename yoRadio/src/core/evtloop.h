@@ -52,30 +52,31 @@ enum class yo_event_t:int32_t {
   playerPause,              // player's state command/state, no param allowed
   playerVolume,             // player's state command/state, param: int n
   playerMode,               // player mode webradio/sdcard, param int n: 0 - for webradio, 1 - for SDCARD
+  playerAudioInfo,          // player notifies about current's data/stream meta, param audio_into_t
+
   // Device modes
 
   // Display events
-  displayBootstring = 60,
-  displayNewMode,
+  displayAudioInfo = 60,
+  displayBootstring,
   displayClock,
-  displayNewTitle,
-  displayNewStation,
-  displayNextStation,
   displayDrawPlaylist,
   displayDrawVol,
-  displayDrawBitRatte,
-  displayAudioInfo,
-  displayShowVUMeter,
-  displayShowRSSI,
-  displayShowWeather,
+  displayNewIP,
+  displayNewMode,
+  displayNewStation,
+  displayNewTitle,
   displayNewWeather,
-  displayPStop,
+  displayNextStation,
+  displayNope,
   displayPStart,
+  displayPStop,
+  displaySDFileIndex,
+  displayShowRSSI,
+  displayShowVUMeter,
+  displayShowWeather,
   displayStart,
   displayWait4SD,
-  displaySDFileIndex,
-  displayNewIP,
-  displayNope,
 
   // ext devices control
   btnLock = 100,            // Lock button
@@ -97,6 +98,19 @@ enum class yo_event_t:int32_t {
 
 
   noop_end                  // NoOp
+};
+
+
+
+// structs that could be used as event payload
+
+/**
+ * @brief playing stream/data meta
+ * 
+ */
+struct audio_into_t {
+  uint32_t bitRate;
+  const char *codecName;
 };
 
 
@@ -140,3 +154,5 @@ constexpr std::common_type_t<int, std::underlying_type_t<E>>
 e2int(E e) {
     return static_cast<std::common_type_t<int, std::underlying_type_t<E>>>(e);
 }
+
+

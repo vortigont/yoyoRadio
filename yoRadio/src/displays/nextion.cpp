@@ -596,11 +596,17 @@ void Nextion::_events_subsribe(){
     [](void* self, esp_event_base_t base, int32_t id, void* data){ static_cast<Nextion*>(self)->_events_cmd_hndlr(id, data); },
     this, &_hdlr_cmd_evt
   );
+
+  // state change events
+  esp_event_handler_instance_register_with(evt::get_hndlr(), YO_CHG_STATE_EVENTS, ESP_EVENT_ANY_ID,
+    [](void* self, esp_event_base_t base, int32_t id, void* data){ static_cast<Nextion*>(self)->_events_chg_hndlr(id, data); },
+    this, &_hdlr_chg_evt
+  );
 }
 
 void Nextion::_events_unsubsribe(){
   esp_event_handler_instance_unregister_with(evt::get_hndlr(), YO_CMD_EVENTS, ESP_EVENT_ANY_ID, _hdlr_cmd_evt);
-
+  esp_event_handler_instance_unregister_with(evt::get_hndlr(), YO_CHG_STATE_EVENTS, ESP_EVENT_ANY_ID, _hdlr_chg_evt);
 }
 
 void Nextion::_events_cmd_hndlr(int32_t id, void* data){
@@ -670,6 +676,24 @@ void Nextion::_events_cmd_hndlr(int32_t id, void* data){
     }
   }
 #endif
+}
+
+void Nextion::_events_chg_hndlr(int32_t id, void* data){
+  LOGV(T_Display, printf, "chg event rcv:%d\n", id);
+
+  switch (static_cast<evt::yo_event_t>(id)){
+
+    // process metadata about playing codec
+    case evt::yo_event_t::playerAudioInfo : {
+      evt::audio_into_t* i = reinterpret_cast<evt::audio_into_t*>(data);
+      bitrate(i->bitRate);
+      break;
+    }
+
+
+    default:;
+  }
+
 }
 
 #endif //NEXTION_RX!=255 && NEXTION_TX!=255

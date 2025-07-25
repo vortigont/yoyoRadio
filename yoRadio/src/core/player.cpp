@@ -1,3 +1,4 @@
+#include <string_view>
 #include "options.h"
 #include "player.h"
 #include "config.h"
@@ -114,14 +115,12 @@ void Player::_stop(bool alreadyStopped){
   stopSong();
   setOutputPins(false);
   if(!hasError()) config.setTitle((display.mode()==LOST || display.mode()==UPDATING)?"":const_PlStopped);
-  config.station.bitrate = 0;
-  config.setBitrateFormat(BF_UNCNOWN);
-  #ifdef USE_NEXTION
-    nextion.bitrate(config.station.bitrate);
-  #endif
-  netserver.requestOnChange(BITRATE, 0);
-  display.putRequest(DBITRATE);
-  display.putRequest(PSTOP);
+
+  // update stream's meta info
+  evt::audio_into_t info{ 0, player->getCodecname() };
+  EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerAudioInfo), &info, sizeof(info));
+  EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayPStop));
+
   //setDefaults();
   if(!lockOutput) stopInfo();
   if (player_on_stop_play) player_on_stop_play();
@@ -179,26 +178,24 @@ void Player::_play(uint16_t stationId) {
   remoteStationName = false;
   config.setDspOn(1);
   config.vuThreshold = 0;
-  //display.putRequest(PSTOP);
   config.screensaverTicks=SCREENSAVERSTARTUPDELAY;
   config.screensaverPlayingTicks=SCREENSAVERSTARTUPDELAY;
   if(config.getMode()!=PM_SDCARD) {
-    display.putRequest(PSTOP);
+    EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayPStop));
   }
   setOutputPins(false);
   //config.setTitle(config.getMode()==PM_WEB?const_PlConnect:"");
   if(!config.loadStation(stationId)) return;
   config.setTitle(config.getMode()==PM_WEB?const_PlConnect:"[next track]");
-  config.station.bitrate=0;
-  config.setBitrateFormat(BF_UNCNOWN);
   
   _loadVol(config.store.volume);
-  display.putRequest(DBITRATE);
-  display.putRequest(NEWSTATION);
+
+  EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewStation));
+
   netserver.requestOnChange(STATION, 0);
-  // todo: why do this netserver loop calls from here??? 
-  netserver.loop();
-  netserver.loop();
+  // todo: why do this netserver loop calls from here??? it's a wrong thread to execute without proper locking!
+  //netserver.loop();
+  //netserver.loop();
   if(config.store.smartstart!=2)
     config.setSmartStart(0);
   bool isConnected = false;
@@ -221,8 +218,11 @@ void Player::_play(uint16_t stationId) {
       config.setSmartStart(1);
     netserver.requestOnChange(MODE, 0);
     setOutputPins(true);
-    display.putRequest(NEWMODE, PLAYER);
-    display.putRequest(PSTART);
+
+    int32_t d = PLAYER;
+    EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
+    EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayPStart));
+
     if (player_on_start_play) player_on_start_play();
     pm.on_start_play();
   }else{
@@ -238,7 +238,9 @@ void Player::browseUrl(){
   remoteStationName = true;
   config.setDspOn(1);
   resumeAfterUrl = _status==PLAYING;
-  display.putRequest(PSTOP);
+  EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayPStop));
+  EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayPStart));
+
 //  setDefaults();
   setOutputPins(false);
   config.setTitle(const_PlConnect);
@@ -247,7 +249,7 @@ void Player::browseUrl(){
     config.setTitle("");
     netserver.requestOnChange(MODE, 0);
     setOutputPins(true);
-    display.putRequest(PSTART);
+    EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayPStart));
     if (player_on_start_play) player_on_start_play();
     pm.on_start_play();
   }else{
@@ -393,38 +395,45 @@ void PlayerES8311::dac_init(){
 
 void audio_info(const char *info) {
   if(player->lockOutput) return;
+  LOGI(T_Player, printf, "Audio info:\t%s\n", info);
   if(config.store.audioinfo) telnet.printf("##AUDIO.INFO#: %s\n", info);
   #ifdef USE_NEXTION
     nextion.audioinfo(info);
   #endif
-  if (strstr(info, "format is aac")  != NULL) { config.setBitrateFormat(BF_AAC); display.putRequest(DBITRATE); }
-  if (strstr(info, "format is flac") != NULL) { config.setBitrateFormat(BF_FLAC); display.putRequest(DBITRATE); }
-  if (strstr(info, "format is mp3")  != NULL) { config.setBitrateFormat(BF_MP3); display.putRequest(DBITRATE); }
-  if (strstr(info, "format is wav")  != NULL) { config.setBitrateFormat(BF_WAV); display.putRequest(DBITRATE); }
+
+  /*
+    'BitsPerSample' string is a part of Audio::showCodecParams(), it is called when all playback params are already known
+    so we can use it as a generic trigget to update metadata
+  */
+  if (strstr(info, "BitsPerSample")  != NULL){
+    evt::audio_into_t info{ player->getBitRate() / 1000, player->getCodecname() };
+    EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerAudioInfo), &info, sizeof(info));
+  }
+
   if (strstr(info, "skip metadata") != NULL) config.setTitle(config.station.name);
   if (strstr(info, "Account already in use") != NULL || strstr(info, "HTTP/1.0 401") != NULL) {
     player->setError(info);
   }
+/*
+  if (strstr(info, "format is aac")  != NULL) { config.setBitrateFormat(BF_AAC); EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayDrawBitRatte)); }
+  if (strstr(info, "format is flac") != NULL) { config.setBitrateFormat(BF_FLAC); EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayDrawBitRatte)); }
+  if (strstr(info, "format is mp3")  != NULL) { config.setBitrateFormat(BF_MP3); EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayDrawBitRatte)); }
+  if (strstr(info, "format is wav")  != NULL) { config.setBitrateFormat(BF_WAV); EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayDrawBitRatte)); }
   char* ici; char b[20]={0};
   if ((ici = strstr(info, "BitRate: ")) != NULL) {
     strlcpy(b, ici + 9, 50);
     audio_bitrate(b);
   }
-
-  LOGD(T_Player, printf, "Audio info:\t%s\n", info);
+*/
 }
-
+/*
 void audio_bitrate(const char *info)
 {
   if(config.store.audioinfo) telnet.printf("%s %s\n", "##AUDIO.BITRATE#:", info);
-  config.station.bitrate = atoi(info) / 1000;
-  display.putRequest(DBITRATE);
-  #ifdef USE_NEXTION
-    nextion.bitrate(config.station.bitrate);
-  #endif
-  netserver.requestOnChange(BITRATE, 0);
+  int bitrate = atoi(info) / 1000;
+  EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerBitRatte), &bitrate, sizeof(bitrate));
 }
-
+*/
 bool printable(const char *info) {
   if(L10N_LANGUAGE!=RU) return true;
   bool p = true;

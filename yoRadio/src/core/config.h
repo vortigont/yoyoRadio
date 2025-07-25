@@ -50,7 +50,7 @@
 #define CONFIG_VERSION  4
 
 enum playMode_e      : uint8_t  { PM_WEB=0, PM_SDCARD=1 };
-enum BitrateFormat { BF_UNCNOWN, BF_MP3, BF_AAC, BF_FLAC, BF_OGG, BF_WAV };
+//enum BitrateFormat { BF_UNCNOWN, BF_MP3, BF_AAC, BF_FLAC, BF_OGG, BF_WAV };
 
 void u8fix(char *src);
 
@@ -159,7 +159,7 @@ struct station_t
   char name[BUFLEN];
   char url[BUFLEN];
   char title[BUFLEN];
-  uint16_t bitrate;
+  uint32_t bitrate;
   int  ovol;
 };
 
@@ -179,7 +179,7 @@ class Config {
     uint8_t irchck;
     ircodes_t ircodes;
 #endif
-    BitrateFormat configFmt = BF_UNCNOWN;
+    //BitrateFormat configFmt = BF_UNCNOWN;
     neworkItem ssids[5];
     uint8_t ssidsCount;
     uint16_t sleepfor;
@@ -218,7 +218,7 @@ class Config {
     bool saveWifi();
     bool saveWifiFromNextion(const char* post);
     void setSmartStart(uint8_t ss);
-    void setBitrateFormat(BitrateFormat fmt) { configFmt = fmt; }
+    //void setBitrateFormat(BitrateFormat fmt) { configFmt = fmt; }
     void initPlaylist();
     void indexPlaylist();
     #ifdef USE_SD

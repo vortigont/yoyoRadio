@@ -4,6 +4,8 @@
 #include "widgets.h"
 #include "../../core/player.h"    //  for VU widget
 
+static constexpr const char* P_na = "n/a";
+
 /************************
       FILL WIDGET
  ************************/
@@ -468,25 +470,25 @@ void BitrateWidget::init(BitrateConfig bconf, uint16_t fgcolor, uint16_t bgcolor
   Widget::init(bconf.widget, fgcolor, bgcolor);
   _dimension = bconf.dimension;
   _bitrate = 0;
-  _format = BF_UNCNOWN;
+  _format = P_na;
   dsp->charSize(bconf.widget.textsize, _charWidth, _textheight);
   memset(_buf, 0, 6);
 }
 
-void BitrateWidget::setBitrate(uint16_t bitrate){
+void BitrateWidget::setBitrate(uint32_t bitrate){
   _bitrate = bitrate;
   if(_bitrate>999) _bitrate=999;
   _draw();
 }
 
-void BitrateWidget::setFormat(BitrateFormat format){
+void BitrateWidget::setFormat(const char* format){
   _format = format;
   _draw();
 }
 
 void BitrateWidget::_draw(){
   _clear();
-  if(!_active || _format == BF_UNCNOWN || _bitrate==0) return;
+  if(!_active || _bitrate==0) return;
   dsp->drawRect(_config.left, _config.top, _dimension, _dimension, _fgcolor);
   dsp->fillRect(_config.left, _config.top + _dimension/2, _dimension, _dimension/2, _fgcolor);
   dsp->setFont();
@@ -497,14 +499,7 @@ void BitrateWidget::_draw(){
   dsp->print(_buf);
   dsp->setTextColor(_bgcolor, _fgcolor);
   dsp->setCursor(_config.left + _dimension/2 - _charWidth*3/2 + 1, _config.top + _dimension - _dimension/4 - _textheight/2);
-  switch(_format){
-    case BF_MP3:  dsp->print("MP3"); break;
-    case BF_AAC:  dsp->print("AAC"); break;
-    case BF_FLAC: dsp->print("FLC"); break;
-    case BF_OGG:  dsp->print("OGG"); break;
-    case BF_WAV:  dsp->print("WAV"); break;
-    default:                        break;
-  }
+  dsp->print(_format);
 }
 
 void BitrateWidget::_clear() {

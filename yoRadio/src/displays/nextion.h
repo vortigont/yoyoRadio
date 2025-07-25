@@ -68,6 +68,7 @@ class Nextion {
 private:
     // event function handlers
     esp_event_handler_instance_t _hdlr_cmd_evt{nullptr};
+    esp_event_handler_instance_t _hdlr_chg_evt{nullptr};
 
     /**
      * @brief subscribe to event mesage bus
@@ -83,6 +84,9 @@ private:
 
     // command events handler
     void _events_cmd_hndlr(int32_t id, void* data);
+
+    // state change events handler
+    void _events_chg_hndlr(int32_t id, void* data);
 };
 
 extern Nextion nextion;
