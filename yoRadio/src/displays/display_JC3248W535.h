@@ -10,6 +10,8 @@
   #include "conf/displayAXS15231Bconf.h"
 #endif
 
+#define CANVAS
+
 #define BOOT_PRG_COLOR    0xE68B
 #define BOOT_TXT_COLOR    0xFFFF
 #define PINK              0xF97F
@@ -21,19 +23,12 @@
 
 class DspCore : public DspCore_Arduino_GFX {
 public:
-  DspCore(Arduino_G *g)
-    : Arduino_Canvas(TFT_WIDTH /* width */, TFT_HEIGHT /* height */, g, 0 /* output_x */, 0 /* output_y */, 0 /* rotation */){ 
-      if (!begin()) Serial.println("[AXS15231B] Failed to begin canvas!");
-    }
-  //DspCore(Arduino_DataBus *b)
-  //  : Arduino_AXS15231B(b, GFX_NOT_DEFINED /* RST */, 0 /* rotation */, false /* IPS */, TFT_WIDTH, TFT_HEIGHT) { begin(); }
+  DspCore(Arduino_G *g);
 
   void initDisplay() override;
   void clearDsp(bool black=false) override;
 
   void drawLogo(uint16_t top) override;
-  void printClock(uint16_t top, uint16_t rightspace, uint16_t timeheight, bool redraw) override;
-  void clearClock() override;
   void drawPlaylist(uint16_t currentItem) override;
   void printPLitem(uint8_t pos, const char* item, ScrollWidget& current) override;
 
@@ -46,19 +41,32 @@ public:
   void wake() override;
 
   void startWrite(void) override { _mtx.lock(); }
-  void endWrite(void) override { flush(); _mtx.unlock(); }
+  void endWrite(void) override { _mtx.unlock(); }
 
   void loop(bool force=false) override;
 
   // mask ArduinoGFX's method
   void writePixel(int16_t x, int16_t y, uint16_t color);
 
+  /**
+   * @brief display locking
+   * 
+   * @param wait - block until lock could be aquired
+   * @return true - if lock has been aquired
+   * @return false - lock can't been aquired (non-blocking lock)
+   */
+  bool lock(bool wait = true) override;
+
+  /**
+   * @brief release lock
+   * 
+   */
+  void unlock() override { _mtx.unlock(); };
+
 private:
-  std::mutex _mtx;
+  std::recursive_mutex _mtx;
   uint8_t _charWidth(unsigned char c) override;
-  void _clockSeconds();
   void _clockDate();
-  void _clockTime();
 #ifdef BATTERY_ON
   void readBattery();
 #endif

@@ -82,7 +82,7 @@ char* DspCoreBase::utf8Rus(const char* str, bool uppercase) {
     return strn;
 }
 
-void DspCoreBase::charSize(uint8_t textsize, uint8_t& width, uint16_t& height){
+void DspCoreBase::charSize(uint8_t textsize, uint16_t& width, uint16_t& height){
   width = textsize * CHARWIDTH;
   height = textsize * CHARHEIGHT;
 }
@@ -277,7 +277,6 @@ void Display::_bootScreen(){
   _pager.setPage(_boot, true);
   dsp->drawLogo(bootLogoTop);
   _bootStep = 1;
-  Serial.println("cc6");
 }
 
 void Display::_buildPager(){
@@ -489,7 +488,7 @@ void Display::_swichMode(displayMode_e newmode) {
     config.isScreensaver = true;
     _pager.setPage( pages[PG_SCREENSAVER]);
     if (newmode == SCREENBLANK) {
-      dsp->clearClock();
+      //dsp->clearClock();  TODO
       config.setDspOn(false, false);
     }
   }else{

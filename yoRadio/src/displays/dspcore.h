@@ -19,11 +19,10 @@ public:
   virtual void initDisplay() = 0;
   virtual void clearDsp(bool black=false) = 0;
   virtual void loop(bool force=false) = 0;
-  //void printClock(){}
 
   virtual void printPLitem(uint8_t pos, const char* item, ScrollWidget& current) = 0;
-  virtual void printClock(uint16_t top, uint16_t rightspace, uint16_t timeheight, bool redraw) = 0;
-  virtual void clearClock() = 0;
+  //virtual void printClock(uint16_t x, uint16_t y, /* have no idea what this is */ uint16_t timeheight, bool redraw) = 0;
+  //virtual void clearClock() = 0;
   virtual void drawLogo(uint16_t top) = 0;
   virtual void drawPlaylist(uint16_t currentItem) = 0;
 
@@ -31,8 +30,17 @@ public:
   static char* utf8Rus(const char* str, bool uppercase);
   static uint16_t textWidthGFX(const char *txt, uint8_t textsize);
 
+  /**
+   * @brief method should calculate char size for the DEFAULT font
+   * whatever it is to be for specific display/driver/board
+   * meant to work with monospace fonts only, needs to be refactored for UTF wariable width fonts
+   * 
+   * @param textsize 
+   * @param width 
+   * @param height 
+   */
+  virtual void charSize(uint8_t textsize, uint16_t& width, uint16_t& height);
 
-  virtual void charSize(uint8_t textsize, uint8_t& width, uint16_t& height);
   #ifndef DSP_LCD
     #if DSP_MODEL==DSP_NOKIA5110
       virtual void command(uint8_t c);
@@ -63,6 +71,21 @@ public:
   virtual void sleep(){};
   virtual void wake(){};
 
+  /**
+   * @brief display locking
+   * 
+   * @param wait - block until lock could be aquired
+   * @return true - if lock has been aquired
+   * @return false - lock can't been aquired (non-blocking lock)
+   */
+  virtual bool lock(bool wait = true){ return true; };
+
+  /**
+   * @brief release lock
+   * 
+   */
+  virtual void unlock(){};
+
   void setClipping(clipArea ca);
   void clearClipping(){ _clipping = false; };
   void setScrollId(void * scrollid) { _scrollid = scrollid; }
@@ -88,7 +111,8 @@ public:
 
 protected:
   char  _timeBuf[20], _dateBuf[20], _oldTimeBuf[20], _oldDateBuf[20], _bufforseconds[4], _buffordate[40];
-  uint16_t _timewidth, _timeleft, _datewidth, _dateleft, _oldtimeleft, _oldtimewidth, _olddateleft, _olddatewidth, clockTop, clockRightSpace, clockTimeHeight, _dotsLeft;
+  uint16_t _timewidth, _timeleft, _datewidth, _dateleft, _oldtimeleft, _oldtimewidth, _olddateleft, _olddatewidth, /* clockTop, clockRightSpace, clockTimeHeight,*/ _dotsLeft;
+
   bool _clipping, _printdots;
   clipArea _cliparea;
   void * _scrollid;

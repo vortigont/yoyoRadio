@@ -8,6 +8,7 @@
 #include "../core/config.h"
 #include "../core/network.h"
 #include "tools/l10n.h"
+#include "../core/log.h"
 
 static Arduino_DataBus *bus{nullptr};
 static Arduino_AXS15231B *g{nullptr};
@@ -19,29 +20,32 @@ bool create_display_dev(){
   }
 
   if (bus == nullptr){
-    Serial.println("Can't create GFX bus!");
+    LOGE(T_Display, println, "Can't create GFX bus!");
     return false;
   }
 
   if (dsp == nullptr ){
     g = new Arduino_AXS15231B(bus, GFX_NOT_DEFINED /* RST */, 0 /* rotation */, false /* IPS */, TFT_WIDTH, TFT_HEIGHT);
     dsp = new DspCore(g);
-
-    //dsp = new DspCore(bus);
-
-    Serial.println("create dsp object");
-    // backlight
-    #ifdef TFT_BLK
-      //pinMode(TFT_BLK, OUTPUT);
-      //digitalWrite(TFT_BLK, TFT_BLK_ON_LEVEL);
-      ledcAttach(TFT_BLK, 1000, 8);
-      //ledcOutputInvert(TFT_BLK, true);
-      ledcWrite(TFT_BLK, 200);
-    #endif
   }
   return dsp != nullptr;
 }
 
+DspCore::DspCore(Arduino_G *g) : Arduino_Canvas(TFT_WIDTH /* width */, TFT_HEIGHT /* height */, g, 0 /* output_x */, 0 /* output_y */, 0 /* rotation */){ 
+  if (!begin()){
+    LOGE(T_Display, println, "[AXS15231B] Failed to begin canvas!");
+    return;
+  }
+
+  // backlight
+  #ifdef TFT_BLK
+    //pinMode(TFT_BLK, OUTPUT);
+    //digitalWrite(TFT_BLK, TFT_BLK_ON_LEVEL);
+    ledcAttach(TFT_BLK, 1000, 8);
+    //ledcOutputInvert(TFT_BLK, true);
+    ledcWrite(TFT_BLK, 200);    // default brightness
+  #endif
+}
 
 void DspCore::initDisplay() {
   fillScreen(0x07e0); // green
@@ -50,6 +54,7 @@ void DspCore::initDisplay() {
 #ifdef  U8G2_FONT_SUPPORT
   setUTF8Print(true);
 #endif  // U8G2_FONT_SUPPORT
+  setTextWrap(false);
 
 
 #ifdef CPU_LOAD
@@ -127,91 +132,38 @@ void DspCore::drawPlaylist(uint16_t currentItem) {
 void DspCore::clearDsp(bool black) { fillScreen( black ? 0 : config.theme.background); }
 
 uint8_t DspCore::_charWidth(unsigned char c){
-    GFXglyph *glyph = pgm_read_glyph_ptr(&CLK_FONT1, c - 0x20);
-  return pgm_read_byte(&glyph->xAdvance);
+  return pgm_read_glyph_ptr(&DirectiveFour56, c - 0x20)->xAdvance;
 }
 
-void DspCore::_clockSeconds(){
-  // Секунды
-
-  char secbuf[8];
-  snprintf(secbuf, sizeof(secbuf), "%02d", network.timeinfo.tm_sec);
-  gfxDrawText(
-    width()  - clockRightSpace - CHARWIDTH*4*2-17,
-    clockTop-clockTimeHeight+94,
-    secbuf,
-    config.theme.seconds,
-    config.theme.background,
-    1,
-    &CLK_FONT2
-  );
-  
-  // Очищаем область под двоеточием (только область самого двоеточия) - для старого шрифта
- //gfxFillRect(gfx, _timeleft+_dotsLeft+5, clockTop-CHARHEIGHT+5, 15, 65, config.theme.background);
-  
-  // Двоеточие с прозрачным фоном
-  gfxDrawText(
-    _timeleft+_dotsLeft -4,
-    clockTop-CHARHEIGHT+46,
-    ":",
-    (network.timeinfo.tm_sec % 2 == 0) ? config.theme.clock : (CLOCKFONT_MONO ? config.theme.clockbg : config.theme.background),
-    (network.timeinfo.tm_sec % 2 == 0) ? config.theme.clock : (CLOCKFONT_MONO ? config.theme.clockbg : config.theme.background),
-    1,
-    &CLK_FONT1
-  );
-#ifdef BATTERY_ON
-  if(!config.isScreensaver) {
-    // Мигалки и батарейка
-    char batbuf[8] = "";
-    uint16_t batcolor = 0;
-    if (Charging) {
-      batcolor = color565(0, 255, 255);
-      if (g == 1) strcpy(batbuf, "\xA0\xA2\x9E\x9F");
-      if (g == 2) strcpy(batbuf, "\xA0\x9E\x9E\xA3");
-      if (g == 3) strcpy(batbuf, "\x9D\x9E\xA2\xA3");
-      if (g >= 4) {g = 0; strcpy(batbuf, "\x9D\xA2\xA2\x9F");}
-      g++;
-    } else if (Volt < 2.8) {
-      batcolor = color565(255, 0, 0);
-      if (g == 1) strcpy(batbuf, "\xA0\xA2\xA2\xA3");
-      if (g >= 2) {g = 0; strcpy(batbuf, "\x9D\x9E\x9E\x9F");}
-      g++;
-    } else {
-      // Статическая батарейка
-      if (Volt >= 3.82)      { batcolor = color565(100, 255, 150); strcpy(batbuf, "\xA0\xA2\xA2\xA3"); }
-      else if (Volt >= 3.72) { batcolor = color565(50, 255, 100);  strcpy(batbuf, "\x9D\xA2\xA2\xA3"); }
-      else if (Volt >= 3.61) { batcolor = color565(0, 255, 0);     strcpy(batbuf, "\x9D\xA1\xA2\xA3"); }
-      else if (Volt >= 3.46) { batcolor = color565(75, 255, 0);    strcpy(batbuf, "\x9D\x9E\xA2\xA3"); }
-      else if (Volt >= 3.33) { batcolor = color565(150, 255, 0);   strcpy(batbuf, "\x9D\x9E\xA1\xA3"); }
-      else if (Volt >= 3.20) { batcolor = color565(255, 255, 0);   strcpy(batbuf, "\x9D\x9E\x9E\xA3"); }
-      else if (Volt >= 2.8)  { batcolor = color565(255, 0, 0);     strcpy(batbuf, "\x9D\x9E\x9E\x9F"); }
-    }
-    gfxDrawText(gfx, BatX, BatY, batbuf, batcolor, config.theme.background, BatFS);
-#ifndef HIDE_VOLT
-    char voltbuf[16];
-    snprintf(voltbuf, sizeof(voltbuf), "%.3fv", Volt);
-    gfxDrawText(gfx, VoltX, VoltY, voltbuf, batcolor, config.theme.background, VoltFS);
-#endif
-    char procbuf[8];
-    snprintf(procbuf, sizeof(procbuf), "%3i%%", ChargeLevel);
-    gfxDrawText(gfx, ProcX, ProcY, procbuf, batcolor, config.theme.background, ProcFS);
+bool DspCore::lock(bool wait){
+  if (wait){
+    _mtx.lock();
+    return true;
+  } else {
+    if (_mtx.try_lock()) return true;
+    else return false;
   }
-#endif
 }
 
 void DspCore::_clockDate(){
-  if(_olddateleft>0)
-    gfxFillRect(_olddateleft,  clockTop+70, _olddatewidth, CHARHEIGHT*2, config.theme.background); //очистка надписи даты
-  gfxDrawText(_dateleft+70, clockTop+70, _dateBuf, config.theme.date, config.theme.background, 2);
+  setFont(FONT_DEFAULT_U8G2);
+  //setCursor(TFT_FRAMEWDT, clockTop+70);
+  int16_t x1, y1;
+  uint16_t w, h;
+  //getTextBounds("Hello World!", TFT_FRAMEWDT, clockTop+70, &x1, &y1, &w, &h);
+
+//  if(_olddateleft>0)
+//    gfxFillRect(_olddateleft,  clockTop+70, _olddatewidth, CHARHEIGHT*2, config.theme.background); //очистка надписи даты
+
+//    gfxDrawText(_dateleft+70, clockTop+70, _dateBuf, config.theme.date, config.theme.background, 2);
   strlcpy(_oldDateBuf, _dateBuf, sizeof(_dateBuf));
   _olddatewidth = _datewidth;
   _olddateleft = _dateleft;
   // День недели
   gfxDrawText(
-    //width() - clockRightSpace - CHARWIDTH*4*2+13-20,
-     8,
-    //clockTop-CHARHEIGHT+44,
-    clockTop+70,
+    TFT_FRAMEWDT,
+    200 - CHARHEIGHT+44, //clockTop-CHARHEIGHT+44,
+    //100 +70,//clockTop+70,
     utf8Rus(dow[network.timeinfo.tm_wday], false),
     config.theme.dow,
     config.theme.background,
@@ -219,91 +171,22 @@ void DspCore::_clockDate(){
   );
 }
 
-void DspCore::_clockTime(){
-  if(_oldtimeleft>0 && !CLOCKFONT_MONO)
-    gfxFillRect(_oldtimeleft, clockTop-clockTimeHeight+1, _oldtimewidth, clockTimeHeight, config.theme.background);
-  _timeleft = width()-clockRightSpace-CHARWIDTH*4*2-24-_timewidth;
-  // Время
-  gfxDrawText(
-    _timeleft-4,
-    clockTop + 38,
-    _timeBuf,
-    config.theme.clock,
-    config.theme.background,
-    1,
-    &CLK_FONT1
-  );
-  strlcpy(_oldTimeBuf, _timeBuf, sizeof(_timeBuf));
-  _oldtimewidth = _timewidth;
-  _oldtimeleft = _timeleft;
-  // Вертикальный разделитель
-  //gfxDrawLine(gfx, width()-clockRightSpace-CHARWIDTH*4*2-25, clockTop +5, width()-clockRightSpace-CHARWIDTH*4*2-25, clockTop +5 + clockTimeHeight-3, config.theme.div);
-  // Горизонтальный разделитель
-  //gfxDrawLine(gfx, width()-clockRightSpace-CHARWIDTH*4*2+10, clockTop+32, width()-clockRightSpace-CHARWIDTH*4*2+10+62-1, clockTop+32, config.theme.div);
-  sprintf(_buffordate, "%2d %s %d", network.timeinfo.tm_mday,mnths[network.timeinfo.tm_mon], network.timeinfo.tm_year+1900);
-  strlcpy(_dateBuf, utf8Rus(_buffordate, true), sizeof(_dateBuf));
-  _datewidth = strlen(_dateBuf) * CHARWIDTH*2;
-  _dateleft = width() - clockRightSpace - _datewidth - 80;
-  
-//if(!config.isScreensaver){    
-//   gfxDrawBitmap(30, 226, bootlogo2, 99, 64);
-//  }
- 
-}
-
-void DspCore::printClock(uint16_t top, uint16_t rightspace, uint16_t timeheight, bool redraw){
-  // Ограничиваем верхнюю границу
-  if(top < TFT_FRAMEWDT) {
-    top = TFT_FRAMEWDT;
-  }
-  
-  // Ограничиваем нижнюю границу
-  // Учитываем:
-  // - высоту времени (clockTimeHeight)
-  // - высоту даты (CHARHEIGHT*2)
-  // - высоту дня недели (CHARHEIGHT*3)
-  // - отступы между элементами (78 пикселей для даты, 44 для дня недели)
-  uint16_t totalHeight = clockTimeHeight + CHARHEIGHT*2 + CHARHEIGHT*3 + 78 ;
-  
-  if(top + totalHeight > height() - TFT_FRAMEWDT) {
-    top = height() - TFT_FRAMEWDT - totalHeight;
-  }
-  
-  clockTop = top;
-  clockRightSpace = rightspace;
-  clockTimeHeight = timeheight;
-  strftime(_timeBuf, sizeof(_timeBuf), "%H:%M", &network.timeinfo);
-  if(strcmp(_oldTimeBuf, _timeBuf)!=0 || redraw){
-    _getTimeBounds();
-    _clockTime();
-    _clockDate();
-  }
-  _clockSeconds();
-}
-
-void DspCore::clearClock(){  
-  // Очищаем область под текущими часами
-  gfxFillRect(_timeleft, clockTop, MAX_WIDTH, clockTimeHeight+12+CHARHEIGHT, config.theme.background);
-  
-  // Если есть старое положение часов (при перемещении), очищаем и его
-  if(_oldtimeleft > 0) {
-    gfxFillRect(_oldtimeleft, clockTop-clockTimeHeight+20, _oldtimewidth+CHARWIDTH*3*2+80, clockTimeHeight+CHARHEIGHT+60, config.theme.background);
-  }
-}
-
-
 void DspCore::sleep(void) { 
   Serial.println("DspCore::sleep");
-  std::lock_guard<std::mutex> lock(_mtx);
+  std::lock_guard<std::recursive_mutex> lock(_mtx);
   displayOff();
-  ledcWrite(0, 0); // Выключаем подсветку через PWM
+  #ifdef TFT_BLK
+  ledcWrite(TFT_BLK, 0); // Выключаем подсветку через PWM
+  #endif
 }
 
 void DspCore::wake(void) {
   Serial.println("DspCore::wake");
-  std::lock_guard<std::mutex> lock(_mtx);
+  std::lock_guard<std::recursive_mutex> lock(_mtx);
   displayOn();
-  ledcWrite(0, map(config.store.brightness, 0, 100, 0, 255)); // Устанавливаем яркость через PWM
+  #ifdef TFT_BLK
+  ledcWrite(TFT_BLK, map(config.store.brightness, 0, 100, 0, 255)); // Устанавливаем яркость через PWM
+  #endif
 }
 
 void DspCore::writePixel(int16_t x, int16_t y, uint16_t color) {
@@ -367,6 +250,14 @@ void DspCore::loop(bool force) {
       cpuWidget.setActive(false);
   }
 #endif
+
+  // AXS15231B can only flush entire canvas buffer to display, so we need to do this periodically
+  // todo: optimize this calls
+
+  if (_mtx.try_lock()){    // if canvas is locked from outside, then skip this frame flush
+    flush();
+    _mtx.unlock();
+  }
 }
 
 #ifdef CPU_LOAD

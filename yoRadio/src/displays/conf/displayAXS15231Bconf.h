@@ -5,11 +5,11 @@
     More info on https://github.com/e2002/yoradio/wiki/Widgets#widgets-description
 *************************************************************************************/
 
+// this settings are for JC3248W535 module
+
 #pragma once
 #include "../widgets/widgets.h"
 #include "clib/u8g2.h"
-//#include "Bahamas6.h"
-//#include "CourierCyr6.h"
 
 #ifndef FONT_DEFAULT_U8G2
 #define FONT_DEFAULT_U8G2 u8g2_font_6x12_t_cyrillic  // CourierCyr6pt8b  //Bahamas6pt8b
@@ -35,7 +35,7 @@
 #define MAX_WIDTH       DSP_WIDTH-TFT_FRAMEWDT
 
 #define CHARWIDTH   6
-#define CHARHEIGHT  8
+#define CHARHEIGHT  12
 
 #if BITRATE_FULL
   #define TITLE_FIX 44
@@ -70,22 +70,26 @@ static const ScrollConfig weatherConf    = {{ TFT_FRAMEWDT,197, 2, WA_LEFT }, 14
 static const FillConfig   metaBGConf     = {{ 0, 38, 0, WA_LEFT }, DSP_WIDTH, 2, false };
 static const FillConfig   metaBGConfInv  = {{ 0, 40, 0, WA_LEFT }, DSP_WIDTH, 2, false };
 static const FillConfig   volbarConf     = {{ TFT_FRAMEWDT, DSP_HEIGHT-TFT_FRAMEWDT-4, 0, WA_LEFT }, MAX_WIDTH, 8, true };
-static const FillConfig  playlBGConf     = {{ 0, 138, 0, WA_LEFT }, DSP_WIDTH, 36, false };
-static const FillConfig  heapbarConf     = {{ TFT_FRAMEWDT, DSP_HEIGHT-4, 0, WA_LEFT }, MAX_WIDTH, 4, false };
+static const FillConfig   playlBGConf    = {{ 0, 138, 0, WA_LEFT }, DSP_WIDTH, 36, false };
+static const FillConfig   heapbarConf    = {{ TFT_FRAMEWDT, DSP_HEIGHT-4, 0, WA_LEFT }, MAX_WIDTH, 4, false };
 
 /* WIDGETS  */                           /* { left, top, fontsize, align } */
 static const WidgetConfig bootstrConf    = { 0, bootLogoTop+100, 2, WA_CENTER };
 static const WidgetConfig bitrateConf    = { 6, 62, 2, WA_RIGHT };
 static const WidgetConfig voltxtConf     = { TFT_FRAMEWDT, DSP_HEIGHT-24, 1, WA_LEFT };
-static const WidgetConfig  iptxtConf     = { TFT_FRAMEWDT+80, DSP_HEIGHT-29, 2, WA_LEFT };
-static const WidgetConfig   rssiConf     = { TFT_FRAMEWDT, DSP_HEIGHT-24, 1, WA_RIGHT };
-static const WidgetConfig   cpuConf      = { TFT_FRAMEWDT, DSP_HEIGHT-50, 1, WA_RIGHT };//эксперимент. новый
+static const WidgetConfig iptxtConf      = { TFT_FRAMEWDT+80, DSP_HEIGHT-29, 2, WA_LEFT };
+static const WidgetConfig rssiConf       = { TFT_FRAMEWDT, DSP_HEIGHT-24, 1, WA_RIGHT };
+static const WidgetConfig cpuConf        = { TFT_FRAMEWDT, DSP_HEIGHT-50, 1, WA_RIGHT };//эксперимент. новый
 static const WidgetConfig numConf        = { TFT_FRAMEWDT, 250, 1, WA_CENTER };
 static const WidgetConfig apNameConf     = { TFT_FRAMEWDT, 88, 3, WA_CENTER };
 static const WidgetConfig apName2Conf    = { TFT_FRAMEWDT, 120, 3, WA_CENTER };
 static const WidgetConfig apPassConf     = { TFT_FRAMEWDT, 173, 3, WA_CENTER };
 static const WidgetConfig apPass2Conf    = { TFT_FRAMEWDT, 205, 3, WA_CENTER };
-static const WidgetConfig  clockConf     = { 0, 98, 52, WA_CENTER };  /* 52 is a fixed font size. do not change */
+static const WidgetConfig clockConf      = { 0, 98, 1, WA_CENTER };
+// cursor offset for clock's seconds
+#define CLOCK_SECONDS_X_OFFSET  0
+#define CLOCK_SECONDS_Y_OFFSET  -15
+
 static const WidgetConfig vuConf         = { TFT_FRAMEWDT, 268, 1, WA_LEFT };
 
 static const WidgetConfig bootWdtConf    = { 120, bootLogoTop+130, 2, WA_LEFT }; //отступ, вертикальное положение, размер, выравнивание

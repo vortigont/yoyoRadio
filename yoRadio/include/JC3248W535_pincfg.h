@@ -13,16 +13,19 @@
 #define TFT_SDA3    39
 #define TFT_TE      38
 
-#define TOUCH_PIN_NUM_I2C_SCL 8
-#define TOUCH_PIN_NUM_I2C_SDA 4
-#define TOUCH_PIN_NUM_INT 3
-#define TOUCH_PIN_NUM_RST -1
+#define TOUCH_GPIO_I2C_SDA 4
+#define TOUCH_GPIO_I2C_SCL 8
+#define TOUCH_GPIO_INT 3
+#define TOUCH_GPIO_RST -1
 
 // SDCARD
-#define SD_MMC_CD   10      // TF_CS    - CD/DAT3
 #define SD_MMC_CMD  11      // MOSI     - CMD
 #define SD_MMC_CLK  12      // TF_CLK   - CLX
 #define SD_MMC_D0   13      // MISO     - DAT0
+#define SD_MMC_D1   -1      // Vcc
+#define SD_MMC_D2   -1      // Vcc
+#define SD_MMC_D3   10      // TF_CS    - CD/DAT3
+#define SD_MMC_CD   SD_MMC_D3      // TF_CS    - CD/DAT3
 
 // I2S
 #define AUDIO_I2S_PORT      I2S_NUM_0
@@ -43,14 +46,15 @@
 
 #define SDC_CS      SD_MMC_CD
 
-#define TS_SCL  TOUCH_PIN_NUM_I2C_SCL
-#define TS_SDA  TOUCH_PIN_NUM_I2C_SDA
-#define TS_INT  TOUCH_PIN_NUM_INT
-#define TS_RST  TOUCH_PIN_NUM_RST -1
+#define TS_SCL  TOUCH_GPIO_I2C_SCL
+#define TS_SDA  TOUCH_GPIO_I2C_SDA
+#define TS_INT  TOUCH_GPIO_INT
+#define TS_RST  TOUCH_GPIO_RST
 #define TS_CS   -1
 
 // ArduinoGFX 
 #define DISPLAY_CREATE_OBJECT
+#define DSP_TASK_DELAY      40      // cap display refresh to 25 fsp
 
 /*
 Links:
