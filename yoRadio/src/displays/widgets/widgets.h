@@ -8,15 +8,15 @@
 enum WidgetAlign { WA_LEFT, WA_CENTER, WA_RIGHT };
 
 typedef struct clipArea {
-  uint16_t left; 
-  uint16_t top; 
-  uint16_t width;  
+  uint16_t left;
+  uint16_t top;
+  uint16_t width;
   uint16_t height;
 } clipArea;
 
 struct WidgetConfig {
-  uint16_t left; 
-  uint16_t top; 
+  uint16_t left;
+  uint16_t top;
   uint16_t textsize;
   WidgetAlign align;
 };
@@ -117,26 +117,25 @@ class Widget{
 
 class TextWidget: public Widget {
   public:
-    TextWidget() {}
+    TextWidget() = default;
     TextWidget(WidgetConfig wconf, uint16_t buffsize, bool uppercase, uint16_t fgcolor, uint16_t bgcolor) { init(wconf, buffsize, uppercase, fgcolor, bgcolor); }
-    ~TextWidget();
+    //~TextWidget();
     void init(WidgetConfig wconf, uint16_t buffsize, bool uppercase, uint16_t fgcolor, uint16_t bgcolor);
     void setText(const char* txt);
     void setText(int val, const char *format);
     void setText(const char* txt, const char *format);
     bool uppercase() { return _uppercase; }
-  protected:
-    char *_text;
-    char *_oldtext;
+
+protected:
+    std::string text;
+    std::string oldtext;
     bool _uppercase;
-    uint16_t  _buffsize, _textwidth, _oldtextwidth, _oldleft, _textheight;
-    uint8_t _charWidth;
+    uint16_t  textwidth, oldtextwidth, oldleft, charWidth, textheight;
 #if DSP_MODEL!=DSP_DUMMY
-    GFXfont *_font{nullptr};
+    GFXfont *font{nullptr};
 #endif
-    protected:
-    void _draw();
-    uint16_t _realLeft();
+    void draw();
+    uint16_t realLeft();
 };
 
 class FillWidget: public Widget {
@@ -152,24 +151,24 @@ class FillWidget: public Widget {
 
 class ScrollWidget: public TextWidget {
   public:
-    ScrollWidget(){}
+    ScrollWidget() = default;
     ScrollWidget(const char* separator, ScrollConfig conf, uint16_t fgcolor, uint16_t bgcolor);
-    ~ScrollWidget();
+    //~ScrollWidget();
     void init(const char* separator, ScrollConfig conf, uint16_t fgcolor, uint16_t bgcolor);
     void loop();
     void setText(const char* txt);
     void setText(const char* txt, const char *format);
+
   private:
-    char *_sep;
-    char *_window;
+    std::string _sep;
+    std::string _window;
     int16_t _x;
     bool _doscroll;
     uint8_t _scrolldelta;
     uint16_t _scrolltime;
     uint32_t _scrolldelay;
     uint16_t _sepwidth, _startscrolldelay;
-    uint8_t _charWidth;
-  private:
+
     void _setTextParams();
     void _calcX();
     void _drawFrame();
@@ -264,9 +263,8 @@ class BitrateWidget: public Widget {
   protected:
     const char * _format;
     char _buf[6];
-    uint8_t _charWidth;
-    uint16_t _dimension, _textheight;
-    uint32_t _bitrate;
+    uint16_t _charWidth, _textheight;
+    uint32_t _dimension, _bitrate;
     void _draw();
     void _clear();
 };
