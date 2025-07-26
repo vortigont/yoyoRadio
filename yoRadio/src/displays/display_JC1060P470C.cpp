@@ -129,75 +129,8 @@ uint8_t DspCore::_charWidth(unsigned char c){
   return pgm_read_byte(&glyph->xAdvance);
 }
 
-void DspCore::_clockSeconds(){
-  // Секунды
-
-  char secbuf[8];
-  snprintf(secbuf, sizeof(secbuf), "%02d", network.timeinfo.tm_sec);
-  gfxDrawText(
-    width()  - clockRightSpace - CHARWIDTH*4*2-17,
-    clockTop-clockTimeHeight+94,
-    secbuf,
-    config.theme.seconds,
-    config.theme.background,
-    1,
-    &CLK_FONT2
-  );
-  
-  // Очищаем область под двоеточием (только область самого двоеточия) - для старого шрифта
- //gfxFillRect(gfx, _timeleft+_dotsLeft+5, clockTop-CHARHEIGHT+5, 15, 65, config.theme.background);
-  
-  // Двоеточие с прозрачным фоном
-  gfxDrawText(
-    _timeleft+_dotsLeft -4,
-    clockTop-CHARHEIGHT+46,
-    ":",
-    (network.timeinfo.tm_sec % 2 == 0) ? config.theme.clock : (CLOCKFONT_MONO ? config.theme.clockbg : config.theme.background),
-    (network.timeinfo.tm_sec % 2 == 0) ? config.theme.clock : (CLOCKFONT_MONO ? config.theme.clockbg : config.theme.background),
-    1,
-    &CLK_FONT1
-  );
-#ifdef BATTERY_ON
-  if(!config.isScreensaver) {
-    // Мигалки и батарейка
-    char batbuf[8] = "";
-    uint16_t batcolor = 0;
-    if (Charging) {
-      batcolor = color565(0, 255, 255);
-      if (g == 1) strcpy(batbuf, "\xA0\xA2\x9E\x9F");
-      if (g == 2) strcpy(batbuf, "\xA0\x9E\x9E\xA3");
-      if (g == 3) strcpy(batbuf, "\x9D\x9E\xA2\xA3");
-      if (g >= 4) {g = 0; strcpy(batbuf, "\x9D\xA2\xA2\x9F");}
-      g++;
-    } else if (Volt < 2.8) {
-      batcolor = color565(255, 0, 0);
-      if (g == 1) strcpy(batbuf, "\xA0\xA2\xA2\xA3");
-      if (g >= 2) {g = 0; strcpy(batbuf, "\x9D\x9E\x9E\x9F");}
-      g++;
-    } else {
-      // Статическая батарейка
-      if (Volt >= 3.82)      { batcolor = color565(100, 255, 150); strcpy(batbuf, "\xA0\xA2\xA2\xA3"); }
-      else if (Volt >= 3.72) { batcolor = color565(50, 255, 100);  strcpy(batbuf, "\x9D\xA2\xA2\xA3"); }
-      else if (Volt >= 3.61) { batcolor = color565(0, 255, 0);     strcpy(batbuf, "\x9D\xA1\xA2\xA3"); }
-      else if (Volt >= 3.46) { batcolor = color565(75, 255, 0);    strcpy(batbuf, "\x9D\x9E\xA2\xA3"); }
-      else if (Volt >= 3.33) { batcolor = color565(150, 255, 0);   strcpy(batbuf, "\x9D\x9E\xA1\xA3"); }
-      else if (Volt >= 3.20) { batcolor = color565(255, 255, 0);   strcpy(batbuf, "\x9D\x9E\x9E\xA3"); }
-      else if (Volt >= 2.8)  { batcolor = color565(255, 0, 0);     strcpy(batbuf, "\x9D\x9E\x9E\x9F"); }
-    }
-    gfxDrawText(gfx, BatX, BatY, batbuf, batcolor, config.theme.background, BatFS);
-#ifndef HIDE_VOLT
-    char voltbuf[16];
-    snprintf(voltbuf, sizeof(voltbuf), "%.3fv", Volt);
-    gfxDrawText(gfx, VoltX, VoltY, voltbuf, batcolor, config.theme.background, VoltFS);
-#endif
-    char procbuf[8];
-    snprintf(procbuf, sizeof(procbuf), "%3i%%", ChargeLevel);
-    gfxDrawText(gfx, ProcX, ProcY, procbuf, batcolor, config.theme.background, ProcFS);
-  }
-#endif
-}
-
 void DspCore::_clockDate(){
+/*
   if(_olddateleft>0)
     gfxFillRect(_olddateleft,  clockTop+70, _olddatewidth, CHARHEIGHT*2, config.theme.background); //очистка надписи даты
   gfxDrawText(_dateleft+70, clockTop+70, _dateBuf, config.theme.date, config.theme.background, 2);
@@ -215,80 +148,8 @@ void DspCore::_clockDate(){
     config.theme.background,
     2
   );
+*/
 }
-
-void DspCore::_clockTime(){
-  if(_oldtimeleft>0 && !CLOCKFONT_MONO)
-    gfxFillRect(_oldtimeleft, clockTop-clockTimeHeight+1, _oldtimewidth, clockTimeHeight, config.theme.background);
-  _timeleft = width()-clockRightSpace-CHARWIDTH*4*2-24-_timewidth;
-  // Время
-  gfxDrawText(
-    _timeleft-4,
-    clockTop + 38,
-    _timeBuf,
-    config.theme.clock,
-    config.theme.background,
-    1,
-    &CLK_FONT1
-  );
-  strlcpy(_oldTimeBuf, _timeBuf, sizeof(_timeBuf));
-  _oldtimewidth = _timewidth;
-  _oldtimeleft = _timeleft;
-  // Вертикальный разделитель
-  //gfxDrawLine(gfx, width()-clockRightSpace-CHARWIDTH*4*2-25, clockTop +5, width()-clockRightSpace-CHARWIDTH*4*2-25, clockTop +5 + clockTimeHeight-3, config.theme.div);
-  // Горизонтальный разделитель
-  //gfxDrawLine(gfx, width()-clockRightSpace-CHARWIDTH*4*2+10, clockTop+32, width()-clockRightSpace-CHARWIDTH*4*2+10+62-1, clockTop+32, config.theme.div);
-  sprintf(_buffordate, "%2d %s %d", network.timeinfo.tm_mday,mnths[network.timeinfo.tm_mon], network.timeinfo.tm_year+1900);
-  strlcpy(_dateBuf, utf8Rus(_buffordate, true), sizeof(_dateBuf));
-  _datewidth = strlen(_dateBuf) * CHARWIDTH*2;
-  _dateleft = width() - clockRightSpace - _datewidth - 80;
-  
-//if(!config.isScreensaver){    
-//   gfxDrawBitmap(30, 226, bootlogo2, 99, 64);
-//  }
- 
-}
-
-void DspCore::printClock(uint16_t top, uint16_t rightspace, uint16_t timeheight, bool redraw){
-  // Ограничиваем верхнюю границу
-  if(top < TFT_FRAMEWDT) {
-    top = TFT_FRAMEWDT;
-  }
-  
-  // Ограничиваем нижнюю границу
-  // Учитываем:
-  // - высоту времени (clockTimeHeight)
-  // - высоту даты (CHARHEIGHT*2)
-  // - высоту дня недели (CHARHEIGHT*3)
-  // - отступы между элементами (78 пикселей для даты, 44 для дня недели)
-  uint16_t totalHeight = clockTimeHeight + CHARHEIGHT*2 + CHARHEIGHT*3 + 78 ;
-  
-  if(top + totalHeight > height() - TFT_FRAMEWDT) {
-    top = height() - TFT_FRAMEWDT - totalHeight;
-  }
-  
-  clockTop = top;
-  clockRightSpace = rightspace;
-  clockTimeHeight = timeheight;
-  strftime(_timeBuf, sizeof(_timeBuf), "%H:%M", &network.timeinfo);
-  if(strcmp(_oldTimeBuf, _timeBuf)!=0 || redraw){
-    _getTimeBounds();
-    _clockTime();
-    _clockDate();
-  }
-  _clockSeconds();
-}
-
-void DspCore::clearClock(){  
-  // Очищаем область под текущими часами
-  gfxFillRect(_timeleft, clockTop, MAX_WIDTH, clockTimeHeight+12+CHARHEIGHT, config.theme.background);
-  
-  // Если есть старое положение часов (при перемещении), очищаем и его
-  if(_oldtimeleft > 0) {
-    gfxFillRect(_oldtimeleft, clockTop-clockTimeHeight+20, _oldtimewidth+CHARWIDTH*3*2+80, clockTimeHeight+CHARHEIGHT+60, config.theme.background);
-  }
-}
-
 
 void DspCore::sleep(void) { 
   Serial.println("DspCore::sleep");

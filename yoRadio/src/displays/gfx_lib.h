@@ -7,8 +7,6 @@
 
 #if __has_include("Arduino_GFX.h")
 #include "Arduino_GFX.h"
-#include "canvas/Arduino_Canvas.h"
-typedef Arduino_Canvas Canvas;
 #endif
 
 /*
@@ -66,6 +64,7 @@ typedef Arduino_Canvas Canvas;
 #elif DSP_MODEL== DSP_JC3248W535
   // Use generic Arduino GFX canvas
   #include "canvas/Arduino_Canvas.h"
+  typedef Arduino_Canvas Canvas;
   #define DISPLAY_ENGINE  Arduino_Canvas
   #if __has_include("conf/displayAXS15231Bconf_custom.h")
     #include "conf/displayAXS15231Bconf_custom.h"
@@ -75,6 +74,8 @@ typedef Arduino_Canvas Canvas;
 #elif DSP_MODEL==DSP_JC1060P470
   // Use Arduino_DSI_Display
   #include "display/Arduino_DSI_Display.h"
+  #include "canvas/Arduino_Canvas.h"
+  typedef Arduino_Canvas Canvas;
   #define DISPLAY_ENGINE  Arduino_DSI_Display
   #if __has_include("conf/display_1024x600_conf_custom.h")
     #include "conf/display_1024x600_conf_custom.h"

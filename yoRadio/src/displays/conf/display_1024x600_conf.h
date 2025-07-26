@@ -66,22 +66,26 @@ static const ScrollConfig weatherConf    = {{ TFT_FRAMEWDT,197, 2, WA_LEFT }, 24
 static const FillConfig   metaBGConf     = {{ 0, 0, 0, WA_LEFT }, DSP_WIDTH, 40, false };
 static const FillConfig   metaBGConfInv  = {{ 0, 80, 0, WA_LEFT }, DSP_WIDTH, 5, false };
 static const FillConfig   volbarConf     = {{ TFT_FRAMEWDT, DSP_HEIGHT-TFT_FRAMEWDT-30, 0, WA_LEFT }, MAX_WIDTH, 15, true };
-static const FillConfig  playlBGConf     = {{ 0, 138, 0, WA_LEFT }, DSP_WIDTH, 36, false };
-static const FillConfig  heapbarConf     = {{ TFT_FRAMEWDT, DSP_HEIGHT-TFT_FRAMEWDT-14, 0, WA_LEFT }, MAX_WIDTH, 8, false };
+static const FillConfig   playlBGConf    = {{ 0, 138, 0, WA_LEFT }, DSP_WIDTH, 36, false };
+static const FillConfig   heapbarConf    = {{ TFT_FRAMEWDT, DSP_HEIGHT-TFT_FRAMEWDT-14, 0, WA_LEFT }, MAX_WIDTH, 8, false };
 
 /* WIDGETS  */                           /* { left, top, fontsize, align } */
 static const WidgetConfig bootstrConf    = { 0, bootLogoTop+150, 3, WA_CENTER };
 static const WidgetConfig bitrateConf    = { 6, 62, 2, WA_RIGHT };
 static const WidgetConfig voltxtConf     = { TFT_FRAMEWDT, DSP_HEIGHT-70, 3, WA_CENTER };
-static const WidgetConfig  iptxtConf     = { TFT_FRAMEWDT+80, DSP_HEIGHT-70, 3, WA_LEFT };
-static const WidgetConfig   rssiConf     = { TFT_FRAMEWDT, DSP_HEIGHT-70, 3, WA_RIGHT };
-static const WidgetConfig   cpuConf      = { TFT_FRAMEWDT, DSP_HEIGHT-70, 1, WA_RIGHT };//эксперимент. новый
+static const WidgetConfig iptxtConf      = { TFT_FRAMEWDT+80, DSP_HEIGHT-70, 3, WA_LEFT };
+static const WidgetConfig rssiConf       = { TFT_FRAMEWDT, DSP_HEIGHT-70, 3, WA_RIGHT };
+static const WidgetConfig cpuConf        = { TFT_FRAMEWDT, DSP_HEIGHT-70, 1, WA_RIGHT };//эксперимент. новый
 static const WidgetConfig numConf        = { TFT_FRAMEWDT, 250, 1, WA_CENTER };
 static const WidgetConfig apNameConf     = { TFT_FRAMEWDT, 220, 4, WA_CENTER };
 static const WidgetConfig apName2Conf    = { TFT_FRAMEWDT, 275, 4, WA_CENTER };
 static const WidgetConfig apPassConf     = { TFT_FRAMEWDT, 400, 4, WA_CENTER };
 static const WidgetConfig apPass2Conf    = { TFT_FRAMEWDT, 455, 4, WA_CENTER };
-static const WidgetConfig  clockConf     = { 0, 220, 52, WA_CENTER };  /* 52 is a fixed font size. do not change */
+static const WidgetConfig clockConf      = { 420, 180, 2, WA_RIGHT };
+// cursor offset for clock's seconds
+#define CLOCK_SECONDS_X_OFFSET  0
+#define CLOCK_SECONDS_Y_OFFSET  -30
+
 static const WidgetConfig vuConf         = { TFT_FRAMEWDT, 268, 1, WA_LEFT };
 
 static const WidgetConfig bootWdtConf    = { 120, bootLogoTop+130, 2, WA_LEFT }; //отступ, вертикальное положение, размер, выравнивание

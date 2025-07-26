@@ -34,8 +34,6 @@ public:
   void clearDsp(bool black=false) override;
 
   void drawLogo(uint16_t top) override;
-  void printClock(uint16_t top, uint16_t rightspace, uint16_t timeheight, bool redraw) override;
-  void clearClock() override;
   void drawPlaylist(uint16_t currentItem) override;
   void printPLitem(uint8_t pos, const char* item, ScrollWidget& current) override;
 
