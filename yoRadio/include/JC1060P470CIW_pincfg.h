@@ -61,7 +61,7 @@
 #define I2S_LRC     ES7210_LRCK
 #define MUTE_PIN    PA_ENABLE
 #define MUTE_VAL    LOW
-#define DAC_TYPE    ES8311
+#define DAC_TYPE    dac_type_t::ES8311
 #define DSP_MODEL   DSP_JC1060P470
 #define DSP_WIDTH       LCD_H_RES
 #define DSP_HEIGHT      LCD_V_RES

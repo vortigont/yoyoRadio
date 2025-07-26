@@ -44,7 +44,7 @@ void setup() {
 
   // cerate and init Player object
   LOGD(T_BOOT, println, "Init Player");
-  create_player(dac_type_t::DAC_TYPE);
+  create_player(DAC_TYPE);
   player->init();
 
   LOGD(T_BOOT, println, "Start NetWork");

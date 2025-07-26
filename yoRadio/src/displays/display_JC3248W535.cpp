@@ -1,13 +1,12 @@
 #include "../core/options.h"
 #if DSP_MODEL==DSP_JC3248W535
-
+#include "display/Arduino_AXS15231B.h"  // ArduinoGFX driver
 #include "canvas/Arduino_Canvas.h"
 #include "databus/Arduino_ESP32QSPI.h"
 #include "display_JC3248W535.h"
 #include "fonts/bootlogo.h"
 #include "../core/config.h"
 #include "../core/network.h"
-
 #include "tools/l10n.h"
 
 static Arduino_DataBus *bus{nullptr};
@@ -20,7 +19,7 @@ bool create_display_dev(){
   }
 
   if (bus == nullptr){
-    Serial.println("Can't create bus!");
+    Serial.println("Can't create GFX bus!");
     return false;
   }
 

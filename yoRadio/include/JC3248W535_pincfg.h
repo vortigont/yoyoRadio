@@ -2,8 +2,8 @@
 
 #define TFT_WIDTH   320
 #define TFT_HEIGHT  480
-#define TFT_BLK_ON_LEVEL 1
-#define TFT_BLK     1
+#define TFT_BLK     1           // display backlight
+#define TFT_BLK_ON_LEVEL 1 
 #define TFT_RST     -1
 #define TFT_CS      45
 #define TFT_SCK     47
@@ -25,7 +25,7 @@
 #define SD_MMC_D0   13      // MISO     - DAT0
 
 // I2S
-#define AUDIO_I2S_PORT I2S_NUM_0
+#define AUDIO_I2S_PORT      I2S_NUM_0
 #define AUDIO_I2S_MCK_IO    -1      // MCK
 #define AUDIO_I2S_BCK_IO    42      // BCLK
 #define AUDIO_I2S_LRCK_IO   2       // L/R CLK

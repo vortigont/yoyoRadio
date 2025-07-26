@@ -1,6 +1,5 @@
 #pragma once
 
-#include "display/Arduino_AXS15231B.h"
 #include <mutex>
 #define GFX_DEV_DEVICE JC3248W535       // this module uses AXS15231B display 
 #include "dspcore.h"
