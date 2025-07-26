@@ -76,7 +76,6 @@ class Widget{
       _width = _backMove.width = 0;
       _backMove.x = _config.left;
       _backMove.y = _config.top;
-      _moved = _locked = false;
     }
     void setAlign(WidgetAlign align){
       _config.align = align;
@@ -106,7 +105,7 @@ class Widget{
       _draw();
     }
   protected:
-    bool _active, _moved, _locked;
+    bool _active, _moved{false}, _locked{false};
     uint16_t _fgcolor, _bgcolor, _width;
     WidgetConfig _config;
     MoveConfig   _backMove;
@@ -245,10 +244,15 @@ class ProgressWidget: public TextWidget {
 };
 
 class ClockWidget: public Widget {
+  // vars to save time block bounds, needed to clear time blocks
+  int16_t _time_block_x{0}, _time_block_y{0}, _seconds_block_x{0}, _seconds_block_y{0};
+  uint16_t  _time_block_w{0}, _time_block_h{0}, _seconds_block_w{0}, _seconds_block_h{0};
+  
+
   public:
-    void draw();
+    void draw(){ _draw(); };
   protected:
-    void _draw();
+    void _draw() override;
     void _clear();
 };
 

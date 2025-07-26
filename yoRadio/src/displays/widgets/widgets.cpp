@@ -432,18 +432,57 @@ void ProgressWidget::loop() {
 /**************************
       CLOCK WIDGET
  **************************/
+/*
 void ClockWidget::draw(){
   if(!_active) return;
   dsp->printClock(_config.top, _config.left, _config.textsize, false);
 }
+*/
 
 void ClockWidget::_draw(){
   if(!_active) return;
-  dsp->printClock(_config.top, _config.left, _config.textsize, true);
+  //dsp->printClock(_config.top, _config.left, _config.textsize, true);
+  dsp->lock();
+
+  _clear();
+  char buff[std::size("hh:mm")];
+  std::time_t time = std::time({});
+  auto t = std::localtime(&time);
+  bool draw_semicolon = t->tm_sec % 2;
+  
+  std::strftime(std::data(buff), std::size(buff), "%R", t);    // "%R" equivalent to "%H:%M", t->tm_sec % 2 ? "%R" : "%H %M" would blink semicolon
+  Serial.printf("at x:%d y:%d time:%s\n", _config.left, _config.top, buff);
+  // recalculate area for clock and save it to be cleared later
+  dsp->getTextBounds(buff, _config.left, _config.top, &_time_block_x, &_time_block_y, &_time_block_w, &_time_block_h);
+
+  if (draw_semicolon){
+    dsp->gfxDrawText(_config.left, _config.top, buff, config.theme.clock, config.theme.background, _config.textsize, &CLK_FONT1);
+  } else {
+    // let's draw time in parts so that ':' is drawn with background color maintaining same area dimensions
+    std::strftime(std::data(buff), std::size(buff), "%H", t);
+    dsp->gfxDrawText(_config.left, _config.top, buff, config.theme.clock, config.theme.background, _config.textsize, &CLK_FONT1);
+    // write semicolon
+    dsp->gfxDrawText(dsp->getCursorX(), dsp->getCursorY(), ":", config.theme.background, config.theme.background, _config.textsize, &CLK_FONT1);
+//    dsp->drawChar(dsp->getCursorX(), dsp->getCursorY(), 0x3a /* ':' */, RGB565_RED, RGB565_RED);
+    std::strftime(std::data(buff), std::size(buff), "%M", t);
+    dsp->gfxDrawText(dsp->getCursorX(), dsp->getCursorY(), buff, config.theme.clock, config.theme.background, _config.textsize, &CLK_FONT1);
+  }
+
+  // make seconds
+  std::strftime(std::data(buff), std::size(buff), "%S", t);
+  dsp->setFont(&CLK_FONT2);
+  // recalculate area for clock and save it to be cleared later
+  dsp->getTextBounds(buff, dsp->getCursorX() + CLOCK_SECONDS_X_OFFSET, dsp->getCursorY() + CLOCK_SECONDS_Y_OFFSET, &_seconds_block_x, &_seconds_block_y, &_seconds_block_w, &_seconds_block_h);
+  // print seconds
+  dsp->gfxDrawText(dsp->getCursorX() + CLOCK_SECONDS_X_OFFSET, dsp->getCursorY() + CLOCK_SECONDS_Y_OFFSET, buff, config.theme.clock, config.theme.background, _config.textsize, &CLK_FONT2);
+
+  dsp->unlock();
 }
 
 void ClockWidget::_clear(){
-  dsp->clearClock();
+  // Очищаем область под текущими часами
+  dsp->gfxFillRect(_time_block_x, _time_block_y, _time_block_w, _time_block_h, config.theme.background);  // RGB565_DARKGREY); // 
+  dsp->gfxFillRect(_seconds_block_x, _seconds_block_y, _seconds_block_w, _seconds_block_h, config.theme.background); // RGB565_DARKGREEN); //config.theme.background);
 }
 
 void BitrateWidget::init(BitrateConfig bconf, uint16_t fgcolor, uint16_t bgcolor){
