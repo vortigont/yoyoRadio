@@ -3,6 +3,7 @@
 
 #include "widgets.h"
 #include "../../core/player.h"    //  for VU widget
+#include "../tools/l10n.h"
 
 static constexpr const char* P_na = "n/a";
 
@@ -176,7 +177,7 @@ void ScrollWidget::_draw() {
     }
     dsp->setCursor(_x + hiddenChars * charWidth, _config.top);
     dsp->setClipping({_config.left, _config.top, _width, textheight});
-    Serial.printf("scrollw:%s", _window);
+    //Serial.printf("scrollw:%s", _window); ==HERE
     //dsp->print(_window);
     #ifndef DSP_LCD
       dsp->print(" ");
@@ -432,30 +433,38 @@ void ProgressWidget::loop() {
 /**************************
       CLOCK WIDGET
  **************************/
-/*
-void ClockWidget::draw(){
-  if(!_active) return;
-  dsp->printClock(_config.top, _config.left, _config.textsize, false);
-}
-*/
 
-void ClockWidget::_draw(){
-  if(!_active) return;
-  //dsp->printClock(_config.top, _config.left, _config.textsize, true);
-  dsp->lock();
-
-  _clear();
-  char buff[std::size("hh:mm")];
+bool ClockWidget::run(bool force){
   std::time_t time = std::time({});
   auto t = std::localtime(&time);
-  bool draw_semicolon = t->tm_sec % 2;
+  if (time == _last && !force){
+    return false;
+  }
+  dsp->lock();
+  _drawTime(t);
+  _last = time;
+  // check if date has changed
+  struct tm cur_date = *t;
+  t = std::localtime(&_last_date);
+  // draw date only if year of year day has changed
+  if ( force || (t->tm_yday != cur_date.tm_yday || t->tm_year != cur_date.tm_year) ){
+    _drawDate(&cur_date);
+    _last_date = time;
+  }
+  dsp->unlock();
+  return true;
+};
+
+void ClockWidget::_drawTime(tm* t){
+  _clear_clk();
+  char buff[std::size("hh:mm")];
   
   std::strftime(std::data(buff), std::size(buff), "%R", t);    // "%R" equivalent to "%H:%M", t->tm_sec % 2 ? "%R" : "%H %M" would blink semicolon
-  Serial.printf("at x:%d y:%d time:%s\n", _config.left, _config.top, buff);
+  Serial.printf("Time:%s\n", buff);
   // recalculate area for clock and save it to be cleared later
   dsp->getTextBounds(buff, _config.left, _config.top, &_time_block_x, &_time_block_y, &_time_block_w, &_time_block_h);
 
-  if (draw_semicolon){
+  if (t->tm_sec % 2){   // draw ':'
     dsp->gfxDrawText(_config.left, _config.top, buff, config.theme.clock, config.theme.background, _config.textsize, &CLK_FONT1);
   } else {
     // let's draw time in parts so that ':' is drawn with background color maintaining same area dimensions
@@ -475,14 +484,35 @@ void ClockWidget::_draw(){
   dsp->getTextBounds(buff, dsp->getCursorX() + CLOCK_SECONDS_X_OFFSET, dsp->getCursorY() + CLOCK_SECONDS_Y_OFFSET, &_seconds_block_x, &_seconds_block_y, &_seconds_block_w, &_seconds_block_h);
   // print seconds
   dsp->gfxDrawText(dsp->getCursorX() + CLOCK_SECONDS_X_OFFSET, dsp->getCursorY() + CLOCK_SECONDS_Y_OFFSET, buff, config.theme.clock, config.theme.background, _config.textsize, &CLK_FONT2);
-
-  dsp->unlock();
 }
 
-void ClockWidget::_clear(){
+void ClockWidget::_drawDate(tm* t){
+  _clear_date();
+  char buff[40];
+  // date format "1 января 2025 / понедельник"
+  snprintf(buff, std::size(buff), "%u %s %u / %s", t->tm_mday, mnths[t->tm_mon], t->tm_year + 1900, dowf[t->tm_wday]);
+  // recalculate area for clock and save it to be cleared later
+  dsp->getTextBounds(buff, _config.left, _config.top, &_date_block_x, &_date_block_y, &_date_block_w, &_date_block_h);
+  // draw date with default font
+  dsp->gfxDrawText(
+    _datecfg->left,
+    _datecfg->top,
+    buff,
+    config.theme.date,
+    config.theme.background,
+    _datecfg->textsize
+  );
+}
+
+void ClockWidget::_clear_clk(){
   // Очищаем область под текущими часами
   dsp->gfxFillRect(_time_block_x, _time_block_y, _time_block_w, _time_block_h, config.theme.background);  // RGB565_DARKGREY); // 
   dsp->gfxFillRect(_seconds_block_x, _seconds_block_y, _seconds_block_w, _seconds_block_h, config.theme.background); // RGB565_DARKGREEN); //config.theme.background);
+}
+
+void ClockWidget::_clear_date(){
+  // Очищаем область под датой
+  dsp->gfxFillRect(_date_block_x, _date_block_y, _date_block_w, _date_block_h, config.theme.background);  // RGB565_DARKGREY); // 
 }
 
 void BitrateWidget::init(BitrateConfig bconf, uint16_t fgcolor, uint16_t bgcolor){

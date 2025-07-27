@@ -1,9 +1,9 @@
 #ifndef widgets_h
 #define widgets_h
 
+#include <ctime>
 #include "../../core/config.h"
 #include "../gfx_lib.h"
-
 
 enum WidgetAlign { WA_LEFT, WA_CENTER, WA_RIGHT };
 
@@ -69,6 +69,18 @@ class Widget{
     Widget(){ _active   = false; }
     virtual ~Widget(){}
     virtual void loop(){}
+
+    /**
+     * @brief run the widget
+     * let it work and draw something on a screen if requred
+     * @note call should only be executed from a display's thread
+     * 
+     * @param force - force widget to (re)draw it's content on a screen
+     * @return true - if widget has drawn anything and screen might need a refresh
+     * @return false - if it was just a dry run and no update was done
+     */
+    virtual bool run(bool force = false){ return false; };
+
     virtual void init(WidgetConfig conf, uint16_t fgcolor, uint16_t bgcolor){
       _config = conf;
       _fgcolor  = fgcolor;
@@ -77,10 +89,12 @@ class Widget{
       _backMove.x = _config.left;
       _backMove.y = _config.top;
     }
+
     void setAlign(WidgetAlign align){
       _config.align = align;
     }
-    void setActive(bool act, bool clr=false) { _active = act; if(_active && !_locked) _draw(); if(clr && !_locked) _clear(); }
+
+    virtual void setActive(bool act, bool clr=false) { _active = act; if(_active && !_locked) _draw(); if(clr && !_locked) _clear(); }
     void lock(bool lck=true) { _locked = lck; if(_locked) _reset(); if(_locked && _active) _clear();  }
     void unlock() { _locked = false; }
     bool locked() { return _locked; }
@@ -104,7 +118,8 @@ class Widget{
       _reset();
       _draw();
     }
-  protected:
+
+protected:
     bool _active, _moved{false}, _locked{false};
     uint16_t _fgcolor, _bgcolor, _width;
     WidgetConfig _config;
@@ -244,16 +259,31 @@ class ProgressWidget: public TextWidget {
 };
 
 class ClockWidget: public Widget {
-  // vars to save time block bounds, needed to clear time blocks
-  int16_t _time_block_x{0}, _time_block_y{0}, _seconds_block_x{0}, _seconds_block_y{0};
-  uint16_t  _time_block_w{0}, _time_block_h{0}, _seconds_block_w{0}, _seconds_block_h{0};
-  
+  std::time_t _last{0}, _last_date{0};
+  // vars to save time block bounds, needed to clear time blocks on next run
+  int16_t _time_block_x{0}, _time_block_y{0}, _seconds_block_x{0}, _seconds_block_y{0}, _date_block_x{0}, _date_block_y{0};
+  uint16_t  _time_block_w{0}, _time_block_h{0}, _seconds_block_w{0}, _seconds_block_h{0}, _date_block_w{0}, _date_block_h{0};
 
-  public:
-    void draw(){ _draw(); };
-  protected:
-    void _draw() override;
-    void _clear();
+
+public:
+    ClockWidget() = default;
+    //~ClockWidget();
+    //void setActive(bool act, bool clr=false) override;
+
+    bool run(bool force = false) override;
+
+    // a dirty hack for now
+    const WidgetConfig* _datecfg{nullptr};
+
+private:
+    void _drawTime(tm* t);
+    void _drawDate(tm* t);
+    void inline _clear(){ _clear_clk(); _clear_date(); };
+    void _clear_clk();
+    void _clear_date();
+
+private:
+//  void _clockDate();
 };
 
 class BitrateWidget: public Widget {

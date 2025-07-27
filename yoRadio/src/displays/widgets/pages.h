@@ -13,6 +13,7 @@ class Page {
     //Page();
     ~Page();
     void loop();
+    bool run(bool force = false);
     Widget& addWidget(Widget* widget);
     bool removeWidget(Widget* widget);
     Page& addPage(Page* page);
@@ -26,6 +27,7 @@ class Pager{
     //Pager() : _pages(std::list<Page*>([](Page* pg){ delete pg; })) {}
     void begin();
     void loop();
+    bool run(bool force = false);
     Page& addPage(Page* page, bool setNow = false);
     bool removePage(Page* page);
     void setPage(Page* page, bool black=false);

@@ -10,7 +10,6 @@
   #include "conf/displayAXS15231Bconf.h"
 #endif
 
-#define CANVAS
 
 #define BOOT_PRG_COLOR    0xE68B
 #define BOOT_TXT_COLOR    0xFFFF
@@ -32,21 +31,21 @@ public:
   void drawPlaylist(uint16_t currentItem) override;
   void printPLitem(uint8_t pos, const char* item, ScrollWidget& current) override;
 
-  void writeFillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) override;
   void setNumFont() override;
-
+  
   void flip() override { setRotation(config.store.flipscreen ? 2 : 0); }
   void invert() override { invertDisplay(config.store.invertdisplay); }
   void sleep() override;
   void wake() override;
-
-  void startWrite(void) override { _mtx.lock(); }
-  void endWrite(void) override { _mtx.unlock(); }
-
+  
+  void startWrite(void) override;
+  void endWrite(void) override;
+  
   void loop(bool force=false) override;
-
+  
   // mask ArduinoGFX's method
-  void writePixel(int16_t x, int16_t y, uint16_t color);
+  void writePixelPreclipped(int16_t x, int16_t y, uint16_t color) override;
+  void writeFillRectPreclipped(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) override;
 
   /**
    * @brief display locking
@@ -61,12 +60,17 @@ public:
    * @brief release lock
    * 
    */
-  void unlock() override { _mtx.unlock(); };
+  void unlock() override { _dirty = true; _mtx.unlock(); };
+
+  void gfxFlushScreen() override { loop(); };
 
 private:
+  bool _dirty{false};
   std::recursive_mutex _mtx;
+#if defined(YO_DEBUG_LEVEL) && YO_DEBUG_LEVEL == 5
+  uint32_t _fps{0}, _lps{0}, _dry_runs{0}, _fps_stamp{0};
+#endif
   uint8_t _charWidth(unsigned char c) override;
-  void _clockDate();
 #ifdef BATTERY_ON
   void readBattery();
 #endif

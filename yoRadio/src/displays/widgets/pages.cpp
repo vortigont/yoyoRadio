@@ -13,6 +13,13 @@ void Pager::loop(){
     if(p->isActive()) p->loop();
 }
 
+bool Pager::run(bool force){
+  bool result{false};
+  for (const auto& p: _pages)
+    result |= p->run(force);
+  return result;
+}
+
 Page& Pager::addPage(Page* page, bool setNow){
   _pages.push_back(page);
   if(setNow) setPage(page);
@@ -56,6 +63,14 @@ Page::~Page() {
 
 void Page::loop() {
   if(_active) for (const auto& w : _widgets) w->loop();
+}
+
+bool Page::run(bool force){
+  bool result{false};
+  if(_active)
+    for (const auto& w : _widgets)
+      result |= w->run(force);
+  return result;
 }
 
 Widget& Page::addWidget(Widget* widget) {

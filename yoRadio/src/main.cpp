@@ -23,9 +23,8 @@ void setup() {
 #if ARDUINO_USB_CDC_ON_BOOT==1
   // let USB serial to settle
   delay(2000);
-    LOGD(T_BOOT, println, "Start NetServer");
 #endif
-  LOGD(T_BOOT, println, "Setup...");
+  LOGI(T_BOOT, println, "Setup...");
 
   // Start event loop task
   evt::start();
@@ -35,49 +34,39 @@ void setup() {
   if (yoradio_on_setup)
     yoradio_on_setup();
 
-  LOGD(T_BOOT, println, "Init Config");
+  LOGI(T_BOOT, println, "Init Config");
   config.init();
-  LOGD(T_BOOT, println, "Init Display");
+  LOGI(T_BOOT, println, "Init Display");
   display.init();
 
   pm.on_setup();
 
   // cerate and init Player object
-  LOGD(T_BOOT, println, "Init Player");
+  LOGI(T_BOOT, println, "Init Player");
   create_player(DAC_TYPE);
   player->init();
 
-  LOGD(T_BOOT, println, "Start NetWork");
-  network.begin();
-  if (network.status != CONNECTED && network.status!=SDREADY) {
-    LOGD(T_BOOT, println, "Start NetServer");
-    netserver.begin();
-    LOGD(T_BOOT, println, "Init Controls");
-    initControls();
-
-    LOGD(T_BOOT, println, "Wait for Display");
-    display.putRequest(DSP_START);
-    while(!display.ready()) delay(10);
-    return;
-  }
-
-  if(SDC_CS!=255) {
-    Serial.println("Wait for SDCARD");
-    display.putRequest(WAITFORSD, 0);
-  }
-  Serial.println("Load playlist");
+  LOGI(T_BOOT, println, "Load playlist");
   config.initPlaylistMode();
+  
+  LOGI(T_BOOT, println, "Start NetWork");
+  network.begin();
 
-  Serial.println("Starting WebServer");
+  LOGI(T_BOOT, println, "Start WebServer");
   netserver.begin();
   telnet.begin();
 
-  LOGD(T_BOOT, println, "Init Controls");
+  if(SDC_CS!=255) {
+    LOGI(T_BOOT, println, "Wait for SDCARD");
+    display.putRequest(WAITFORSD, 0);
+  }
+
+  LOGI(T_BOOT, println, "Init Controls");
   initControls();
 
-  LOGD(T_BOOT, println, "Start Display");
+  LOGI(T_BOOT, println, "Start Display");
   display.putRequest(DSP_START);
-  LOGD(T_BOOT, println, "Wait for Display");
+  LOGI(T_BOOT, println, "Wait for Display");
   while(!display.ready()) delay(10);
 
   #ifdef MQTT_ROOT_TOPIC
@@ -85,9 +74,10 @@ void setup() {
   #endif
   if (config.getMode()==PM_SDCARD) player->initHeaders(config.station.url);
   player->lockOutput=false;
+
   #ifndef NO_AUTOPLAY_ONBOOT
   if (config.store.smartstart == 1) {
-    delay(99);
+    LOGI(T_BOOT, println, "Resume last station playback");
     auto v = config.lastStation();
     EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &v, sizeof(v));
   }

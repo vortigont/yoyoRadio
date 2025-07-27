@@ -146,7 +146,6 @@ bool NetServer::begin(bool quiet) {
 #endif
 
   _events_subsribe();
-  if(!quiet) Serial.println("done");
   return true;
 }
 

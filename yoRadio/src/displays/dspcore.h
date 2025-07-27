@@ -63,7 +63,7 @@ public:
   #endif
 
   //virtual void writePixel(int16_t x, int16_t y, uint16_t color) = 0;
-  virtual void writeFillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) = 0;
+  //virtual void writeFillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) = 0;
   virtual void setNumFont() = 0;
 
   virtual void flip(){};
@@ -154,7 +154,7 @@ public:
   // Очистка
   void gfxClearArea(int x, int y, int w, int h, uint16_t bgcolor){ fillRect(x, y, w, h, bgcolor); };
   void gfxClearScreen(uint16_t bgcolor){ fillScreen(bgcolor); };
-  void gfxFlushScreen(){ flush(); };
+  virtual void gfxFlushScreen(){};
 //
 //#ifdef FONT_DEFAULT_AGFX
   void setFont(const GFXfont* font = nullptr);
@@ -182,11 +182,20 @@ public:
   void loopDspTask(void * pvParameters);
 
 class Display {
+
+enum class state_t {
+  empty = 0,
+  bootlogo,
+  normal,
+  screensaver,
+  na
+};
+
   public:
     uint16_t currentPlItem;
     uint16_t numOfNextStation;
     displayMode_e _mode;
-  public:
+
     Display() {};
     ~Display();
     displayMode_e mode() { return _mode; }
@@ -194,7 +203,7 @@ class Display {
     void init();
     void loop();
     void _start();
-    bool ready() { return _bootStep==2; }
+    bool ready() { return _state == state_t::normal; }
     void resetQueue();
     void putRequest(displayRequestType_e type, int payload=0);
     void flip();
@@ -220,7 +229,7 @@ private:
     Page *_boot;
     TextWidget *_bootstring, *_volip, *_voltxt, *_rssi, *_bitrate;
     Ticker _returnTicker;
-    uint8_t _bootStep;
+    state_t _state{state_t::empty};
     void _time(bool redraw = false);
     void _apScreen();
     void _swichMode(displayMode_e newmode);

@@ -85,10 +85,13 @@ static const WidgetConfig apNameConf     = { TFT_FRAMEWDT, 88, 3, WA_CENTER };
 static const WidgetConfig apName2Conf    = { TFT_FRAMEWDT, 120, 3, WA_CENTER };
 static const WidgetConfig apPassConf     = { TFT_FRAMEWDT, 173, 3, WA_CENTER };
 static const WidgetConfig apPass2Conf    = { TFT_FRAMEWDT, 205, 3, WA_CENTER };
-static const WidgetConfig clockConf      = { 0, 98, 1, WA_CENTER };
+// Clock
+static const WidgetConfig clockConf      = { 0, 100, 1, WA_LEFT };
+static const WidgetConfig dateConf       = { TFT_FRAMEWDT, 135, 2, WA_LEFT };
 // cursor offset for clock's seconds
 #define CLOCK_SECONDS_X_OFFSET  0
 #define CLOCK_SECONDS_Y_OFFSET  -15
+
 
 static const WidgetConfig vuConf         = { TFT_FRAMEWDT, 268, 1, WA_LEFT };
 

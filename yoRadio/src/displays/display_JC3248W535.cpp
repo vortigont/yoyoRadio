@@ -1,7 +1,7 @@
 #include "../core/options.h"
 #if DSP_MODEL==DSP_JC3248W535
-#include "display/Arduino_AXS15231B.h"  // ArduinoGFX driver
 #include "canvas/Arduino_Canvas.h"
+#include "display/Arduino_AXS15231B.h"  // ArduinoGFX driver
 #include "databus/Arduino_ESP32QSPI.h"
 #include "display_JC3248W535.h"
 #include "fonts/bootlogo.h"
@@ -49,6 +49,7 @@ DspCore::DspCore(Arduino_G *g) : Arduino_Canvas(TFT_WIDTH /* width */, TFT_HEIGH
 
 void DspCore::initDisplay() {
   fillScreen(0x07e0); // green
+  flush();
   delay(500);
   fillScreen(0x0);    // black
 #ifdef  U8G2_FONT_SUPPORT
@@ -70,20 +71,21 @@ void DspCore::initDisplay() {
   if (plTtemsCount%2==0) plTtemsCount++;
   plCurrentPos = plTtemsCount/2;
   plYStart = (height() / 2 - plItemHeight / 2) - plItemHeight * (plTtemsCount - 1) / 2 + playlistConf.widget.textsize*2;
-  
+
+  flush();
   Serial.println("[AXS15231B] initDisplay completed successfully");
 }
 
 void DspCore::drawLogo(uint16_t top) {
-  // Очищаем область под логотип
-  //gfxFillRect(0, top, width(), 88, config.theme.background);
-  
+  std::lock_guard<std::recursive_mutex> lock(_mtx);
   // Рисуем логотип
   draw16bitRGBBitmap((width() - 99) / 2, top, const_cast<uint16_t*>(bootlogo2), 99, 64);
-  delay(1000);
+  _dirty = true;
+  //delay(1000);
 }
 
 void DspCore::printPLitem(uint8_t pos, const char* item, ScrollWidget& current){
+  std::lock_guard<std::recursive_mutex> lock(_mtx);
   if (pos == plCurrentPos) {
     current.setText(item);
   } else {
@@ -119,17 +121,24 @@ void DspCore::printPLitem(uint8_t pos, const char* item, ScrollWidget& current){
       textsize
     );
   }
+  _dirty = true;
 }
 
 void DspCore::drawPlaylist(uint16_t currentItem) {
   return;
+  std::lock_guard<std::recursive_mutex> lock(_mtx);
   uint8_t lastPos = config.fillPlMenu(currentItem - plCurrentPos, plTtemsCount);
   if(lastPos<plTtemsCount){
     gfxFillRect(0, lastPos*plItemHeight+plYStart, width(), height()/2, config.theme.background);
   }
+  _dirty = true;
 }
 
-void DspCore::clearDsp(bool black) { fillScreen( black ? 0 : config.theme.background); }
+void DspCore::clearDsp(bool black) {
+  std::lock_guard<std::recursive_mutex> lock(_mtx);
+  fillScreen( black ? 0 : config.theme.background);
+  _dirty = true;
+}
 
 uint8_t DspCore::_charWidth(unsigned char c){
   return pgm_read_glyph_ptr(&DirectiveFour56, c - 0x20)->xAdvance;
@@ -143,32 +152,6 @@ bool DspCore::lock(bool wait){
     if (_mtx.try_lock()) return true;
     else return false;
   }
-}
-
-void DspCore::_clockDate(){
-  setFont(FONT_DEFAULT_U8G2);
-  //setCursor(TFT_FRAMEWDT, clockTop+70);
-  int16_t x1, y1;
-  uint16_t w, h;
-  //getTextBounds("Hello World!", TFT_FRAMEWDT, clockTop+70, &x1, &y1, &w, &h);
-
-//  if(_olddateleft>0)
-//    gfxFillRect(_olddateleft,  clockTop+70, _olddatewidth, CHARHEIGHT*2, config.theme.background); //очистка надписи даты
-
-//    gfxDrawText(_dateleft+70, clockTop+70, _dateBuf, config.theme.date, config.theme.background, 2);
-  strlcpy(_oldDateBuf, _dateBuf, sizeof(_dateBuf));
-  _olddatewidth = _datewidth;
-  _olddateleft = _dateleft;
-  // День недели
-  gfxDrawText(
-    TFT_FRAMEWDT,
-    200 - CHARHEIGHT+44, //clockTop-CHARHEIGHT+44,
-    //100 +70,//clockTop+70,
-    utf8Rus(dow[network.timeinfo.tm_wday], false),
-    config.theme.dow,
-    config.theme.background,
-    2
-  );
 }
 
 void DspCore::sleep(void) { 
@@ -189,18 +172,21 @@ void DspCore::wake(void) {
   #endif
 }
 
-void DspCore::writePixel(int16_t x, int16_t y, uint16_t color) {
+void DspCore::writePixelPreclipped(int16_t x, int16_t y, uint16_t color) {
+  std::lock_guard<std::recursive_mutex> lock(_mtx);
   if(_clipping){
     if ((x < _cliparea.left) || (x > _cliparea.left+_cliparea.width) || (y < _cliparea.top) || (y > _cliparea.top + _cliparea.height)) return;
   }
-  drawPixel(x, y, color);
+  Arduino_Canvas::writePixelPreclipped(x, y, color);
 }
 
-void DspCore::writeFillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
+void DspCore::writeFillRectPreclipped(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
+  std::lock_guard<std::recursive_mutex> lock(_mtx);
   if(_clipping){
     if ((x < _cliparea.left) || (x >= _cliparea.left+_cliparea.width) || (y < _cliparea.top) || (y > _cliparea.top + _cliparea.height))  return;
   }
-  writeFillRect(x, y, w, h, color);
+
+  Arduino_Canvas::writeFillRectPreclipped(x, y, w, h, color);
 }
 
 void DspCore::setNumFont(){
@@ -210,6 +196,18 @@ void DspCore::setNumFont(){
     setFont(&DS_DIGI56pt7b);
   #endif
   setTextSize(1);
+}
+
+void DspCore::startWrite(void){
+  _mtx.lock();
+  #if defined(YO_DEBUG_LEVEL) && YO_DEBUG_LEVEL == 5
+  ++_lps;
+  #endif
+}
+
+void DspCore::endWrite(void){
+  _dirty = true;
+  _mtx.unlock();
 }
 
 void DspCore::loop(bool force) {
@@ -253,10 +251,23 @@ void DspCore::loop(bool force) {
 
   // AXS15231B can only flush entire canvas buffer to display, so we need to do this periodically
   // todo: optimize this calls
-
-  if (_mtx.try_lock()){    // if canvas is locked from outside, then skip this frame flush
+  
+  if (_dirty){    // if canvas is locked from outside, then skip this frame flush
+    std::lock_guard<std::recursive_mutex> lock(_mtx);
     flush();
-    _mtx.unlock();
+    _dirty = false;
+    #if defined(YO_DEBUG_LEVEL) && YO_DEBUG_LEVEL == 5
+    ++_fps;
+    if (millis() - _fps_stamp > 1000){
+      LOGV(T_Display, printf, "fps:%u, dry:%u, lps:%u\n", _fps, _dry_runs, _lps);
+      _fps = _dry_runs = _lps = 0;
+      _fps_stamp = millis();
+    }
+    #endif
+  } else {
+    #if defined(YO_DEBUG_LEVEL) && YO_DEBUG_LEVEL == 5
+    ++_dry_runs;
+    #endif
   }
 }
 

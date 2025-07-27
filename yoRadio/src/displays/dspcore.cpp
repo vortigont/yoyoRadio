@@ -224,7 +224,7 @@ Display::~Display(){
 }
 
 void Display::_createDspTask(){
-  xTaskCreatePinnedToCore(loopDspTask, "DspTask", CORE_STACK_SIZE,  NULL,  4, &DspTask, !xPortGetCoreID());
+  xTaskCreatePinnedToCore(loopDspTask, "DspTask", CORE_STACK_SIZE,  NULL,  4, &DspTask, CONFIG_ARDUINO_RUNNING_CORE);
 }
 
 void loopDspTask(void * pvParameters){
@@ -242,18 +242,18 @@ void loopDspTask(void * pvParameters){
 }
 
 void Display::init() {
-  Serial.println("##[BOOT]#\tdisplay.init");
+  LOGI(T_BOOT, println, "display.init");
 #ifdef USE_NEXTION
   nextion.begin();
 #endif
 #if LIGHT_SENSOR!=255
   analogSetAttenuation(ADC_0db);
 #endif
-  _bootStep = 0;
+  _state = state_t::empty;
   if (create_display_dev())
     dsp->initDisplay();
   else {
-    Serial.println("##[BOOT]#\tdisplay.init FAILED!");
+    LOGE(T_BOOT, println, "display.init FAILED!");
     return;
   }
 
@@ -261,28 +261,27 @@ void Display::init() {
   displayQueue = xQueueCreate( 5, sizeof( requestParams_t ) );
   while(displayQueue==NULL){;}
 
-  while(!_bootStep==0) { delay(10); }
   _pager.begin();
   _bootScreen();
   _createDspTask();
   _events_subsribe();
-  Serial.println("done");
 }
 
 void Display::_bootScreen(){
+  _state = state_t::bootlogo;
   _boot = new Page();
   _boot->addWidget(new ProgressWidget(bootWdtConf, bootPrgConf, BOOT_PRG_COLOR, 0));
   _bootstring = (TextWidget*) &_boot->addWidget(new TextWidget(bootstrConf, 50, true, BOOT_TXT_COLOR, 0));
   _pager.addPage(_boot);
   _pager.setPage(_boot, true);
   dsp->drawLogo(bootLogoTop);
-  _bootStep = 1;
 }
 
 void Display::_buildPager(){
   _meta.init("*", metaConf, config.theme.meta, config.theme.metabg);
   _title1.init("*", title1Conf, config.theme.title1, config.theme.background);
   _clock.init(clockConf, 0, 0);
+  _clock._datecfg = &dateConf;    // dirty hack with date config
   #if DSP_MODEL==DSP_NOKIA5110
     _plcurrent.init("*", playlistConf, 0, 1);
   #else
@@ -411,7 +410,7 @@ void Display::_start() {
     #ifdef USE_NEXTION
       nextion.apScreen();
     #endif
-    _bootStep = 2;
+    _state = state_t::normal;
     return;
   }
   #ifdef USE_NEXTION
@@ -436,8 +435,9 @@ void Display::_start() {
   _volume();
   _station();
   _time(false);
-  _bootStep = 2;
+  _state = state_t::normal;
   pm.on_display_player();
+  LOGV(T_Display, println, "Display::_start() end");
 }
 
 void Display::_showDialog(const char *title){
@@ -580,7 +580,7 @@ void Display::loop() {
       switch (request.type){
         case NEWMODE: _swichMode((displayMode_e)request.payload); break;
         case CLOCK: 
-          if(_mode==PLAYER || _mode==SCREENSAVER) _time(); 
+          //if(_mode==PLAYER || _mode==SCREENSAVER) _time(); 
           /*#ifdef USE_NEXTION
             if(_mode==TIMEZONE) nextion.localTime(network.timeinfo);
             if(_mode==INFO)     nextion.rssi();
@@ -650,11 +650,12 @@ void Display::loop() {
       return;
   }
 
-  _pager.loop();
+  if (_pager.run())
+    dsp->loop();
+  //_pager.loop();
 #ifdef USE_NEXTION
   nextion.loop();
 #endif
-  dsp->loop();
   #if I2S_DOUT==255
   player.computeVUlevel();
   #endif
@@ -719,7 +720,6 @@ void Display::_title() {
 }
 
 void Display::_time(bool redraw) {
-  
 #if LIGHT_SENSOR!=255
   if(config.store.dspon) {
     config.store.brightness = AUTOBACKLIGHT(analogRead(LIGHT_SENSOR));
@@ -734,7 +734,7 @@ void Display::_time(bool redraw) {
     #endif
     _clock.moveTo({clockConf.left, ft, 0});
   }
-  _clock.draw();
+  //_clock.draw();
   /*#ifdef USE_NEXTION
     nextion.printClock(network.timeinfo);
   #endif*/
@@ -805,11 +805,12 @@ void Display::_events_cmd_hndlr(int32_t id, void* data){
     case evt::yo_event_t::displayNewMode :
       _swichMode(*reinterpret_cast<displayMode_e*>(data));
       break;
-
+/*
     case evt::yo_event_t::displayClock :
-      if(_mode==PLAYER || _mode==SCREENSAVER) _time(); 
+      //if(_mode==PLAYER || _mode==SCREENSAVER) _time();
+      if(_mode==PLAYER || _mode==SCREENSAVER) display.putRequest(CLOCK);
       break;
-
+*/
     case evt::yo_event_t::displayNewTitle :
       _title();
       break;
