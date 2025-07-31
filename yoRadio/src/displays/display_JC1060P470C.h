@@ -37,7 +37,10 @@ public:
   void drawPlaylist(uint16_t currentItem) override;
   void printPLitem(uint8_t pos, const char* item, ScrollWidget& current) override;
 
-  void writeFillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) override;
+  // mask ArduinoGFX's method
+  void writePixelPreclipped(int16_t x, int16_t y, uint16_t color) override;
+  void writeFillRectPreclipped(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) override;
+
   void setNumFont() override;
 
   void flip() override { setRotation(config.store.flipscreen ? 2 : 0); }
@@ -54,11 +57,8 @@ public:
   void writePixel(int16_t x, int16_t y, uint16_t color);
 
 private:
-  //std::mutex _mtx;
   uint8_t _charWidth(unsigned char c) override;
-  void _clockSeconds();
-  void _clockDate();
-  void _clockTime();
+
 #ifdef BATTERY_ON
   void readBattery();
 #endif

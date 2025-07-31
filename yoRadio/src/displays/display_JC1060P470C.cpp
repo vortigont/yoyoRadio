@@ -129,28 +129,6 @@ uint8_t DspCore::_charWidth(unsigned char c){
   return pgm_read_byte(&glyph->xAdvance);
 }
 
-void DspCore::_clockDate(){
-/*
-  if(_olddateleft>0)
-    gfxFillRect(_olddateleft,  clockTop+70, _olddatewidth, CHARHEIGHT*2, config.theme.background); //очистка надписи даты
-  gfxDrawText(_dateleft+70, clockTop+70, _dateBuf, config.theme.date, config.theme.background, 2);
-  strlcpy(_oldDateBuf, _dateBuf, sizeof(_dateBuf));
-  _olddatewidth = _datewidth;
-  _olddateleft = _dateleft;
-  // День недели
-  gfxDrawText(
-    //width() - clockRightSpace - CHARWIDTH*4*2+13-20,
-     8,
-    //clockTop-CHARHEIGHT+44,
-    clockTop+70,
-    utf8Rus(dow[network.timeinfo.tm_wday], false),
-    config.theme.dow,
-    config.theme.background,
-    2
-  );
-*/
-}
-
 void DspCore::sleep(void) { 
   Serial.println("DspCore::sleep");
   //std::lock_guard<std::mutex> lock(_mtx);
@@ -165,18 +143,19 @@ void DspCore::wake(void) {
   ledcWrite(0, map(config.store.brightness, 0, 100, 0, 255)); // Устанавливаем яркость через PWM
 }
 
-void DspCore::writePixel(int16_t x, int16_t y, uint16_t color) {
+void DspCore::writePixelPreclipped(int16_t x, int16_t y, uint16_t color) {
   if(_clipping){
     if ((x < _cliparea.left) || (x > _cliparea.left+_cliparea.width) || (y < _cliparea.top) || (y > _cliparea.top + _cliparea.height)) return;
   }
-  drawPixel(x, y, color);
+  Arduino_DSI_Display::writePixelPreclipped(x, y, color);
 }
 
-void DspCore::writeFillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
+void DspCore::writeFillRectPreclipped(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
   if(_clipping){
     if ((x < _cliparea.left) || (x >= _cliparea.left+_cliparea.width) || (y < _cliparea.top) || (y > _cliparea.top + _cliparea.height))  return;
   }
-  writeFillRect(x, y, w, h, color);
+
+  Arduino_DSI_Display::writeFillRectPreclipped(x, y, w, h, color);
 }
 
 void DspCore::setNumFont(){
