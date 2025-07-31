@@ -110,16 +110,10 @@ public:
 
 
 protected:
-  char  _timeBuf[20], _dateBuf[20], _oldTimeBuf[20], _oldDateBuf[20], _bufforseconds[4], _buffordate[40];
-  uint16_t _timewidth, _timeleft, _datewidth, _dateleft, _oldtimeleft, _oldtimewidth, _olddateleft, _olddatewidth, /* clockTop, clockRightSpace, clockTimeHeight,*/ _dotsLeft;
 
-  bool _clipping, _printdots;
+  bool _clipping;
   clipArea _cliparea;
   void * _scrollid;
-  virtual void _getTimeBounds();
-  void _clockSeconds();
-  void _clockDate();
-  void _clockTime();
   virtual uint8_t _charWidth(unsigned char c) = 0;
   #if DSP_MODEL==DSP_ILI9225
     uint16_t _bgcolor, _fgcolor;
@@ -230,7 +224,6 @@ private:
     TextWidget *_bootstring, *_volip, *_voltxt, *_rssi, *_bitrate;
     Ticker _returnTicker;
     state_t _state{state_t::empty};
-    void _time(bool redraw = false);
     void _apScreen();
     void _swichMode(displayMode_e newmode);
     void _drawPlaylist();

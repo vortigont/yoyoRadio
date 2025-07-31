@@ -16,7 +16,6 @@ enum n_Status_e { CONNECTED, SOFT_AP, FAILED, SDREADY };
 class MyNetwork {
   public:
     n_Status_e status;
-    struct tm timeinfo;
     bool firstRun, forceTimeSync, forceWeather;
     bool lostPlaying = false, beginReconnect = false;
     //uint8_t tsFailCnt, wsFailCnt;

@@ -98,13 +98,6 @@ uint16_t DspCoreBase::textWidth(const char *txt){
   return w;
 }
 
-void DspCoreBase::_getTimeBounds() {
-  _timewidth = textWidth(_timeBuf);
-  char buf[4];
-  strftime(buf, 4, "%H", &network.timeinfo);
-  _dotsLeft=textWidth(buf);
-}
-
 // Функция для вычисления ширины строки для стандартного шрифта Adafruit_GFX
 uint16_t DspCoreBase::textWidthGFX(const char *txt, uint8_t textsize) {
   return strlen(txt) * CHARWIDTH * textsize;
@@ -434,7 +427,6 @@ void Display::_start() {
   _pager.setPage( pages[PG_PLAYER]);
   _volume();
   _station();
-  _time(false);
   _state = state_t::normal;
   pm.on_display_player();
   LOGV(T_Display, println, "Display::_start() end");
@@ -463,6 +455,10 @@ void Display::_swichMode(displayMode_e newmode) {
   if (newmode == _mode || (network.status != CONNECTED && network.status != SDREADY)) return;
   _mode = newmode;
   dsp->setScrollId(NULL);
+
+  // enable / disable clock widget
+  _clock.setActive(newmode == PLAYER || newmode == SCREENSAVER);
+  
   if (newmode == PLAYER) {
     if(player->isRunning())
       _clock.moveTo(clockMove);
@@ -579,13 +575,6 @@ void Display::loop() {
     if(pm_result)
       switch (request.type){
         case NEWMODE: _swichMode((displayMode_e)request.payload); break;
-        case CLOCK: 
-          //if(_mode==PLAYER || _mode==SCREENSAVER) _time(); 
-          /*#ifdef USE_NEXTION
-            if(_mode==TIMEZONE) nextion.localTime(network.timeinfo);
-            if(_mode==INFO)     nextion.rssi();
-          #endif*/
-          break;
         case NEWTITLE: _title(); break;
         case NEWSTATION: _station(); break;
         case NEXTSTATION: _drawNextStationNum(request.payload); break;
@@ -717,27 +706,6 @@ void Display::_title() {
   }
   if (player_on_track_change) player_on_track_change();
   pm.on_track_change();
-}
-
-void Display::_time(bool redraw) {
-#if LIGHT_SENSOR!=255
-  if(config.store.dspon) {
-    config.store.brightness = AUTOBACKLIGHT(analogRead(LIGHT_SENSOR));
-    config.setBrightness();
-  }
-#endif
-  if(config.isScreensaver && network.timeinfo.tm_sec % 60 == 0){
-    #ifdef GXCLOCKFONT
-      uint16_t ft=static_cast<uint16_t>(random(TFT_FRAMEWDT, (dsp->height()-dsp->plItemHeight-TFT_FRAMEWDT*2-clockConf.textsize)));
-    #else
-      uint16_t ft=static_cast<uint16_t>(random(TFT_FRAMEWDT+clockConf.textsize, (dsp->height()-dsp->plItemHeight-TFT_FRAMEWDT*2)));
-    #endif
-    _clock.moveTo({clockConf.left, ft, 0});
-  }
-  //_clock.draw();
-  /*#ifdef USE_NEXTION
-    nextion.printClock(network.timeinfo);
-  #endif*/
 }
 
 void Display::_volume() {

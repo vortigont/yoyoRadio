@@ -435,6 +435,8 @@ void ProgressWidget::loop() {
  **************************/
 
 bool ClockWidget::run(bool force){
+  if(!_active) return false;
+
   std::time_t time = std::time({});
   auto t = std::localtime(&time);
   if (time == _last && !force){
@@ -447,11 +449,12 @@ bool ClockWidget::run(bool force){
   struct tm cur_date = *t;
   t = std::localtime(&_last_date);
   // draw date only if year of year day has changed
-  if ( force || (t->tm_yday != cur_date.tm_yday || t->tm_year != cur_date.tm_year) ){
+  if ( force || (t->tm_yday != cur_date.tm_yday) || (t->tm_year != cur_date.tm_year) ){
     _drawDate(&cur_date);
     _last_date = time;
   }
   dsp->unlock();
+  _reconfig(&cur_date);
   return true;
 };
 
@@ -514,6 +517,25 @@ void ClockWidget::_clear_date(){
   // Очищаем область под датой
   dsp->gfxFillRect(_date_block_x, _date_block_y, _date_block_w, _date_block_h, config.theme.background);  // RGB565_DARKGREY); // 
 }
+
+void ClockWidget::_reconfig(tm* t){
+  // todo: this is a wrong place for this code, should be in display/dspcore
+  #if LIGHT_SENSOR!=255
+  if(config.store.dspon) {
+    config.store.brightness = AUTOBACKLIGHT(analogRead(LIGHT_SENSOR));
+    config.setBrightness();
+  }
+#endif
+  if (config.isScreensaver && t->tm_sec == 0){
+    #ifdef GXCLOCKFONT
+      uint16_t ft=static_cast<uint16_t>(random(TFT_FRAMEWDT, (dsp->height()-dsp->plItemHeight-TFT_FRAMEWDT*2-clockConf.textsize)));
+    #else
+      uint16_t ft=static_cast<uint16_t>(random(TFT_FRAMEWDT+clockConf.textsize, (dsp->height()-dsp->plItemHeight-TFT_FRAMEWDT*2)));
+    #endif
+    moveTo({_config.left, ft, 0});
+  }
+}
+
 
 void BitrateWidget::init(BitrateConfig bconf, uint16_t fgcolor, uint16_t bgcolor){
   Widget::init(bconf.widget, fgcolor, bgcolor);

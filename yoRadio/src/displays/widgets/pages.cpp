@@ -28,7 +28,7 @@ Page& Pager::addPage(Page* page, bool setNow){
 
 bool Pager::removePage(Page* page){
   page->setActive(false);
-  dsp->clearDsp();
+  dsp->clearDsp();    // todo: remove this direct call
   auto i = std::find_if(_pages.begin(), _pages.end(), [&page](const Page* pn){ return page == pn; });
   if (i != _pages.end()){
     delete (*i);

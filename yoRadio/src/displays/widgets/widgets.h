@@ -66,7 +66,7 @@ struct BitrateConfig {
 
 class Widget{
   public:
-    Widget(){ _active   = false; }
+    Widget() = default;
     virtual ~Widget(){}
     virtual void loop(){}
 
@@ -120,7 +120,7 @@ class Widget{
     }
 
 protected:
-    bool _active, _moved{false}, _locked{false};
+    bool _active{false}, _moved{false}, _locked{false};
     uint16_t _fgcolor, _bgcolor, _width;
     WidgetConfig _config;
     MoveConfig   _backMove;
@@ -281,9 +281,8 @@ private:
     void inline _clear(){ _clear_clk(); _clear_date(); };
     void _clear_clk();
     void _clear_date();
-
-private:
-//  void _clockDate();
+    // move clock in screensaver mode / measure brightness
+    void _reconfig(tm* t);
 };
 
 class BitrateWidget: public Widget {

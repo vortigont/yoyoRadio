@@ -77,20 +77,8 @@ void ticks() {
     }
   }
 #endif
-#if RTCSUPPORTED
-  if(config.isRTCFound()){
-    rtc.getTime(&network.timeinfo);
-    mktime(&network.timeinfo);
-    EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayClock));
-  }
-#else
-  if(network.timeinfo.tm_year>100 || network.status == SDREADY) {
-    network.timeinfo.tm_sec++;
-    mktime(&network.timeinfo);
-    EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayClock));
-  }
-#endif
-  if(player->isRunning() && config.getMode()==PM_SDCARD) netserver.requestOnChange(SDPOS, 0);
+
+if(player->isRunning() && config.getMode()==PM_SDCARD) netserver.requestOnChange(SDPOS, 0);
   if(divrssi) {
     if(network.status == CONNECTED){
       netserver.setRSSI(WiFi.RSSI());
@@ -99,9 +87,7 @@ void ticks() {
       EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayShowRSSI), &d, sizeof(d));
     }
 #ifdef USE_SD
-// зачем это здесь в области rssi???
     if(display.mode()!=SDCHANGE)
-      EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayClock));
       EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::playerMode));
 #endif
 
@@ -239,13 +225,6 @@ void MyNetwork::begin() {
   Serial.println("##[BOOT]#\tdone");
   if(REAL_LEDBUILTIN!=255) digitalWrite(REAL_LEDBUILTIN, LOW);
   
-#if RTCSUPPORTED
-  if(config.isRTCFound()){
-    rtc.getTime(&network.timeinfo);
-    mktime(&network.timeinfo);
-    EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayClock));
-  }
-#endif
   ctimer.attach(1, ticks);
   if (network_on_connect) network_on_connect();
   pm.on_connect();
@@ -271,7 +250,9 @@ void MyNetwork::setWifiParams(){
 void MyNetwork::requestTimeSync(bool withTelnetOutput, uint8_t clientId) {
   if (withTelnetOutput) {
     char timeStringBuff[50];
-    strftime(timeStringBuff, sizeof(timeStringBuff), "%Y-%m-%dT%H:%M:%S", &timeinfo);
+    std::time_t time = std::time({});
+    auto t = std::localtime(&time);
+    std::strftime(timeStringBuff, sizeof(timeStringBuff), "%fT%T", t);
     if (config.store.tzHour < 0) {
       telnet.printf(clientId, "##SYS.DATE#: %s%03d:%02d\n> ", timeStringBuff, config.store.tzHour, config.store.tzMin);
     } else {
@@ -309,11 +290,10 @@ void doSync( void * pvParameters ) {
   //static uint8_t wsFailCnt = 0;
   if(network.forceTimeSync){
     network.forceTimeSync = false;
-    if(getLocalTime(&network.timeinfo)){
+    struct tm t;
+    if(getLocalTime(&t)){
       tsFailCnt = 0;
       network.forceTimeSync = false;
-      mktime(&network.timeinfo);
-      EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayClock));
       network.requestTimeSync(true);
       #if RTCSUPPORTED
         if (config.isRTCFound()) rtc.setTime(&network.timeinfo);

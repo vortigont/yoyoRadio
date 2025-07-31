@@ -167,7 +167,9 @@ void Telnet::on_connect(const char* str, uint8_t clientId) {
 void Telnet::info() {
   telnet.printf("##CLI.INFO#\n");
   char timeStringBuff[50];
-  strftime(timeStringBuff, sizeof(timeStringBuff), "%Y-%m-%dT%H:%M:%S+03:00", &network.timeinfo);
+  std::time_t time = std::time({});
+  auto t = std::localtime(&time);
+  std::strftime(timeStringBuff, sizeof(timeStringBuff), "%fT%T", t);
   telnet.printf("##SYS.DATE#: %s\n", timeStringBuff); //TODO timezone offset
   telnet.printf("##CLI.NAMESET#: %d %s\n", config.lastStation(), config.station.name);
   if (player->status() == PLAYING) {
@@ -272,7 +274,9 @@ void Telnet::on_input(const char* str, uint8_t clientId) {
     if (strcmp(str, "cli.info") == 0 || strcmp(str, "info") == 0) {
       printf(clientId, "##CLI.INFO#\n");
       char timeStringBuff[50];
-      strftime(timeStringBuff, sizeof(timeStringBuff), "%Y-%m-%dT%H:%M:%S", &network.timeinfo);
+      std::time_t time = std::time({});
+      auto t = std::localtime(&time);
+      std::strftime(timeStringBuff, sizeof(timeStringBuff), "%fT%T", t);
       if (config.store.tzHour < 0) {
         printf(clientId, "##SYS.DATE#: %s%03d:%02d\n", timeStringBuff, config.store.tzHour, config.store.tzMin);
       } else {
