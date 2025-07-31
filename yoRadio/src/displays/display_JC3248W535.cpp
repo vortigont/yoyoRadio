@@ -49,9 +49,8 @@ DspCore::DspCore(Arduino_G *g) : Arduino_Canvas(TFT_WIDTH /* width */, TFT_HEIGH
 
 void DspCore::initDisplay() {
   fillScreen(0x07e0); // green
-  flush();
-  delay(500);
-  fillScreen(0x0);    // black
+  flush(true);
+
 #ifdef  U8G2_FONT_SUPPORT
   setUTF8Print(true);
 #endif  // U8G2_FONT_SUPPORT
@@ -72,7 +71,6 @@ void DspCore::initDisplay() {
   plCurrentPos = plTtemsCount/2;
   plYStart = (height() / 2 - plItemHeight / 2) - plItemHeight * (plTtemsCount - 1) / 2 + playlistConf.widget.textsize*2;
 
-  flush();
   Serial.println("[AXS15231B] initDisplay completed successfully");
 }
 

@@ -243,8 +243,9 @@ void Display::init() {
   analogSetAttenuation(ADC_0db);
 #endif
   _state = state_t::empty;
-  if (create_display_dev())
+  if (create_display_dev()){
     dsp->initDisplay();
+  }
   else {
     LOGE(T_BOOT, println, "display.init FAILED!");
     return;
@@ -394,6 +395,7 @@ void Display::_apScreen() {
 }
 
 void Display::_start() {
+  dsp->clearDsp();
   if(_boot) _pager.removePage(_boot);
   #ifdef USE_NEXTION
     nextion.wake();
