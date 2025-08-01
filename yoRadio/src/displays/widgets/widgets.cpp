@@ -495,7 +495,7 @@ void ClockWidget::_drawDate(tm* t){
   // date format "1 января 2025 / понедельник"
   snprintf(buff, std::size(buff), "%u %s %u / %s", t->tm_mday, mnths[t->tm_mon], t->tm_year + 1900, dowf[t->tm_wday]);
   // recalculate area for clock and save it to be cleared later
-  dsp->getTextBounds(buff, _config.left, _config.top, &_date_block_x, &_date_block_y, &_date_block_w, &_date_block_h);
+  dsp->getTextBounds(buff, _datecfg->left, _datecfg->top, &_date_block_x, &_date_block_y, &_date_block_w, &_date_block_h);
   // draw date with default font
   dsp->gfxDrawText(
     _datecfg->left,
