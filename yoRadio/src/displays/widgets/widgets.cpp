@@ -1,6 +1,4 @@
 #include "../gfx_engine.h"
-#if DSP_MODEL!=DSP_DUMMY
-
 #include "widgets.h"
 #include "../../core/player.h"    //  for VU widget
 #include "../tools/l10n.h"
@@ -490,12 +488,21 @@ void ClockWidget::_drawTime(tm* t){
 }
 
 void ClockWidget::_drawDate(tm* t){
-  _clear_date();
   char buff[40];
   // date format "1 января 2025 / понедельник"
   snprintf(buff, std::size(buff), "%u %s %u / %s", t->tm_mday, mnths[t->tm_mon], t->tm_year + 1900, dowf[t->tm_wday]);
   // recalculate area for clock and save it to be cleared later
-  dsp->getTextBounds(buff, _datecfg->left, _datecfg->top, &_date_block_x, &_date_block_y, &_date_block_w, &_date_block_h);
+  dsp->setFont();
+  dsp->setTextSize(_datecfg->textsize);
+
+  if (!_date_block_w || !_date_block_h){
+    // on the first run clear area for current date
+    dsp->getTextBounds(buff, _datecfg->left, _datecfg->top, &_date_block_x, &_date_block_y, &_date_block_w, &_date_block_h);
+    _clear_date();
+  } else {
+    _clear_date();
+    dsp->getTextBounds(buff, _datecfg->left, _datecfg->top, &_date_block_x, &_date_block_y, &_date_block_w, &_date_block_h);
+  }
   // draw date with default font
   dsp->gfxDrawText(
     _datecfg->left,
@@ -515,7 +522,7 @@ void ClockWidget::_clear_clk(){
 
 void ClockWidget::_clear_date(){
   // Очищаем область под датой
-  dsp->gfxFillRect(_date_block_x, _date_block_y, _date_block_w, _date_block_h, config.theme.background);  // RGB565_DARKGREY); // 
+  dsp->gfxFillRect(_date_block_x, _date_block_y, _date_block_w, _date_block_h, config.theme.background);  // RGB565_DARKGREY);
 }
 
 void ClockWidget::_reconfig(tm* t){
@@ -576,5 +583,3 @@ void BitrateWidget::_draw(){
 void BitrateWidget::_clear() {
   dsp->fillRect(_config.left, _config.top, _dimension, _dimension, _bgcolor);
 }
-
-#endif // #if DSP_MODEL!=DSP_DUMMY

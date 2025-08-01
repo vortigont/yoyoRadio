@@ -156,7 +156,7 @@ void DspCore_Arduino_GFX::gfxDrawFormatted(int x, int y, const char* fmt, uint16
   va_end(args);
   gfxDrawText(x, y, buf, color, bgcolor, size, font);
 }
-//
+
 void DspCore_Arduino_GFX::setFont(const GFXfont* font){
   if (font)
     Arduino_GFX::setFont(font);
@@ -182,7 +182,7 @@ void DspCore_Arduino_GFX::setFont(const uint8_t* font){
   }
 #endif
 }
-//
+
 
 
 #endif  // _ARDUINO_GFX_H_

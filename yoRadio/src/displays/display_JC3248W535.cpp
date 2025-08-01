@@ -36,7 +36,8 @@ DspCore::DspCore(Arduino_G *g) : Arduino_Canvas(TFT_WIDTH /* width */, TFT_HEIGH
     LOGE(T_Display, println, "[AXS15231B] Failed to begin canvas!");
     return;
   }
-
+  uint16_t* buff = Arduino_Canvas::getFramebuffer();
+  memset(buff, 0, TFT_WIDTH * TFT_HEIGHT * 2);
   // backlight
   #ifdef TFT_BLK
     //pinMode(TFT_BLK, OUTPUT);
@@ -48,9 +49,6 @@ DspCore::DspCore(Arduino_G *g) : Arduino_Canvas(TFT_WIDTH /* width */, TFT_HEIGH
 }
 
 void DspCore::initDisplay() {
-  fillScreen(0x07e0); // green
-  flush(true);
-
 #ifdef  U8G2_FONT_SUPPORT
   setUTF8Print(true);
 #endif  // U8G2_FONT_SUPPORT
