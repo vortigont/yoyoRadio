@@ -34,6 +34,12 @@ class DspCore: public Adafruit_PCD8544 {
 #include "tools/commongfx.h"
 };
 
+/*
+  // moved from dspcore.h
+  virtual void command(uint8_t c);
+  virtual void data(uint8_t c);
+*/
+
 extern DspCore dsp;
 
 /*

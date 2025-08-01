@@ -21,8 +21,6 @@ public:
   virtual void loop(bool force=false) = 0;
 
   virtual void printPLitem(uint8_t pos, const char* item, ScrollWidget& current) = 0;
-  //virtual void printClock(uint16_t x, uint16_t y, /* have no idea what this is */ uint16_t timeheight, bool redraw) = 0;
-  //virtual void clearClock() = 0;
   virtual void drawLogo(uint16_t top) = 0;
   virtual void drawPlaylist(uint16_t currentItem) = 0;
 
@@ -40,32 +38,7 @@ public:
    * @param height 
    */
   virtual void charSize(uint8_t textsize, uint16_t& width, uint16_t& height);
-
-  #ifndef DSP_LCD
-    #if DSP_MODEL==DSP_NOKIA5110
-      virtual void command(uint8_t c);
-      virtual void data(uint8_t c);
-    #else
-      virtual void startWrite(void){};
-      virtual void endWrite(void){};
-    #endif
-    //void setTextSize(uint8_t s);
-  #else
-    uint16_t width();
-    uint16_t height();
-    void fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
-    void drawRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color){}
-    void setTextSize(uint8_t s){}
-    void setTextSize(uint8_t sx, uint8_t sy){}
-    void setTextColor(uint16_t c, uint16_t bg){}
-    void setFont(){}
-    void apScreen();
-  #endif
-
-  //virtual void writePixel(int16_t x, int16_t y, uint16_t color) = 0;
-  //virtual void writeFillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) = 0;
   virtual void setNumFont() = 0;
-
   virtual void flip(){};
   virtual void invert(){};
   virtual void sleep(){};
@@ -92,37 +65,12 @@ public:
   void * getScrollId() { return _scrollid; }
   uint16_t textWidth(const char *txt);
 
-  #if DSP_MODEL==DSP_ILI9225
-    uint16_t width(void) { return (int16_t)maxX(); }
-    uint16_t height(void) { return (int16_t)maxY(); }
-    void drawRGBBitmap(int16_t x, int16_t y, const uint16_t *bitmap, int16_t w, int16_t h);
-    uint16_t print(const char* s);
-    void fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
-    void drawRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
-    void setFont(const GFXfont *f = NULL);
-    void setFont(uint8_t* font, bool monoSp=false );
-    void setTextColor(uint16_t fg, uint16_t bg);
-    void setCursor(int16_t x, int16_t y);
-    void drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color);
-    void drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color);
-    uint16_t drawChar(uint16_t x, uint16_t y, uint16_t ch, uint16_t color = COLOR_WHITE);
-  #endif
-
-
 protected:
 
   bool _clipping;
   clipArea _cliparea;
   void * _scrollid;
   virtual uint8_t _charWidth(unsigned char c) = 0;
-  #if DSP_MODEL==DSP_ILI9225
-    uint16_t _bgcolor, _fgcolor;
-    int16_t  _cursorx, _cursory;
-    bool _gFont/*, _started*/;
-  #endif
-
-
-
 };
 
 
@@ -186,19 +134,37 @@ enum class state_t {
 };
 
   public:
+    // Текущий элемент плейлиста
     uint16_t currentPlItem;
+    // Номер следующей станции
     uint16_t numOfNextStation;
+    // Текущий режим отображения
     displayMode_e _mode;
 
-    Display() {};
+    Display() = default;
     ~Display();
-    displayMode_e mode() { return _mode; }
+
+    // get current display mode
+    displayMode_e mode() const { return _mode; }
+    // set current display mode
     void mode(displayMode_e m) { _mode=m; }
+    // initialize display (create device driver class)
     void init();
+    // display drawing loop
     void loop();
+
+    /**
+     * @brief create and initialize widgets
+     * 
+     */
     void _start();
-    bool ready() { return _state == state_t::normal; }
+
+    // returns true if display has reached "main operational state" on boot
+    bool ready() const { return _state == state_t::normal; }
+
     void resetQueue();
+
+    // send and event to display to process and draw specific component
     void putRequest(displayRequestType_e type, int payload=0);
     void flip();
     void invert();
@@ -210,18 +176,25 @@ enum class state_t {
 private:
     ScrollWidget _meta, _title1, _plcurrent;
     ScrollWidget *_weather;
+    // string with player state - 'ready', 'connecting', etc...
     ScrollWidget *_title2;
     BitrateWidget *_fullbitrate;
+    // Фоновые виджеты
     FillWidget *_metabackground, *_plbackground;
+    // Volume bar
     SliderWidget *_volbar, *_heapbar;
+
     Pager _pager;
     Page _footer;
+
     VuWidget *_vuwidget;
     NumWidget _nums;
     ProgressWidget _testprogress;
     ClockWidget _clock;
+    // bootscreen
     Page *_boot;
     TextWidget *_bootstring, *_volip, *_voltxt, *_rssi, *_bitrate;
+    // ticker timer
     Ticker _returnTicker;
     state_t _state{state_t::empty};
     void _apScreen();
