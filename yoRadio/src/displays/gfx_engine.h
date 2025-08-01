@@ -52,6 +52,9 @@
   #include "display_JC1060P470C.h"
 #endif
 
-#if DSP_MODEL!=DSP_DUMMY
+// a fuction that creates device specific rendering object,
+// must be defined in one of the includes from above
+bool create_display_dev();
+
+// device specific display rendering object
 extern DspCore* dsp;
-#endif

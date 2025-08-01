@@ -22,7 +22,7 @@ bool getWeather(char *wstr);
 void doSync(void * pvParameters);
 
 void ticks() {
-  if(!display.ready()) return; //waiting for SD is ready
+  if(!display->ready()) return; //waiting for SD is ready
   pm.on_ticker();
   static const uint16_t weatherSyncInterval=1800;
   //static const uint16_t weatherSyncIntervalFail=10;
@@ -52,7 +52,7 @@ void ticks() {
     }
   }
 #ifndef DSP_LCD
-  if(config.store.screensaverEnabled && display.mode()==PLAYER && !player->isRunning()){
+  if(config.store.screensaverEnabled && display->mode()==PLAYER && !player->isRunning()){
     config.screensaverTicks++;
     if(config.screensaverTicks > config.store.screensaverTimeout+SCREENSAVERSTARTUPDELAY){
       if(config.store.screensaverBlank){
@@ -64,7 +64,7 @@ void ticks() {
       }
     }
   }
-  if(config.store.screensaverPlayingEnabled && display.mode()==PLAYER && player->isRunning()){
+  if(config.store.screensaverPlayingEnabled && display->mode()==PLAYER && player->isRunning()){
     config.screensaverPlayingTicks++;
     if(config.screensaverPlayingTicks > config.store.screensaverPlayingTimeout*60+SCREENSAVERSTARTUPDELAY){
       if(config.store.screensaverPlayingBlank){
@@ -87,7 +87,7 @@ if(player->isRunning() && config.getMode()==PM_SDCARD) netserver.requestOnChange
       EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayShowRSSI), &d, sizeof(d));
     }
 #ifdef USE_SD
-    if(display.mode()!=SDCHANGE)
+    if(display->mode()!=SDCHANGE)
       EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::playerMode));
 #endif
 

@@ -114,7 +114,7 @@ void Player::_stop(bool alreadyStopped){
   _status = STOPPED;
   stopSong();
   setOutputPins(false);
-  if(!hasError()) config.setTitle((display.mode()==LOST || display.mode()==UPDATING)?"":const_PlStopped);
+  if(!hasError()) config.setTitle((display->mode()==LOST || display->mode()==UPDATING)?"":const_PlStopped);
 
   // update stream's meta info
   evt::audio_into_t info{ 0, player->getCodecname() };
@@ -451,7 +451,7 @@ void audio_showstation(const char *info) {
   //config.setTitle(p?info:config.station.name);
   if(player->remoteStationName){
     config.setStation(p?info:config.station.name);
-    display.putRequest(NEWSTATION);
+    display->putRequest(NEWSTATION);
     netserver.requestOnChange(STATION, 0);
   }
 }
@@ -477,7 +477,7 @@ void audio_error(const char *info) {
 void audio_id3artist(const char *info){
   LOGI(T_Player, printf, "id3artist: %s\n", info);
   if(printable(info)) config.setStation(info);
-  display.putRequest(NEWSTATION);
+  display->putRequest(NEWSTATION);
   netserver.requestOnChange(STATION, 0);
 }
 

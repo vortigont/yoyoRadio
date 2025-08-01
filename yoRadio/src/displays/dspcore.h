@@ -4,10 +4,14 @@
 #include "gfx_lib.h"
 #include "widgets/widgets.h"
 #include "widgets/pages.h"
+#include "../displays/nextion.h"
 
 
-
-
+/**
+ * @brief Graphics API core display class
+ * it providex a very simplified GFX api to wrap around other grphics libs
+ * like AdafruitGFX, ArduinoGFX, etc...
+ */
 class DspCoreBase {
 public:
   DspCoreBase(){}
@@ -76,6 +80,10 @@ protected:
 
 // abstact class based on ArduinoGFX extending it with drawing helpers
 #ifdef _ARDUINO_GFX_H_
+/**
+ * @brief Graphics API core display class
+ * it adopts ArduinoGFX API
+ */
 class DspCore_Arduino_GFX : public DspCoreBase, virtual public DISPLAY_ENGINE {
 
 public:
@@ -111,67 +119,87 @@ public:
 #endif    // _ARDUINO_GFX_H_
 
 
-#if NEXTION_RX!=255 && NEXTION_TX!=255
-  #define USE_NEXTION
-  #include "../displays/nextion.h"
-#endif
-
-
-
-
-
-#ifndef DUMMYDISPLAY
-  void loopDspTask(void * pvParameters);
-
+/**
+ * @brief abstract display class (or better say output interface)
+ * wraps around functional-based output devices,
+ * i.e. screen, nextion, etc...
+ */
 class Display {
 
-enum class state_t {
-  empty = 0,
-  bootlogo,
-  normal,
-  screensaver,
-  na
+protected:
+  enum class state_t {
+    empty = 0,
+    bootlogo,
+    normal,
+    screensaver,
+    na
+  };
+
+public:
+  // current playlist item
+  uint16_t currentPlItem;
+  // playlist index num for next station
+  uint16_t numOfNextStation;
+  // current display mode
+  displayMode_e _mode;
+
+  Display() = default;
+  virtual ~Display(){};
+
+  // initialize display (create device driver class, etc...)
+  virtual void init() = 0;
+  // send a control message (compat mode) 
+  virtual void putRequest(displayRequestType_e type, int payload=0){};
+  virtual bool ready() { return true; }
+
+  // Dummy methods
+  // flush msg Q
+  virtual void resetQueue(){};
+  virtual void flip(){};
+  virtual void invert(){};
+  virtual bool deepsleep(){ return true; };
+  virtual void wakeup(){};
+  virtual void setContrast(){};
+  virtual void printPLitem(uint8_t pos, const char* item){};
+
+
+
+  // get current display mode
+  displayMode_e mode() const { return _mode; }
+  // set current display mode
+  void mode(displayMode_e m) { _mode=m; }
+
+
 };
 
-  public:
-    // Текущий элемент плейлиста
-    uint16_t currentPlItem;
-    // Номер следующей станции
-    uint16_t numOfNextStation;
-    // Текущий режим отображения
-    displayMode_e _mode;
 
-    Display() = default;
-    ~Display();
+/**
+ * @brief Graphics Display output device. i.e. screens  
+ * 
+ */
+class DisplayGFX : public Display {
 
-    // get current display mode
-    displayMode_e mode() const { return _mode; }
-    // set current display mode
-    void mode(displayMode_e m) { _mode=m; }
+public:
+    DisplayGFX();
+    ~DisplayGFX();
+
     // initialize display (create device driver class)
-    void init();
-    // display drawing loop
-    void loop();
-
-    /**
-     * @brief create and initialize widgets
-     * 
-     */
-    void _start();
+    void init() override;
 
     // returns true if display has reached "main operational state" on boot
     bool ready() const { return _state == state_t::normal; }
 
-    void resetQueue();
+    // flush msg Q
+    void resetQueue() override;
 
     // send and event to display to process and draw specific component
     void putRequest(displayRequestType_e type, int payload=0);
-    void flip();
-    void invert();
-    bool deepsleep();
-    void wakeup();
-    void setContrast();
-    void printPLitem(uint8_t pos, const char* item);
+    void flip() override;
+    void invert() override;
+    bool deepsleep() override;
+    void wakeup() override;
+    void setContrast() override;
+    void printPLitem(uint8_t pos, const char* item) override;
 
 private:
     ScrollWidget _meta, _title1, _plcurrent;
@@ -186,6 +214,8 @@ private:
 
     Pager _pager;
     Page _footer;
+    // some pages container
+    std::array<Page*,4> _pages;
 
     VuWidget *_vuwidget;
     NumWidget _nums;
@@ -211,6 +241,17 @@ private:
     void _setReturnTicker(uint8_t time_s);
     void _layoutChange(bool played);
     void _setRSSI(int rssi);
+    /**
+     * @brief create and initialize widgets
+     * 
+     */
+    void _start();
+
+
+    void _loopDspTask();
+
+    TaskHandle_t _dspTask{nullptr};
+    QueueHandle_t _displayQueue{nullptr};
 
     // event function handlers
     esp_event_handler_instance_t _hdlr_cmd_evt{nullptr};
@@ -235,40 +276,37 @@ private:
     void _events_chg_hndlr(int32_t id, void* data);
 };
 
-#else
 
-class Display {
-  public:
-    uint16_t currentPlItem;
-    uint16_t numOfNextStation;
-    displayMode_e _mode;
-  public:
-    Display() {};
-    displayMode_e mode() { return _mode; }
-    void mode(displayMode_e m) { _mode=m; }
-    void init();
-    void _start();
-    void putRequest(displayRequestType_e type, int payload=0);
-    void loop(){}
-    bool ready() { return true; }
-    void resetQueue(){}
-    void centerText(const char* text, uint8_t y, uint16_t fg, uint16_t bg){}
-    void rightText(const char* text, uint8_t y, uint16_t fg, uint16_t bg){}
-    void flip(){}
-    void invert(){}
-    void setContrast(){}
-    bool deepsleep(){return true;}
-    void wakeup(){}
-    void printPLitem(uint8_t pos, const char* item){}
+/**
+ * @brief just a blackhole stub, i.e. no display output device
+ * 
+ */
+class DisplayDummy : public Display {
+public:
+    DisplayDummy() = default;
+
+    void init() override {};
+    void putRequest(displayRequestType_e type, int payload = 0) override;
 };
 
-#endif
 
+class DisplayNextion : public Display {
+public:
+  DisplayNextion() = default;
 
-extern Display display;
+  void init() override { _nextion.begin(true); };
+  void putRequest(displayRequestType_e type, int payload = 0) override;
 
-// function that creates display controller class and assigns a pointer to DspCore* dsp, should be defined in one (and only one!) of the respective displayXXXX.cpp files
-bool create_display_dev();
+private:
+  Nextion _nextion;
+  void _start();
+};
+
+extern Display* display;
+
+// function that creates display interface controller class
+// and respective device-specific object (DspCore* dsp), should be defined in one (and only one!) of the respective displayXXXX.cpp files
+bool create_display();
 
 
 #endif    // dspcore_h

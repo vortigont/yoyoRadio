@@ -134,7 +134,7 @@ void Config::changeMode(int newmode){
   if(getMode()==PM_SDCARD) {
     sdResumePos = player->getFilePos();
   }
-  if(network.status==SOFT_AP || display.mode()==LOST){
+  if(network.status==SOFT_AP || display->mode()==LOST){
     saveValue(&store.play_mode, static_cast<uint8_t>(PM_SDCARD));
     delay(50);
     ESP.restart();
@@ -161,7 +161,7 @@ void Config::changeMode(int newmode){
     }
     int32_t d = SDCHANGE;
     EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
-    while(display.mode()!=SDCHANGE)
+    while(display->mode()!=SDCHANGE)
       delay(10);
     delay(50);
   }
@@ -181,7 +181,7 @@ void Config::changeMode(int newmode){
   netserver.requestOnChange(GETINDEX, 0);
   //netserver.requestOnChange(GETMODE, 0);
  // netserver.requestOnChange(CHANGEMODE, 0);
-  display.resetQueue();
+  display->resetQueue();
   
   int32_t d = SDCHANGE;
   EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
@@ -445,14 +445,14 @@ void Config::resetSystem(const char *val, uint8_t clientId){
   }
   if (strcmp(val, "screen") == 0) {
     saveValue(&store.flipscreen, false, false);
-    display.flip();
+    display->flip();
     saveValue(&store.invertdisplay, false, false);
-    display.invert();
+    display->invert();
     saveValue(&store.dspon, true, false);
     store.brightness = 100;
     setBrightness(false);
     saveValue(&store.contrast, (uint8_t)55, false);
-    display.setContrast();
+    display->setContrast();
     saveValue(&store.numplaylist, false);
     saveValue(&store.screensaverEnabled, false);
     saveValue(&store.screensaverTimeout, (uint16_t)20);
@@ -751,7 +751,7 @@ uint8_t Config::fillPlMenu(int from, uint8_t count, bool fromNextion) {
   while (true) {
     if (ls < 1) {
       ls++;
-      if(!fromNextion) display.printPLitem(c, "");
+      if(!fromNextion) display->printPLitem(c, "");
   #ifdef USE_NEXTION
     if(fromNextion) nextion.printPLitem(c, "");
   #endif
@@ -772,7 +772,7 @@ uint8_t Config::fillPlMenu(int from, uint8_t count, bool fromNextion) {
       String stationName = playlist.readStringUntil('\n');
       stationName = stationName.substring(0, stationName.indexOf('\t'));
       if(config.store.numplaylist && stationName.length()>0) stationName = String(from+c)+" "+stationName;
-      if(!fromNextion) display.printPLitem(c, stationName.c_str());
+      if(!fromNextion) display->printPLitem(c, stationName.c_str());
       #ifdef USE_NEXTION
         if(fromNextion) nextion.printPLitem(c, stationName.c_str());
       #endif
@@ -936,7 +936,7 @@ bool Config::initNetwork() {
 void Config::setBrightness(bool dosave){
 #if BRIGHTNESS_PIN!=255
   if(!store.dspon && dosave) {
-    display.wakeup();
+    display->wakeup();
   }
   analogWrite(BRIGHTNESS_PIN, map(store.brightness, 0, 100, 0, 255));
   if(!store.dspon) store.dspon = true;
@@ -971,9 +971,9 @@ void Config::setDspOn(bool dspon, bool saveval){
 #if BRIGHTNESS_PIN!=255
   analogWrite(BRIGHTNESS_PIN, 0);
 #endif
-    display.deepsleep();
+    display->deepsleep();
   }else{
-    display.wakeup();
+    display->wakeup();
 #if BRIGHTNESS_PIN!=255
   analogWrite(BRIGHTNESS_PIN, map(store.brightness, 0, 100, 0, 255));
 #endif
@@ -982,7 +982,7 @@ void Config::setDspOn(bool dspon, bool saveval){
 
 void Config::doSleep(){
   if(BRIGHTNESS_PIN!=255) analogWrite(BRIGHTNESS_PIN, 0);
-  display.deepsleep();
+  display->deepsleep();
 #ifdef USE_NEXTION
   nextion.sleep();
 #endif
@@ -999,7 +999,7 @@ void Config::doSleep(){
 
 void Config::doSleepW(){
   if(BRIGHTNESS_PIN!=255) analogWrite(BRIGHTNESS_PIN, 0);
-  display.deepsleep();
+  display->deepsleep();
 #ifdef USE_NEXTION
   nextion.sleep();
 #endif

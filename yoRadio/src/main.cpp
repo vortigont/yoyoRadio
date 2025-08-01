@@ -37,7 +37,11 @@ void setup() {
   LOGI(T_BOOT, println, "Init Config");
   config.init();
   LOGI(T_BOOT, println, "Init Display");
-  display.init();
+  if (!create_display()){
+    LOGE(T_BOOT, println, "Can't create display interface! Boot failed!");
+    return;
+  }
+  display->init();
 
   pm.on_setup();
 
@@ -58,16 +62,16 @@ void setup() {
 
   if(SDC_CS!=255) {
     LOGI(T_BOOT, println, "Wait for SDCARD");
-    display.putRequest(WAITFORSD, 0);
+    display->putRequest(WAITFORSD, 0);
   }
 
   LOGI(T_BOOT, println, "Init Controls");
   initControls();
 
   LOGI(T_BOOT, println, "Start Display");
-  display.putRequest(DSP_START);
+  display->putRequest(DSP_START);
   LOGI(T_BOOT, println, "Wait for Display");
-  while(!display.ready()) delay(10);
+  while(!display->ready()) delay(10);
 
   #ifdef MQTT_ROOT_TOPIC
     mqttInit();

@@ -52,6 +52,7 @@ The connection tables are located here https://github.com/e2002/yoradio#connecti
 #define DSP_ST7920      24    // 128x64   2.6'  https://aliexpress.com/item/32699482638.html
 #define DSP_JC3248W535  30    // 480x320  3.5'  Guition JC3248W535 https://aliexpress.com/item/1005007593889279.html
 #define DSP_JC1060P470  31    // 1024x600 7'    Guition JC1060P470
+#define DSP_NEXTION     32    // Nextion display interface
 #define DSP_CUSTOM      101   // your display
 
 #ifndef DSP_MODEL
@@ -81,6 +82,9 @@ The connection tables are located here https://github.com/e2002/yoradio#connecti
 #endif
 #ifndef NEXTION_TX
   #define NEXTION_TX    255
+#endif
+#if NEXTION_RX!=255 && NEXTION_TX!=255
+  #define DSP_MODEL     DSP_NEXTION
 #endif
 
 /*        OLED I2C DISPLAY        */

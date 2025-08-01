@@ -28,7 +28,11 @@ public:
   void clearDsp(bool black=false) override;
 
   void drawLogo(uint16_t top) override;
+
+  // draw Playlist (a set of playlist items)
   void drawPlaylist(uint16_t currentItem) override;
+
+  // draw one playlist item on screen
   void printPLitem(uint8_t pos, const char* item, ScrollWidget& current) override;
 
   void setNumFont() override;
@@ -77,8 +81,6 @@ private:
 
 };
   
-
-
 
 //Arduino_Canvas *gfx = new Arduino_Canvas(320 /* width */, 480 /* height */, g, 0 /* output_x */, 0 /* output_y */, 0 /* rotation */);
 
