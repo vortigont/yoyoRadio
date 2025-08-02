@@ -242,6 +242,9 @@ void DisplayGFX::init() {
   _state = state_t::empty;
   if (create_display_dev()){
     dsp->initDisplay();
+    // Очищаем экран при инициализации
+    dsp->clearDsp(true); // true = черный экран
+    dsp->loop(true); // Принудительное обновление
   }
   else {
     LOGE(T_BOOT, println, "display->init FAILED!");
@@ -271,6 +274,11 @@ void DisplayGFX::init() {
 
 void DisplayGFX::_bootScreen(){
   _state = state_t::bootlogo;
+  
+  // Очищаем экран перед отображением boot page
+  dsp->clearDsp(false); // false = цвет фона
+  dsp->loop(true); // Принудительное обновление
+  
   _boot = new Page();
   _boot->addWidget(new ProgressWidget(bootWdtConf, bootPrgConf, BOOT_PRG_COLOR, 0));
   _bootstring = (TextWidget*) &_boot->addWidget(new TextWidget(bootstrConf, 50, true, BOOT_TXT_COLOR, 0));
