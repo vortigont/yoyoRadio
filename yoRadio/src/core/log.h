@@ -75,3 +75,4 @@ static constexpr const char* T_Module = "Module";
 static constexpr const char* T_WebUI = "WebUI";
 static constexpr const char* T_ModMGR = "ModMGR";
 static constexpr const char* T_Display = "Display";
+static constexpr const char* T_Clock = "Clock";

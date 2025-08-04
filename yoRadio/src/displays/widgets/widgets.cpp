@@ -2,6 +2,7 @@
 #include "widgets.h"
 #include "../../core/player.h"    //  for VU widget
 #include "../tools/l10n.h"
+#include "../../core/log.h"
 
 static constexpr const char* P_na = "n/a";
 
@@ -461,7 +462,7 @@ void ClockWidget::_drawTime(tm* t){
   char buff[std::size("hh:mm")];
   
   std::strftime(std::data(buff), std::size(buff), "%R", t);    // "%R" equivalent to "%H:%M", t->tm_sec % 2 ? "%R" : "%H %M" would blink semicolon
-  Serial.printf("Time:%s\n", buff);
+  LOGD(T_Clock, println, buff );
   // recalculate area for clock and save it to be cleared later
   dsp->getTextBounds(buff, _config.left, _config.top, &_time_block_x, &_time_block_y, &_time_block_w, &_time_block_h);
 
@@ -488,9 +489,10 @@ void ClockWidget::_drawTime(tm* t){
 }
 
 void ClockWidget::_drawDate(tm* t){
-  char buff[40];
+  char buff[100];
   // date format "1 января 2025 / понедельник"
-  snprintf(buff, std::size(buff), "%u %s %u / %s", t->tm_mday, mnths[t->tm_mon], t->tm_year + 1900, dowf[t->tm_wday]);
+  snprintf(buff, std::size(buff), "%d %s %d / %s", t->tm_mday, mnths[t->tm_mon], t->tm_year + 1900, dowf[t->tm_wday]);
+  LOGD(T_Clock, println, buff );
   // recalculate area for clock and save it to be cleared later
   dsp->setFont();
   dsp->setTextSize(_datecfg->textsize);
