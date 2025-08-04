@@ -65,7 +65,7 @@ public:
 
   void setClipping(clipArea ca);
   void clearClipping(){ _clipping = false; };
-  void setScrollId(void * scrollid) { _scrollid = scrollid; }
+  //void setScrollId(void * scrollid) { _scrollid = scrollid; }
   void * getScrollId() { return _scrollid; }
   uint16_t textWidth(const char *txt);
 
@@ -202,6 +202,7 @@ public:
     void printPLitem(uint8_t pos, const char* item) override;
 
 private:
+/*
     ScrollWidget _meta, _title1, _plcurrent;
     ScrollWidget *_weather;
     // string with player state - 'ready', 'connecting', etc...
@@ -224,6 +225,7 @@ private:
     // bootscreen
     Page *_boot;
     TextWidget *_bootstring, *_volip, *_voltxt, *_rssi, *_bitrate;
+*/
     // ticker timer
     Ticker _returnTicker;
     state_t _state{state_t::empty};
@@ -290,6 +292,10 @@ public:
 };
 
 
+/**
+ * @brief class implenents Nextion displays management
+ * 
+ */
 class DisplayNextion : public Display {
 public:
   DisplayNextion() = default;
@@ -300,6 +306,7 @@ public:
 private:
   Nextion _nextion;
   void _start();
+  void _station();
 };
 
 extern Display* display;

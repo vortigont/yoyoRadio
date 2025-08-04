@@ -118,7 +118,7 @@ void ScrollWidget::setText(const char* txt) {
   textwidth = text.length() * charWidth;
   _x = _config.left;
   _doscroll = _checkIsScrollNeeded();
-  if (dsp->getScrollId() == this) dsp->setScrollId(NULL);
+  //if (dsp->getScrollId() == this) dsp->setScrollId(NULL);
   _scrolldelay = millis();
   if (_active) {
     _setTextParams();
@@ -196,9 +196,9 @@ void ScrollWidget::_calcX() {
   _x -= _scrolldelta;
   if (-_x > textwidth + _sepwidth - _config.left) {
     _x = _config.left;
-    dsp->setScrollId(NULL);
+    //dsp->setScrollId(NULL);
   } else {
-    dsp->setScrollId(this);
+    //dsp->setScrollId(this);
   }
 }
 
@@ -212,7 +212,7 @@ bool ScrollWidget::_checkDelay(int m, uint32_t &tstamp) {
 }
 
 void ScrollWidget::_reset(){
-  dsp->setScrollId(NULL);
+  //dsp->setScrollId(NULL);
   _x = _config.left;
   _scrolldelay = millis();
   _doscroll = _checkIsScrollNeeded();

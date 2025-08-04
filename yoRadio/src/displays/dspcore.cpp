@@ -219,16 +219,10 @@ void returnPlayer(){
 }
 
 DisplayGFX::DisplayGFX(){
-  _pages = { new Page(), new Page(), new Page(), new Page() };
 }
 
 DisplayGFX::~DisplayGFX(){
   _events_unsubsribe();
-  // discard pages
-  for (auto &p : _pages){
-    delete p;
-    p = nullptr;
-  }
 }
 
 void DisplayGFX::init() {
@@ -256,7 +250,7 @@ void DisplayGFX::init() {
     LOGE(T_Display, println, "Can't create msg queue");
   }
 
-  _pager.begin();
+  //_pager.begin();
   _bootScreen();
 
   // create runner task
@@ -278,15 +272,17 @@ void DisplayGFX::_bootScreen(){
   // Очищаем экран перед отображением boot page
   dsp->clearDsp(false); // false = цвет фона
   dsp->loop(true); // Принудительное обновление
-  
+/*  
   _boot = new Page();
   _boot->addWidget(new ProgressWidget(bootWdtConf, bootPrgConf, BOOT_PRG_COLOR, 0));
   _bootstring = (TextWidget*) &_boot->addWidget(new TextWidget(bootstrConf, 50, true, BOOT_TXT_COLOR, 0));
   _pager.addPage(_boot);
   _pager.setPage(_boot, true);
+*/
   dsp->drawLogo(bootLogoTop);
 }
 
+/*
 void DisplayGFX::_buildPager(){
   _meta.init("*", metaConf, config.theme.meta, config.theme.metabg);
   _title1.init("*", title1Conf, config.theme.title1, config.theme.background);
@@ -379,8 +375,10 @@ void DisplayGFX::_buildPager(){
 
   for(const auto& p: _pages) _pager.addPage(p);
 }
+*/
 
 void DisplayGFX::_apScreen() {
+/*
   if(_boot) _pager.removePage(_boot);
   #ifndef DSP_LCD
     _boot = new Page();
@@ -408,11 +406,12 @@ void DisplayGFX::_apScreen() {
   #else
     dsp->apScreen();
   #endif
+*/
 }
 
 void DisplayGFX::_start() {
   dsp->clearDsp();
-  if(_boot) _pager.removePage(_boot);
+//  if(_boot) _pager.removePage(_boot);
   #ifdef USE_NEXTION
     nextion.wake();
   #endif
@@ -428,21 +427,20 @@ void DisplayGFX::_start() {
     //nextion.putcmd("page player");
     nextion.start();
   #endif
-  _buildPager();
+  //_buildPager();
   _mode = PLAYER;
   config.setTitle(const_PlReady);
-  
+/*
   if(_heapbar)  _heapbar->lock(!config.store.audioinfo);
-  
   if(_weather)  _weather->lock(!config.store.showweather);
   if(_weather && config.store.showweather)  _weather->setText(const_getWeather);
-
   if(_vuwidget) _vuwidget->lock();
   if(_rssi)     _setRSSI(WiFi.RSSI());
   #ifndef HIDE_IP
     if(_volip) _volip->setText(WiFi.localIP().toString().c_str(), iptxtFmt);
   #endif
   _pager.setPage( _pages.at(PG_PLAYER));
+*/
   _volume();
   _station();
   _state = state_t::normal;
@@ -451,6 +449,7 @@ void DisplayGFX::_start() {
 }
 
 void DisplayGFX::_showDialog(const char *title){
+/*
   dsp->setScrollId(NULL);
   _pager.setPage( _pages.at(PG_DIALOG));
   #ifdef META_MOVE
@@ -458,6 +457,7 @@ void DisplayGFX::_showDialog(const char *title){
   #endif
   _meta.setAlign(WA_CENTER);
   _meta.setText(title);
+*/
 }
 
 void DisplayGFX::_setReturnTicker(uint8_t time_s){
@@ -466,10 +466,7 @@ void DisplayGFX::_setReturnTicker(uint8_t time_s){
 }
 
 void DisplayGFX::_swichMode(displayMode_e newmode) {
-  #ifdef USE_NEXTION
-    //nextion.swichMode(newmode);
-    nextion.putRequest({NEWMODE, newmode});
-  #endif
+/*
   if (newmode == _mode || (network.status != CONNECTED && network.status != SDREADY)) return;
   _mode = newmode;
   dsp->setScrollId(NULL);
@@ -530,7 +527,7 @@ void DisplayGFX::_swichMode(displayMode_e newmode) {
     currentPlItem = config.lastStation();
     _drawPlaylist();
   }
-  
+*/  
 }
 
 void DisplayGFX::resetQueue(){
@@ -544,12 +541,12 @@ void DisplayGFX::_drawPlaylist() {
 
 void DisplayGFX::_drawNextStationNum(uint16_t num) {
   _setReturnTicker(30);
-  _meta.setText(config.stationByNum(num));
-  _nums.setText(num, "%d");
+  //_meta.setText(config.stationByNum(num));
+  //_nums.setText(num, "%d");
 }
 
 void DisplayGFX::printPLitem(uint8_t pos, const char* item){
-  dsp->printPLitem(pos, item, _plcurrent);
+  //dsp->printPLitem(pos, item, _plcurrent);
 }
 
 void DisplayGFX::putRequest(displayRequestType_e type, int payload){
@@ -561,6 +558,7 @@ void DisplayGFX::putRequest(displayRequestType_e type, int payload){
 }
 
 void DisplayGFX::_layoutChange(bool played){
+/*
   if(config.store.vumeter){
     if(played){
       if(_vuwidget) _vuwidget->unlock();
@@ -580,6 +578,7 @@ void DisplayGFX::_layoutChange(bool played){
       _clock.moveBack();
     }
   }
+*/
 }
 
 void DisplayGFX::_loopDspTask() {
@@ -596,14 +595,19 @@ void DisplayGFX::_loopDspTask() {
           case NEXTSTATION: _drawNextStationNum(request.payload); break;
           case DRAWPLAYLIST: _drawPlaylist(); break;
           case DRAWVOL: _volume(); break;
-          case AUDIOINFO: if(_heapbar)  { _heapbar->lock(!config.store.audioinfo); _heapbar->setValue(player->inBufferFilled()); } break;
+          case AUDIOINFO:
+            //if(_heapbar)  { _heapbar->lock(!config.store.audioinfo); _heapbar->setValue(player->inBufferFilled()); }
+            break;
           case SHOWVUMETER: {
+            /*
             if(_vuwidget){
               _vuwidget->lock(!config.store.vumeter); 
               _layoutChange(player->isRunning());
             }
-            break;
+            */
           }
+          break;
+/*
           case SHOWWEATHER: {
             if(_weather) _weather->lock(!config.store.showweather);
             if(!config.store.showweather){
@@ -621,11 +625,6 @@ void DisplayGFX::_loopDspTask() {
           }
           case BOOTSTRING: {
             if(_bootstring) _bootstring->setText(config.ssids[request.payload].ssid, bootstrFmt);
-            /*#ifdef USE_NEXTION
-              char buf[50];
-              snprintf(buf, 50, bootstrFmt, config.ssids[request.payload].ssid);
-              nextion.bootString(buf);
-            #endif*/
             break;
           }
           case WAITFORSD: {
@@ -636,16 +635,19 @@ void DisplayGFX::_loopDspTask() {
             if(_mode == SDCHANGE) _nums.setText(request.payload, "%d");
             break;
           }
-          case DSPRSSI: if(_rssi){ _setRSSI(request.payload); } if (_heapbar && config.store.audioinfo) _heapbar->setValue(player->isRunning()?player->inBufferFilled():0); break;
+*/
+          //case DSPRSSI: if(_rssi){ _setRSSI(request.payload); } if (_heapbar && config.store.audioinfo) _heapbar->setValue(player->isRunning()?player->inBufferFilled():0); break;
           case PSTART: _layoutChange(true);   break;
           case PSTOP:  _layoutChange(false);  break;
           case DSP_START: _start();  break;
+/*
           case NEWIP: {
             #ifndef HIDE_IP
               if(_volip) _volip->setText(WiFi.localIP().toString().c_str(), iptxtFmt);
             #endif
             break;
           }
+*/
           default: break;
         }
 
@@ -655,8 +657,8 @@ void DisplayGFX::_loopDspTask() {
         return;
     }
 
-    if (_pager.run())
-      dsp->loop();
+    //if (_pager.run())
+    dsp->loop();
     //_pager.loop();
 
     #if I2S_DOUT==255
@@ -668,6 +670,7 @@ void DisplayGFX::_loopDspTask() {
 }
 
 void DisplayGFX::_setRSSI(int rssi) {
+/*
   if(!_rssi) return;
 #if RSSI_DIGIT
   _rssi->setText(rssi, rssiFmt);
@@ -681,17 +684,13 @@ void DisplayGFX::_setRSSI(int rssi) {
   if(rssi >= rssi_steps[3] && rssi < rssi_steps[2]) strlcpy(rssiG, "\003\002", 3);
   if(rssi <  rssi_steps[3] || rssi >=  0) strlcpy(rssiG, "\001\002", 3);
   _rssi->setText(rssiG);
+*/
 }
 
 void DisplayGFX::_station() {
-  _meta.setAlign(metaConf.widget.align);
-  _meta.setText("АБВГД-еёжзиклм_123");
+  //_meta.setAlign(metaConf.widget.align);
+  //_meta.setText("АБВГД-еёжзиклм_123");
   //_meta.setText(config.station.name);
-/*#ifdef USE_NEXTION
-  nextion.newNameset(config.station.name);
-  nextion.bitrate(config.station.bitrate);
-  nextion.bitratePic(ICON_NA);
-#endif*/
 }
 
 char *split(char *str, const char *delim) {
@@ -702,6 +701,7 @@ char *split(char *str, const char *delim) {
 }
 
 void DisplayGFX::_title() {
+/*
   if (strlen(config.station.title) > 0) {
     char tmpbuf[strlen(config.station.title)+1];
     strlcpy(tmpbuf, config.station.title, strlen(config.station.title)+1);
@@ -713,9 +713,6 @@ void DisplayGFX::_title() {
       _title1.setText(config.station.title);
       if(_title2) _title2->setText("");
     }
-    /*#ifdef USE_NEXTION
-      nextion.newTitle(config.station.title);
-    #endif*/
     
   } else {
     _title1.setText("");
@@ -723,9 +720,11 @@ void DisplayGFX::_title() {
   }
   if (player_on_track_change) player_on_track_change();
   pm.on_track_change();
+*/
 }
 
 void DisplayGFX::_volume() {
+/*
   if(_volbar) _volbar->setValue(config.store.volume);
   #ifndef HIDE_VOL
     if(_voltxt) _voltxt->setText(config.store.volume, voltxtFmt);
@@ -734,9 +733,7 @@ void DisplayGFX::_volume() {
     _setReturnTicker(3);
     _nums.setText(config.store.volume, numtxtFmt);
   }
-  /*#ifdef USE_NEXTION
-    nextion.setVol(config.store.volume, _mode == VOL);
-  #endif*/
+*/
 }
 
 void DisplayGFX::flip(){ dsp->flip(); }
@@ -817,21 +814,24 @@ void DisplayGFX::_events_cmd_hndlr(int32_t id, void* data){
       break;
 
     case evt::yo_event_t::displayAudioInfo :
+/*
       if(_heapbar){
         _heapbar->lock(!config.store.audioinfo);
         _heapbar->setValue(player->inBufferFilled());
       }
+*/
       break;
 
-    case evt::yo_event_t::displayShowVUMeter : {
+    case evt::yo_event_t::displayShowVUMeter :
+/*
       if(_vuwidget){
         _vuwidget->lock(!config.store.vumeter); 
         _layoutChange(player->isRunning());
       }
-      break;
-    }
+*/
+    break;
 
-    case evt::yo_event_t::displayShowWeather : {
+    case evt::yo_event_t::displayShowWeather : /*{
       if(_weather)
         _weather->lock(!config.store.showweather);
       if(!config.store.showweather){
@@ -841,9 +841,9 @@ void DisplayGFX::_events_cmd_hndlr(int32_t id, void* data){
       } else {
         if(_weather) _weather->setText(const_getWeather);
       }
-      break;
-    }
-
+    }*/
+    break;
+/*
     case evt::yo_event_t::displayNewWeather :
       if(_weather && network.weatherBuf)
         _weather->setText(network.weatherBuf);
@@ -855,11 +855,6 @@ void DisplayGFX::_events_cmd_hndlr(int32_t id, void* data){
         return;
       if(_bootstring)
         _bootstring->setText(config.ssids[idx].ssid, bootstrFmt);
-      /*#ifdef USE_NEXTION
-        char buf[50];
-        snprintf(buf, 50, bootstrFmt, config.ssids[request.payload].ssid);
-        nextion.bootString(buf);
-      #endif*/
       break;
     }
 
@@ -879,7 +874,7 @@ void DisplayGFX::_events_cmd_hndlr(int32_t id, void* data){
       if (_heapbar && config.store.audioinfo)
         _heapbar->setValue(player->isRunning() ? player->inBufferFilled() : 0);
       break;
-
+*/
     case evt::yo_event_t::displayPStart :
       _layoutChange(true);
       break;
@@ -894,8 +889,8 @@ void DisplayGFX::_events_cmd_hndlr(int32_t id, void* data){
 
     #ifndef HIDE_IP
     case evt::yo_event_t::displayNewIP :
-      if(_volip)
-        _volip->setText(WiFi.localIP().toString().c_str(), iptxtFmt);
+      //if(_volip)
+      //  _volip->setText(WiFi.localIP().toString().c_str(), iptxtFmt);
       break;
     #endif
 
@@ -913,12 +908,14 @@ void DisplayGFX::_events_chg_hndlr(int32_t id, void* data){
       evt::audio_into_t* i = reinterpret_cast<evt::audio_into_t*>(data);
       char buf[20];
       snprintf(buf, 20, bitrateFmt, i->codecName);
+/*
       if (_bitrate)
         { _bitrate->setText(i->bitRate == 0 ? "n/a" : buf); }
       if(_fullbitrate) {
         _fullbitrate->setBitrate(i->bitRate);
         _fullbitrate->setFormat(i->codecName);
       } 
+*/
       break;
     }
 
@@ -952,3 +949,20 @@ void DisplayNextion::putRequest(displayRequestType_e type, int payload){
   request.payload = payload;
   nextion.putRequest(request);
 }
+
+void DisplayNextion::_station() {
+  nextion.newNameset(config.station.name);
+  nextion.bitrate(config.station.bitrate);
+  nextion.bitratePic(ICON_NA);
+}
+    /*#ifdef USE_NEXTION
+      nextion.newTitle(config.station.title);
+    #endif*/
+  /*#ifdef USE_NEXTION
+    nextion.setVol(config.store.volume, _mode == VOL);
+  #endif*/
+      /*#ifdef USE_NEXTION
+        char buf[50];
+        snprintf(buf, 50, bootstrFmt, config.ssids[request.payload].ssid);
+        nextion.bootString(buf);
+      #endif*/
