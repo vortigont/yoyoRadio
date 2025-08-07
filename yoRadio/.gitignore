@@ -1,4 +1,5 @@
 .pio
 .vscode/
+embed/
 myoptions*
 user_*.ini
