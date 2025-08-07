@@ -8,18 +8,20 @@ enum class embedded_data_t {
   index,
   ui,
   i18n,
-  script,
+  yoscript,
+  yostyle,
   embuijs,
   embuijson,
   embuii18n,
   embuilang,
   tz,
   lodash,
-  pusecss
+  purecss,
+  embui_style
 };
 
 static constexpr const char INDEX_FILE[] = "/index.html";
-static constexpr const char C_TYPE_JS_UTF8[] = "application_javascript; charset=utf-8";
+static constexpr const char C_TYPE_JS_UTF8[] = "text/javascript; charset=utf-8";
 
 static void mk_response(embedded_data_t obj, AsyncWebServerRequest* req){
   AsyncWebServerResponse* response;
@@ -38,7 +40,7 @@ static void mk_response(embedded_data_t obj, AsyncWebServerRequest* req){
         response = req->beginResponse(200, asyncsrv::T_application_json, ui_i18n_json_gz_start, ui_i18n_json_gz_end - ui_i18n_json_gz_start );
         break;
 */
-      case embedded_data_t::script :
+      case embedded_data_t::yoscript :
         response = req->beginResponse(200, C_TYPE_JS_UTF8, yo_js_gz_start, yo_js_gz_end - yo_js_gz_start );
         break;
       case embedded_data_t::embuijs :
@@ -57,10 +59,16 @@ static void mk_response(embedded_data_t obj, AsyncWebServerRequest* req){
         response = req->beginResponse(200, asyncsrv::T_application_json, tz_json_gz_start, tz_json_gz_end - tz_json_gz_start );
         break;
       case embedded_data_t::lodash :
-        response = req->beginResponse(200, asyncsrv::T_application_json, lodash_js_gz_start, lodash_js_gz_end - lodash_js_gz_start );
+        response = req->beginResponse(200, C_TYPE_JS_UTF8, lodash_js_gz_start, lodash_js_gz_end - lodash_js_gz_start );
         break;
-      case embedded_data_t::pusecss :
+      case embedded_data_t::purecss :
         response = req->beginResponse(200, asyncsrv::T_text_css, pure_css_gz_start, pure_css_gz_end - pure_css_gz_start );
+        break;
+      case embedded_data_t::yostyle :
+        response = req->beginResponse(200, asyncsrv::T_text_css, yo_style_css_gz_start, yo_style_css_gz_end - yo_style_css_gz_start );
+        break;
+        case embedded_data_t::embui_style :
+        response = req->beginResponse(200, asyncsrv::T_text_css, embui_style_css_gz_start, embui_style_css_gz_end - embui_style_css_gz_start );
         break;
 
       default :
@@ -77,15 +85,19 @@ static void mk_response(embedded_data_t obj, AsyncWebServerRequest* req){
 void set_static_http_handlers(){
   embui.server.rewrite("/", INDEX_FILE);
   embui.server.on("/index.html", HTTP_GET, [](AsyncWebServerRequest *request){ mk_response(embedded_data_t::index, request); } );
-  embui.server.on("/js/yo.js", HTTP_GET, [](AsyncWebServerRequest *request){ mk_response(embedded_data_t::script, request); } );
+  embui.server.on("/js/yo.js", HTTP_GET, [](AsyncWebServerRequest *request){ mk_response(embedded_data_t::yoscript, request); } );
   embui.server.on("/js/ui_yo.json", HTTP_GET, [](AsyncWebServerRequest *request){ mk_response(embedded_data_t::ui, request); } );
+  embui.server.on("/js/yo_style.css", HTTP_GET, [](AsyncWebServerRequest *request){ mk_response(embedded_data_t::yostyle, request); } );
   //embui.server.on("/js/i18n.json", HTTP_GET, [](AsyncWebServerRequest *request){ mk_response(embedded_data_t::i18n, request); } );
   // embui
-  embui.server.on("/embui.js", HTTP_GET, [](AsyncWebServerRequest *request){ mk_response(embedded_data_t::embuijs, request); } );
+  embui.server.on("/js/embui.js", HTTP_GET, [](AsyncWebServerRequest *request){ mk_response(embedded_data_t::embuijs, request); } );
+  embui.server.on("/js/lodash.js", HTTP_GET, [](AsyncWebServerRequest *request){ mk_response(embedded_data_t::lodash, request); } );
   embui.server.on("/js/ui_embui.json", HTTP_GET, [](AsyncWebServerRequest *request){ mk_response(embedded_data_t::embuijson, request); } );
   embui.server.on("/js/ui_embui.i18n.json", HTTP_GET, [](AsyncWebServerRequest *request){ mk_response(embedded_data_t::embuii18n, request); } );
   embui.server.on("/js/ui_embui.lang.json", HTTP_GET, [](AsyncWebServerRequest *request){ mk_response(embedded_data_t::embuilang, request); } );
   embui.server.on("/js/tz.json", HTTP_GET, [](AsyncWebServerRequest *request){ mk_response(embedded_data_t::tz, request); } );
+  embui.server.on("/js/pure.css", HTTP_GET, [](AsyncWebServerRequest *request){ mk_response(embedded_data_t::purecss, request); } );
+  embui.server.on("/js/embui_style.css", HTTP_GET, [](AsyncWebServerRequest *request){ mk_response(embedded_data_t::embui_style, request); } );
 }
 
 #endif  // NO_EMBEDDED_FILES

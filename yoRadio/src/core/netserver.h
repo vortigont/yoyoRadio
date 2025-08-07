@@ -47,6 +47,9 @@ struct nsRequestParams_t
   uint8_t clientId;
 };
 
+// set handlers for embedded resources
+void set_static_http_handlers();
+
 class NetServer {
   private:
     import_e importRequest;

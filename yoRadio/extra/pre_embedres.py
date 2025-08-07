@@ -21,7 +21,13 @@ except:
 #print("************** Current Build targets", BUILD_TARGETS)
 
 outdir='embed'
-in_gz_files = ["webresources/html/index.html", "webresources/html/js/ui_yo.json", "webresources/html/js/embui.js", "webresources/html/js/yo.js"]
+in_gz_files = ["webresources/html/index.html",
+               "webresources/html/js/embui.js",
+               "webresources/html/js/embui_style.css",
+               "webresources/html/js/ui_yo.json",
+               "webresources/html/js/yo.js",
+               "webresources/html/js/yo_style.css"
+               ]
 #combine_js_files = ["resources/html/js/lamp.js", "resources/html/js/drawing.js"]
 static_gz_files = [
     outdir + "/ui_embui.json.gz",
@@ -29,8 +35,7 @@ static_gz_files = [
     outdir + "/ui_embui.lang.json.gz",
     outdir + "/tz.json.gz",
     outdir + "/lodash.js.gz",
-    outdir + "/pure.css.gz",
-    outdir + "/embui_style.css.gz"
+    outdir + "/pure.css.gz"
 ]
 
 def set_compressor():

@@ -175,6 +175,7 @@ bool NetServer::begin(bool quiet) {
   //webserver.serveStatic("/", LittleFS, "/www/")
   //  .setCacheControl(asyncsrv::T_no_cache);     // revalidate based on etag/IMS headers
 
+  set_static_http_handlers();
   embui.server.serveStatic("/data", LittleFS, "/data/")
     .setCacheControl(asyncsrv::T_no_cache);     // revalidate based on etag/IMS headers
 
