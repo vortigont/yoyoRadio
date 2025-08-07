@@ -12,23 +12,24 @@
 
 static Arduino_DataBus *bus{nullptr};
 static Arduino_AXS15231B *g{nullptr};
-DspCore* dsp{nullptr};
+static Dsp_JC3248W535 *dsp_dev{nullptr};
 
-bool create_display_dev(){
+Arduino_GFX* create_display_dev(){
   if (bus == nullptr){
     bus = new Arduino_ESP32QSPI(TFT_CS, TFT_SCK, TFT_SDA0, TFT_SDA1, TFT_SDA2, TFT_SDA3);
   }
 
   if (bus == nullptr){
     LOGE(T_Display, println, "Can't create GFX bus!");
-    return false;
+    return nullptr;
   }
-
-  if (dsp == nullptr ){
+  if (!g)
     g = new Arduino_AXS15231B(bus, GFX_NOT_DEFINED /* RST */, 0 /* rotation */, false /* IPS */, TFT_WIDTH, TFT_HEIGHT);
-    dsp = new DspCore(g);
-  }
-  return dsp != nullptr;
+
+  if (!dsp_dev)
+    dsp_dev = new Dsp_JC3248W535();
+
+  return g;
 }
 
 DspCore::DspCore(Arduino_G *g) : Arduino_Canvas(TFT_WIDTH /* width */, TFT_HEIGHT /* height */, g, 0 /* output_x */, 0 /* output_y */, 0 /* rotation */){ 
@@ -38,14 +39,6 @@ DspCore::DspCore(Arduino_G *g) : Arduino_Canvas(TFT_WIDTH /* width */, TFT_HEIGH
   }
   uint16_t* buff = Arduino_Canvas::getFramebuffer();
   memset(buff, 0, TFT_WIDTH * TFT_HEIGHT * 2);
-  // backlight
-  #ifdef TFT_BLK
-    //pinMode(TFT_BLK, OUTPUT);
-    //digitalWrite(TFT_BLK, TFT_BLK_ON_LEVEL);
-    ledcAttach(TFT_BLK, 1000, 8);
-    //ledcOutputInvert(TFT_BLK, true);
-    ledcWrite(TFT_BLK, 200);    // default brightness
-  #endif
 }
 
 void DspCore::initDisplay() {
@@ -363,5 +356,28 @@ void DspCore::readBattery() {
     if (ChargeLevel > 100) ChargeLevel = 100;
 }
 #endif
+
+Dsp_JC3248W535::Dsp_JC3248W535(){
+  // backlight
+  //pinMode(TFT_BLK, OUTPUT);
+  //digitalWrite(TFT_BLK, TFT_BLK_ON_LEVEL);
+  ledcAttach(TFT_BLK, 1000, 8);
+  //ledcOutputInvert(TFT_BLK, true);
+  ledcWrite(TFT_BLK, 200);    // default brightness
+}
+
+void Dsp_JC3248W535::sleep(){ 
+  Serial.println("DspCore::sleep");
+  g->displayOff();
+  #ifdef TFT_BLK
+  ledcWrite(TFT_BLK, 0); // Выключаем подсветку через PWM
+  #endif
+}
+
+void Dsp_JC3248W535::wake(){
+  Serial.println("DspCore::wake");
+  g->displayOn();
+  ledcWrite(TFT_BLK, map(config.store.brightness, 0, 100, 0, 255)); // Устанавливаем яркость через PWM
+}
 
 #endif

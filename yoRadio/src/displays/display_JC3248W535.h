@@ -20,6 +20,8 @@
 #define AXS15231B_DISPOFF   0x28
 #define AXS15231B_DISPON    0x29
 
+Arduino_GFX* create_display_dev();
+
 class DspCore : public DspCore_Arduino_GFX {
 public:
   DspCore(Arduino_G *g);
@@ -81,6 +83,13 @@ private:
 
 };
   
+// Module device cointrol
+class Dsp_JC3248W535 {
+public:
+  Dsp_JC3248W535();
 
+  void sleep();
+  void wake();
+};
 //Arduino_Canvas *gfx = new Arduino_Canvas(320 /* width */, 480 /* height */, g, 0 /* output_x */, 0 /* output_y */, 0 /* rotation */);
 

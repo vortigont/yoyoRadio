@@ -1,5 +1,7 @@
 #pragma once
 
+// AXS15231B TFT LCD
+// https://dl.espressif.com/AE/esp_iot_solution/AXS15231B_Datasheet_V0.5_20230306.pdf
 #define TFT_WIDTH   320
 #define TFT_HEIGHT  480
 #define TFT_BLK     1           // display backlight

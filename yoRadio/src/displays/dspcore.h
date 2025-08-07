@@ -4,7 +4,8 @@
 #include "gfx_lib.h"
 #include "widgets/widgets.h"
 #include "widgets/pages.h"
-#include "../displays/nextion.h"
+#include "nextion.h"
+#include "muiplusplus.hpp"
 
 
 /**
@@ -84,8 +85,8 @@ protected:
  * @brief Graphics API core display class
  * it adopts ArduinoGFX API
  */
+//class DspCore_Arduino_GFX : public DspCoreBase, virtual public DISPLAY_ENGINE {
 class DspCore_Arduino_GFX : public DspCoreBase, virtual public DISPLAY_ENGINE {
-
 public:
   DspCore_Arduino_GFX(){};
 
@@ -172,15 +173,19 @@ public:
 
 };
 
-
+#ifdef _ARDUINO_GFX_H_
 /**
  * @brief Graphics Display output device. i.e. screens  
  * 
  */
 class DisplayGFX : public Display {
+  // display graphics object
+  Arduino_GFX* _gfx;
+  MuiPlusPlus _mpp;
+  
 
-public:
-    DisplayGFX();
+  public:
+    DisplayGFX(Arduino_GFX* gfx) : _gfx(gfx) {};
     ~DisplayGFX();
 
     // initialize display (create device driver class)
@@ -194,12 +199,12 @@ public:
 
     // send and event to display to process and draw specific component
     void putRequest(displayRequestType_e type, int payload=0);
-    void flip() override;
-    void invert() override;
-    bool deepsleep() override;
-    void wakeup() override;
-    void setContrast() override;
-    void printPLitem(uint8_t pos, const char* item) override;
+//    void flip() override;
+//    void invert() override;
+//    bool deepsleep() override;
+//    void wakeup() override;
+//    void setContrast() override;
+//    void printPLitem(uint8_t pos, const char* item) override;
 
 private:
 /*
@@ -277,6 +282,7 @@ private:
     // state change events handler
     void _events_chg_hndlr(int32_t id, void* data);
 };
+#endif    // _ARDUINO_GFX_H_
 
 
 /**

@@ -17,7 +17,7 @@ bool create_display(){
 #elif DSP_MODEL == DSP_NEXTION
   display = new DisplayNextion();
 #else
-  display = new DisplayGFX();
+  display = new DisplayGFX(create_display_dev());
 #endif
   return create_display_dev();
 }
@@ -218,30 +218,20 @@ void returnPlayer(){
   display->putRequest(NEWMODE, PLAYER);
 }
 
-DisplayGFX::DisplayGFX(){
-}
-
 DisplayGFX::~DisplayGFX(){
   _events_unsubsribe();
 }
 
 void DisplayGFX::init() {
   LOGI(T_BOOT, println, "display->init");
-#ifdef USE_NEXTION
-  nextion.begin();
-#endif
 #if LIGHT_SENSOR!=255
   analogSetAttenuation(ADC_0db);
 #endif
   _state = state_t::empty;
-  if (create_display_dev()){
-    dsp->initDisplay();
-    // Очищаем экран при инициализации
-    dsp->clearDsp(true); // true = черный экран
-    dsp->loop(true); // Принудительное обновление
-  }
-  else {
-    LOGE(T_BOOT, println, "display->init FAILED!");
+  if (_gfx->begin()){
+    _gfx->fillScreen(0);
+  } else {
+    LOGE(T_BOOT, println, "DisplayGFX.init FAILED!");
     return;
   }
 
@@ -270,16 +260,16 @@ void DisplayGFX::_bootScreen(){
   _state = state_t::bootlogo;
   
   // Очищаем экран перед отображением boot page
+  /*  
   dsp->clearDsp(false); // false = цвет фона
   dsp->loop(true); // Принудительное обновление
-/*  
   _boot = new Page();
   _boot->addWidget(new ProgressWidget(bootWdtConf, bootPrgConf, BOOT_PRG_COLOR, 0));
   _bootstring = (TextWidget*) &_boot->addWidget(new TextWidget(bootstrConf, 50, true, BOOT_TXT_COLOR, 0));
   _pager.addPage(_boot);
   _pager.setPage(_boot, true);
-*/
   dsp->drawLogo(bootLogoTop);
+  */
 }
 
 /*
@@ -410,23 +400,13 @@ void DisplayGFX::_apScreen() {
 }
 
 void DisplayGFX::_start() {
-  dsp->clearDsp();
+//  dsp->clearDsp();
 //  if(_boot) _pager.removePage(_boot);
-  #ifdef USE_NEXTION
-    nextion.wake();
-  #endif
   if (network.status != CONNECTED && network.status != SDREADY) {
     _apScreen();
-    #ifdef USE_NEXTION
-      nextion.apScreen();
-    #endif
     _state = state_t::normal;
     return;
   }
-  #ifdef USE_NEXTION
-    //nextion.putcmd("page player");
-    nextion.start();
-  #endif
   //_buildPager();
   _mode = PLAYER;
   config.setTitle(const_PlReady);
@@ -440,11 +420,10 @@ void DisplayGFX::_start() {
     if(_volip) _volip->setText(WiFi.localIP().toString().c_str(), iptxtFmt);
   #endif
   _pager.setPage( _pages.at(PG_PLAYER));
-*/
   _volume();
   _station();
   _state = state_t::normal;
-  pm.on_display_player();
+*/
   LOGV(T_Display, println, "DisplayGFX::_start() end");
 }
 
@@ -535,7 +514,7 @@ void DisplayGFX::resetQueue(){
 }
 
 void DisplayGFX::_drawPlaylist() {
-  dsp->drawPlaylist(currentPlItem);
+//  dsp->drawPlaylist(currentPlItem);
   _setReturnTicker(30);
 }
 
@@ -545,9 +524,9 @@ void DisplayGFX::_drawNextStationNum(uint16_t num) {
   //_nums.setText(num, "%d");
 }
 
-void DisplayGFX::printPLitem(uint8_t pos, const char* item){
+//void DisplayGFX::printPLitem(uint8_t pos, const char* item){
   //dsp->printPLitem(pos, item, _plcurrent);
-}
+//}
 
 void DisplayGFX::putRequest(displayRequestType_e type, int payload){
   if(_displayQueue==NULL) return;
@@ -658,7 +637,7 @@ void DisplayGFX::_loopDspTask() {
     }
 
     //if (_pager.run())
-    dsp->loop();
+    //dsp->loop();
     //_pager.loop();
 
     #if I2S_DOUT==255
@@ -736,10 +715,10 @@ void DisplayGFX::_volume() {
 */
 }
 
-void DisplayGFX::flip(){ dsp->flip(); }
+//void DisplayGFX::flip(){ dsp->flip(); }
 
-void DisplayGFX::invert(){ dsp->invert(); }
-
+//void DisplayGFX::invert(){ dsp->invert(); }
+/*
 void  DisplayGFX::setContrast(){
   #if DSP_MODEL==DSP_NOKIA5110
     dsp->setContrast(config.store.contrast);
@@ -759,7 +738,7 @@ void DisplayGFX::wakeup(){
   dsp->wake();
 #endif
 }
-
+*/
 void DisplayGFX::_events_subsribe(){
   // command events
   esp_event_handler_instance_register_with(evt::get_hndlr(), YO_CMD_EVENTS, ESP_EVENT_ANY_ID,
