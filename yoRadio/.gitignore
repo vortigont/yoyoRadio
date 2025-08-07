@@ -3,3 +3,4 @@
 embed/
 myoptions*
 user_*.ini
+include/embed.h
