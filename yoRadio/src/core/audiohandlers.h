@@ -25,6 +25,10 @@ void audio_info(const char *info) {
     strlcpy(b, ici + 9, 50);
     audio_bitrate(b);
   }
+
+#ifdef DEBUG_AUDIO_INFO
+  Serial.print("Audio info:"); Serial.println(info);
+#endif
 }
 
 void audio_bitrate(const char *info)

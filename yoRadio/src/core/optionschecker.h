@@ -1,11 +1,11 @@
 #ifndef optionschecker_h
 #define optionschecker_h
 
-#if REAL_LEDBUILTIN==TFT_RST
+#if (REAL_LEDBUILTIN != -1) && (REAL_LEDBUILTIN == TFT_RST)
 #  error LED_BUILTIN IS THE SAME AS TFT_RST. Check it in myoptions.h
 #endif
 
-#if REAL_LEDBUILTIN==VS1053_RST
+#if (REAL_LEDBUILTIN != -1) && (REAL_LEDBUILTIN==VS1053_RST)
 #  error LED_BUILTIN IS THE SAME AS VS1053_RST. Check it in myoptions.h
 #endif
 

@@ -12,6 +12,11 @@ Display display;
 Nextion nextion;
 #endif
 
+// some old legacy from AudioEx.h
+#ifndef AUDIOBUFFER_MULTIPLIER2                                                                                                                               
+#define AUDIOBUFFER_MULTIPLIER2    8                                                                                                                          
+#endif
+
 #ifndef DUMMYDISPLAY
 //============================================================================================================================
 DspCore dsp;
