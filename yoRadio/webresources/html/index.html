@@ -247,7 +247,7 @@
 			{{#label}}<span>{{label}}</span>{{/label}}
 			<ul id="{{id}}">
 			{{#block}}
-				<li {{#class}}class="{{class}}"{{/class}} {{onevent "click", "on_change", action, url}}>{{label}}<span>{{idx}}</span></li>
+				<li {{#class}}class="{{class}}"{{/class}} {{onevent "click", "on_change", action, idx}}><span>{{idx}}</span>{{label}}</li>
 			{{/block}}
 			</ul>
 		<!-- </div> -->

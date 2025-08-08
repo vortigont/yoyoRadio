@@ -6,6 +6,7 @@
 #include "sdmanager.h"
 #include "netserver.h"
 #include "evtloop.h"
+#include "templates.hpp"
 #include "log.h"
 
 
@@ -144,10 +145,9 @@ void Player::loop() {
     switch (requestP.type){
       case PR_STOP: _stop(); break;
       case PR_PLAY: {
-        if (requestP.payload>0) {
-          config.setLastStation((uint16_t)requestP.payload);
-        }
-        _play((uint16_t)abs(requestP.payload)); 
+        int idx = clamp(requestP.payload, 1, (int)config.store.countStation);
+        config.setLastStation((uint16_t)requestP.payload);
+        _play(idx);
         // callback
         if (player_on_station_change)
           player_on_station_change(); 

@@ -10,9 +10,7 @@
 #include "display.h"
 #include "options.h"
 #include "network.h"
-//#include "mqtt.h"
 #include "controls.h"
-//#include <ESPmDNS.h>
 #ifdef USE_SD
 #include "sdmanager.h"
 #endif
@@ -116,6 +114,12 @@ void embui_actions_register(){
   embui.action.add(T_ui_page_any, ui_page_selector);                      // ui page switcher
   embui.action.add(T_ui_page_radio, ui_page_radio);                       // build page "radio"
   //embui.action.set_settings_cb(block_user_settings);                    // "settings" page options callback
+
+  // ***************
+  // simple handlers
+
+  // Player - play station # from a playlist
+  embui.action.add(T_player_playstation, [](Interface *interf, JsonObjectConst data, const char* action){ player.sendCommand({PR_PLAY, data}); });
 }
 
 
@@ -1056,6 +1060,7 @@ void handleHTTPArgs(AsyncWebServerRequest * request) {
       netserver.requestOnChange(BALANCE, 0);
       commandFound=true;
     }
+/* moved to embui websocket action
     if (request->hasArg("playstation") || request->hasArg("play")) {
       const AsyncWebParameter* p = request->getParam(request->hasArg("playstation") ? "playstation" : "play", request->method() == HTTP_POST);
       int id = atoi(p->value().c_str());
@@ -1066,6 +1071,7 @@ void handleHTTPArgs(AsyncWebServerRequest * request) {
       commandFound=true;
       DBGVB("[%s] play=%d", __func__, id);
     }
+*/
     if (request->hasArg("vol")) {
       const AsyncWebParameter* p = request->getParam("vol", request->method() == HTTP_POST);
       int v = atoi(p->value().c_str());
