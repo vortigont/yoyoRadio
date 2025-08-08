@@ -217,10 +217,6 @@ void Telnet::on_input(const char* str, uint8_t clientId) {
       player.stepVol(true);
       return;
     }
-    if (strcmp(str, "sys.date") == 0 || strcmp(str, "date") == 0 || strcmp(str, "time") == 0) {
-      network.requestTimeSync(true, clientId > MAX_TLN_CLIENTS?clientId:0);
-      return;
-    }
     int volume;
     if (sscanf(str, "vol(%d)", &volume) == 1 || sscanf(str, "cli.vol(\"%d\")", &volume) == 1 || sscanf(str, "vol %d", &volume) == 1) {
       if (volume < 0) volume = 0;
@@ -271,11 +267,6 @@ void Telnet::on_input(const char* str, uint8_t clientId) {
       printf(clientId, "##CLI.INFO#\n");
       char timeStringBuff[50];
       strftime(timeStringBuff, sizeof(timeStringBuff), "%Y-%m-%dT%H:%M:%S", &network.timeinfo);
-      if (config.store.tzHour < 0) {
-        printf(clientId, "##SYS.DATE#: %s%03d:%02d\n", timeStringBuff, config.store.tzHour, config.store.tzMin);
-      } else {
-        printf(clientId, "##SYS.DATE#: %s+%02d:%02d\n", timeStringBuff, config.store.tzHour, config.store.tzMin);
-      }
       printf(clientId, "##CLI.NAMESET#: %d %s\n", config.lastStation(), config.station.name);
       if (player.status() == PLAYING) {
         printf(clientId, "##CLI.META#: %s\n", config.station.title);
@@ -307,38 +298,7 @@ void Telnet::on_input(const char* str, uint8_t clientId) {
       return;
     }
     #endif
-    if (strcmp(str, "sys.tzo") == 0 || strcmp(str, "tzo") == 0) {
-      printf(clientId, "##SYS.TZO#: %d:%d\n> ", config.store.tzHour, config.store.tzMin);
-      return;
-    }
-    //int16_t tzh, tzm;
     int tzh, tzm;
-    if (sscanf(str, "tzo(%d:%d)", &tzh, &tzm) == 2 || sscanf(str, "sys.tzo(\"%d:%d\")", &tzh, &tzm) == 2 || sscanf(str, "tzo %d:%d", &tzh, &tzm) == 2) {
-      if (tzh < -12) tzh = -12;
-      if (tzh > 14) tzh = 14;
-      if (tzm < 0) tzm = 0;
-      if (tzm > 59) tzm = 59;
-      config.setTimezone((int8_t)tzh, (int8_t)tzm);
-      if(tzh<0){
-        printf(clientId, "new timezone offset: %03d:%02d\n", config.store.tzHour, config.store.tzMin);
-      }else{
-        printf(clientId, "new timezone offset: %02d:%02d\n", config.store.tzHour, config.store.tzMin);
-      }
-      network.requestTimeSync(true);
-      return;
-    }
-    if (sscanf(str, "tzo(%d)", &tzh) == 1 || sscanf(str, "sys.tzo(\"%d\")", &tzh) == 1 || sscanf(str, "tzo %d", &tzh) == 1) {
-      if (tzh < -12) tzh = -12;
-      if (tzh > 14) tzh = 14;
-      config.setTimezone((int8_t)tzh, 0);
-      if(tzh<0){
-        printf(clientId, "new timezone offset: %03d:%02d\n", config.store.tzHour, config.store.tzMin);
-      }else{
-        printf(clientId, "new timezone offset: %02d:%02d\n", config.store.tzHour, config.store.tzMin);
-      }
-      network.requestTimeSync(true);
-      return;
-    }
     if (sscanf(str, "dspon(%d)", &tzh) == 1 || sscanf(str, "cli.dspon(\"%d\")", &tzh) == 1 || sscanf(str, "dspon %d", &tzh) == 1) {
       config.setDspOn(tzh!=0);
       return;

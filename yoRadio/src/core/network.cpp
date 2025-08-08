@@ -37,12 +37,8 @@ void ticks() {
   weatherSyncTicks++;
   divrssi = !divrssi;
   if(network.status == CONNECTED){
-    if(network.forceTimeSync || network.forceWeather){
+    if(network.forceWeather){
       xTaskCreatePinnedToCore(doSync, "doSync", 1024 * 4, NULL, 0, &syncTaskHandle, 0);
-    }
-    if(timeSyncTicks >= timeSyncInterval){
-      timeSyncTicks=0;
-      network.forceTimeSync = true;
     }
     if(weatherSyncTicks >= weatherSyncInterval){
       weatherSyncTicks=0;
@@ -197,7 +193,7 @@ void MyNetwork::begin() {
   BOOTLOG("network.begin");
   config.initNetwork();
   ctimer.detach();
-  forceTimeSync = forceWeather = true;
+  forceWeather = true;
   if (config.ssidsCount == 0 || DBGAP) {
     raiseSoftAP();
     return;
@@ -241,23 +237,6 @@ void MyNetwork::setWifiParams(){
     weatherBuf = (char *) malloc(sizeof(char) * WEATHER_STRING_L);
     memset(weatherBuf, 0, WEATHER_STRING_L);
   #endif
-  if(strlen(config.store.sntp1)>0 && strlen(config.store.sntp2)>0){
-    configTime(config.store.tzHour * 3600 + config.store.tzMin * 60, config.getTimezoneOffset(), config.store.sntp1, config.store.sntp2);
-  }else if(strlen(config.store.sntp1)>0){
-    configTime(config.store.tzHour * 3600 + config.store.tzMin * 60, config.getTimezoneOffset(), config.store.sntp1);
-  }
-}
-
-void MyNetwork::requestTimeSync(bool withTelnetOutput, uint8_t clientId) {
-  if (withTelnetOutput) {
-    char timeStringBuff[50];
-    strftime(timeStringBuff, sizeof(timeStringBuff), "%Y-%m-%dT%H:%M:%S", &timeinfo);
-    if (config.store.tzHour < 0) {
-      telnet.printf(clientId, "##SYS.DATE#: %s%03d:%02d\n> ", timeStringBuff, config.store.tzHour, config.store.tzMin);
-    } else {
-      telnet.printf(clientId, "##SYS.DATE#: %s+%02d:%02d\n> ", timeStringBuff, config.store.tzHour, config.store.tzMin);
-    }
-  }
 }
 
 void rebootTime() {
@@ -284,29 +263,6 @@ void MyNetwork::requestWeatherSync(){
 
 
 void doSync( void * pvParameters ) {
-  static uint8_t tsFailCnt = 0;
-  //static uint8_t wsFailCnt = 0;
-  if(network.forceTimeSync){
-    network.forceTimeSync = false;
-    if(getLocalTime(&network.timeinfo)){
-      tsFailCnt = 0;
-      network.forceTimeSync = false;
-      mktime(&network.timeinfo);
-      display.putRequest(CLOCK);
-      network.requestTimeSync(true);
-      #if RTCSUPPORTED
-        if (config.isRTCFound()) rtc.setTime(&network.timeinfo);
-      #endif
-    }else{
-      if(tsFailCnt<4){
-        network.forceTimeSync = true;
-        tsFailCnt++;
-      }else{
-        network.forceTimeSync = false;
-        tsFailCnt=0;
-      }
-    }
-  }
   if(network.weatherBuf && (strlen(config.store.weatherkey)!=0 && config.store.showweather) && network.forceWeather){
     network.forceWeather = false;
     network.trueWeather=getWeather(network.weatherBuf);

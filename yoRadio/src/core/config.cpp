@@ -320,9 +320,6 @@ void Config::setDefaults() {
   store.lastSSID = 0;
   store.audioinfo = false;
   store.smartstart = 2;
-  store.tzHour = 3;
-  store.tzMin = 0;
-  store.timezoneOffset = 0;
 
   store.vumeter=false;
   store.softapdelay=0;
@@ -334,8 +331,6 @@ void Config::setDefaults() {
   store.dspon=true;
   store.brightness=100;
   store.contrast=55;
-  strlcpy(store.sntp1,"pool.ntp.org", 35);
-  strlcpy(store.sntp2,"1.ru.pool.ntp.org", 35);
   store.showweather=false;
   strlcpy(store.weatherlat,"55.7512", 10);
   strlcpy(store.weatherlon,"37.6184", 10);
@@ -365,19 +360,6 @@ void Config::setDefaults() {
   store.screensaverPlayingEnabled = false;
   store.screensaverPlayingTimeout = 5;
   eepromWrite(EEPROM_START, store);
-}
-
-void Config::setTimezone(int8_t tzh, int8_t tzm) {
-  saveValue(&store.tzHour, tzh, false);
-  saveValue(&store.tzMin, tzm);
-}
-
-void Config::setTimezoneOffset(uint16_t tzo) {
-  saveValue(&store.timezoneOffset, tzo);
-}
-
-uint16_t Config::getTimezoneOffset() {
-  return 0; // TODO
 }
 
 void Config::setSnuffle(bool sn){

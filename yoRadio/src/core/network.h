@@ -1,7 +1,6 @@
 #ifndef network_h
 #define network_h
 #include <Ticker.h>
-#include "time.h"
 #include "WiFi.h"
 #include "rtcsupport.h"
 
@@ -17,7 +16,7 @@ class MyNetwork {
   public:
     n_Status_e status;
     struct tm timeinfo;
-    bool firstRun, forceTimeSync, forceWeather;
+    bool firstRun, forceWeather;
     bool lostPlaying = false, beginReconnect = false;
     //uint8_t tsFailCnt, wsFailCnt;
     Ticker ctimer;
@@ -26,7 +25,6 @@ class MyNetwork {
   public:
     MyNetwork() {};
     void begin();
-    void requestTimeSync(bool withTelnetOutput=false, uint8_t clientId=0);
     void requestWeatherSync();
     void setWifiParams();
     bool wifiBegin(bool silent=false);
