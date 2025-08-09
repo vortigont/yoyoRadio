@@ -1,9 +1,10 @@
 #include "dspcore.h"
+#include "widgets/muipp_widgets.hpp"
 #include "gfx_engine.h"
+#include "tools/l10n.h"
+#include "../core/config.h"
 #include "../core/network.h"
 #include "../core/player.h"
-#include "Audio.h"
-#include "tools/l10n.h"
 #include "../core/evtloop.h"
 #include "../core/log.h"
 
@@ -22,6 +23,7 @@ bool create_display(){
   return create_display_dev();
 }
 
+#ifdef NOT_NEEDED
 
 char* DspCoreBase::utf8Rus(const char* str, bool uppercase) {
     int index = 0;
@@ -182,6 +184,7 @@ void DspCore_Arduino_GFX::setFont(const uint8_t* font){
   }
 #endif
 }
+#endif // NOT_NEEDED
 
 
 
@@ -230,6 +233,7 @@ void DisplayGFX::init() {
   _state = state_t::empty;
   if (_gfx->begin()){
     _gfx->fillScreen(0);
+    _gfx->setUTF8Print(true);
   } else {
     LOGE(T_BOOT, println, "DisplayGFX.init FAILED!");
     return;
@@ -400,30 +404,11 @@ void DisplayGFX::_apScreen() {
 }
 
 void DisplayGFX::_start() {
-//  dsp->clearDsp();
-//  if(_boot) _pager.removePage(_boot);
-  if (network.status != CONNECTED && network.status != SDREADY) {
-    _apScreen();
-    _state = state_t::normal;
-    return;
-  }
-  //_buildPager();
+  _build_main_screen();
   _mode = PLAYER;
   config.setTitle(const_PlReady);
-/*
-  if(_heapbar)  _heapbar->lock(!config.store.audioinfo);
-  if(_weather)  _weather->lock(!config.store.showweather);
-  if(_weather && config.store.showweather)  _weather->setText(const_getWeather);
-  if(_vuwidget) _vuwidget->lock();
-  if(_rssi)     _setRSSI(WiFi.RSSI());
-  #ifndef HIDE_IP
-    if(_volip) _volip->setText(WiFi.localIP().toString().c_str(), iptxtFmt);
-  #endif
-  _pager.setPage( _pages.at(PG_PLAYER));
-  _volume();
-  _station();
   _state = state_t::normal;
-*/
+  return;
   LOGV(T_Display, println, "DisplayGFX::_start() end");
 }
 
@@ -633,13 +618,13 @@ void DisplayGFX::_loopDspTask() {
       // check if there are more messages waiting in the Q, in this case break the loop() and go
       // for another round to evict next message, do not waste time to redraw the screen, etc...
       if (uxQueueMessagesWaiting(_displayQueue))
-        return;
+        continue;
     }
-
-    //if (_pager.run())
-    //dsp->loop();
-    //_pager.loop();
-
+    //Serial.print(".");
+    // refresh screen items if needed
+    if (_mpp.refresh(_gfx))
+      _gfx->flush();
+  
     #if I2S_DOUT==255
     player.computeVUlevel();
     #endif
@@ -715,9 +700,6 @@ void DisplayGFX::_volume() {
 */
 }
 
-//void DisplayGFX::flip(){ dsp->flip(); }
-
-//void DisplayGFX::invert(){ dsp->invert(); }
 /*
 void  DisplayGFX::setContrast(){
   #if DSP_MODEL==DSP_NOKIA5110
@@ -903,6 +885,24 @@ void DisplayGFX::_events_chg_hndlr(int32_t id, void* data){
 
 }
 
+void DisplayGFX::_build_main_screen(){
+  _mpp.clear();
+  muiItemId root_page = _mpp.makePage();  // root page
+  ClockWidget* clk = new ClockWidget(_mpp.nextIndex());
+  // pick configs from display-specific include file (conf/display_*)
+  clk->cfg = clock_cfg;
+  clk->dcfg = date_cfg;
+  // move clock object to root page
+  _mpp.addMuippItem(clk, root_page);
+  // this is not a real menu, so no need to activate the items
+  //pageAutoSelect(root_page, some_id);
+  // start menu from page mainmenu
+  _mpp.menuStart(root_page);
+  // render newly created screen
+  _mpp.render(_gfx);
+  _gfx->flush();
+}
+
 
 // ****************
 //  Dummy display methods
@@ -921,6 +921,7 @@ void DisplayNextion::_start(){
   nextion.start();
   config.setTitle(const_PlReady);
 }
+
 void DisplayNextion::putRequest(displayRequestType_e type, int payload){
   if(type==DSP_START) _start();
   requestParams_t request;

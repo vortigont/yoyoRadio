@@ -372,7 +372,7 @@ void NetServer::processQueue(){
         break;
       }
       case SDPOS:
-        obj["sdpos"] = player->getFilePos();
+        //obj["sdpos"] = player->getFilePos();    >getFilePos() is obsolete
         obj["sdend"] = player->getFileSize();
         obj["sdtpos"] = player->getAudioCurrentTime();
         obj["sdtend"] = player->getAudioFileDuration();

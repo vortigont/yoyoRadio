@@ -1,6 +1,6 @@
+#ifdef NOT_NEEDED
 #include "../dspcore.h"
 #if DSP_MODEL!=DSP_DUMMY
-
 #include "pages.h"
 #include "../gfx_engine.h"
 
@@ -121,3 +121,4 @@ bool Page::isActive() {
 }
 
 #endif // #if DSP_MODEL!=DSP_DUMMY
+#endif  // NOT_NEEDED

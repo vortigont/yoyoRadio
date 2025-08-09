@@ -48,6 +48,7 @@
   #include "displayST7920.h"
 #elif DSP_MODEL== DSP_JC3248W535
   #include "display_JC3248W535.h"
+  #include "conf/320x480_agfx_cfg.h"
 #elif DSP_MODEL== DSP_JC1060P470
   #include "display_JC1060P470C.h"
 #endif
@@ -57,4 +58,4 @@
 // create_display_dev();
 
 // device specific display rendering object
-extern DspCore* dsp;
+//extern DspCore* dsp;

@@ -71,7 +71,7 @@ void setup() {
   LOGI(T_BOOT, println, "Start Display");
   display->putRequest(DSP_START);
   LOGI(T_BOOT, println, "Wait for Display");
-  while(!display->ready()) delay(10);
+  //while(!display->ready()) delay(10);
 
   #ifdef MQTT_ROOT_TOPIC
     mqttInit();

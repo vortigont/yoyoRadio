@@ -131,9 +131,11 @@ void Config::_setupVersion(){
 void Config::changeMode(int newmode){
   bool pir = player->isRunning();
   if(SDC_CS==255) return;
+/*
   if(getMode()==PM_SDCARD) {
-    sdResumePos = player->getFilePos();
+    sdResumePos = player->getFilePos();   // getFilePos() is not available in recent audio lib
   }
+*/
   if(network.status==SOFT_AP || display->mode()==LOST){
     saveValue(&store.play_mode, static_cast<uint8_t>(PM_SDCARD));
     delay(50);

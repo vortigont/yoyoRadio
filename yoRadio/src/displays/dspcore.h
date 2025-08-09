@@ -1,13 +1,13 @@
 #ifndef dspcore_h
 #define dspcore_h
 #include "../core/options.h"
+#include "../core/common.h"
 #include "gfx_lib.h"
-#include "widgets/widgets.h"
-#include "widgets/pages.h"
+#include "Ticker.h"
 #include "nextion.h"
 #include "muiplusplus.hpp"
 
-
+#ifdef NOT_NEEDED
 /**
  * @brief Graphics API core display class
  * it providex a very simplified GFX api to wrap around other grphics libs
@@ -118,7 +118,7 @@ public:
 
 };
 #endif    // _ARDUINO_GFX_H_
-
+#endif // NOT_NEEDED
 
 /**
  * @brief abstract display class (or better say output interface)
@@ -248,6 +248,9 @@ private:
     void _setReturnTicker(uint8_t time_s);
     void _layoutChange(bool played);
     void _setRSSI(int rssi);
+
+    void _build_main_screen();
+
     /**
      * @brief create and initialize widgets
      * 

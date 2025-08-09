@@ -8,29 +8,12 @@
 // this settings are for JC3248W535 module
 
 #pragma once
-#include "../widgets/widgets.h"
-#include "clib/u8g2.h"
-
-#ifndef FONT_DEFAULT_U8G2
-#define FONT_DEFAULT_U8G2 u8g2_font_6x12_t_cyrillic  // CourierCyr6pt8b  //Bahamas6pt8b
-#endif
-
-#if CLOCKFONT_MONO
-  //#include "fonts/DS_DIGI56pt7b_mono.h"        // https://tchapi.github.io/Adafruit-GFX-Font-Customiser/
-  #include "../fonts/DirectiveFour56.h"
-  #include "../fonts/DirectiveFour30.h"
-  #define CLK_FONT1 DirectiveFour56
-  #define CLK_FONT2 DirectiveFour30
-#else
-  #include "fonts/DS_DIGI56pt7b.h"
-#endif
+#include "320x480_agfx_defines.h"
 
 
 // Определение для скрытия VU-метра (если нужно)
 // #define HIDE_VU
 
-#define DSP_WIDTH       320
-#define DSP_HEIGHT      480
 #define TFT_FRAMEWDT    8
 #define MAX_WIDTH       DSP_WIDTH-TFT_FRAMEWDT
 
@@ -56,6 +39,7 @@
   #define VoltFS     2		// FontSize for voltage (   )
 #endif
 
+#ifdef NOT_NEEDED
 /* SCROLLS  */                           /* {{ left, top, fontsize, align }, buffsize, uppercase, width, scrolldelay, scrolldelta, scrolltime } */
 static const ScrollConfig metaConf       = {{ TFT_FRAMEWDT, TFT_FRAMEWDT, 3, WA_CENTER}, 140, true, MAX_WIDTH, 5000, 30, 12 }; //5,12
 // state/ready titile
@@ -85,12 +69,6 @@ static const WidgetConfig apNameConf     = { TFT_FRAMEWDT, 88, 3, WA_CENTER };
 static const WidgetConfig apName2Conf    = { TFT_FRAMEWDT, 120, 3, WA_CENTER };
 static const WidgetConfig apPassConf     = { TFT_FRAMEWDT, 173, 3, WA_CENTER };
 static const WidgetConfig apPass2Conf    = { TFT_FRAMEWDT, 205, 3, WA_CENTER };
-// Clock
-static const WidgetConfig clockConf      = { 0, 100, 1, WA_LEFT };
-static const WidgetConfig dateConf       = { TFT_FRAMEWDT, 135, 2, WA_LEFT };
-// cursor offset for clock's seconds
-#define CLOCK_SECONDS_X_OFFSET  0
-#define CLOCK_SECONDS_Y_OFFSET  -15
 
 
 static const WidgetConfig vuConf         = { TFT_FRAMEWDT, 268, 1, WA_LEFT };
@@ -102,14 +80,8 @@ static const BitrateConfig fullbitrateConf = {{DSP_WIDTH-TFT_FRAMEWDT-80, 226, 2
 /* BANDS  */                             /* { onebandwidth, onebandheight, bandsHspace, bandsVspace, numofbands, fadespeed } */
 static const VUBandsConfig bandsConf     = {  MAX_WIDTH, 35, 4, 5, 45, 30};
 
-/* STRINGS  */
-static const char         numtxtFmt[]    = "%d";
-static const char           rssiFmt[]    = "WiFi %d";
-static const char          iptxtFmt[]    = "%s";
-static const char         voltxtFmt[]    = "\023\025%d";
-static const char        bitrateFmt[]    = "%d kBs";
-
 /* MOVES  */                             /* { left, top, width } */
 static const MoveConfig    clockMove     = { 0, 98, MAX_WIDTH /* MAX_WIDTH */ }; // -1 disables move
 static const MoveConfig   weatherMove    = { TFT_FRAMEWDT, 197, MAX_WIDTH};
 static const MoveConfig   weatherMoveVU  = { TFT_FRAMEWDT, 197, MAX_WIDTH};
+#endif  // NOT_NEEDED

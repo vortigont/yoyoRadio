@@ -1,5 +1,5 @@
 #pragma once
-
+#include "../core/options.h"
 /*
   This header should define with graphics lib should be used to drive the display
 
@@ -8,15 +8,6 @@
 #if __has_include("Arduino_GFX.h")
 #include "Arduino_GFX.h"
 #endif
-
-/*
-// abstact class based on AdfruitGFX extending it with drawing helpers
-#if __has_include("AdafruitGFX.h")
-//#include "AdafruitGFX.h"
-//class DspCoreBase
-
-#endif    // __has_include "AdafruitGFX.h"
-*/
 
 // include specific display engine header file (needed for DspCore definition)
 #if DSP_MODEL==DSP_DUMMY
@@ -66,11 +57,7 @@
   #include "canvas/Arduino_Canvas.h"
   typedef Arduino_Canvas Canvas;
   #define DISPLAY_ENGINE  Arduino_Canvas
-  #if __has_include("conf/displayAXS15231Bconf_custom.h")
-    #include "conf/displayAXS15231Bconf_custom.h"
-  #else
-    #include "conf/displayAXS15231Bconf.h"
-  #endif
+  #include "conf/displayAXS15231Bconf.h"
 #elif DSP_MODEL==DSP_JC1060P470
   // Use Arduino_DSI_Display
   #include "display/Arduino_DSI_Display.h"

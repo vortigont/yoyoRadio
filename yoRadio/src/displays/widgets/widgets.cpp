@@ -1,3 +1,5 @@
+#ifdef NOT_NEEDED
+
 #include "../gfx_engine.h"
 #include "widgets.h"
 #include "../../core/player.h"    //  for VU widget
@@ -429,122 +431,6 @@ void ProgressWidget::loop() {
   }
 }
 
-/**************************
-      CLOCK WIDGET
- **************************/
-
-bool ClockWidget::run(bool force){
-  if(!_active) return false;
-
-  std::time_t time = std::time({});
-  auto t = std::localtime(&time);
-  if (time == _last && !force){
-    return false;
-  }
-  dsp->lock();
-  _drawTime(t);
-  _last = time;
-  // check if date has changed
-  struct tm cur_date = *t;
-  t = std::localtime(&_last_date);
-  // draw date only if year of year day has changed
-  if ( force || (t->tm_yday != cur_date.tm_yday) || (t->tm_year != cur_date.tm_year) ){
-    _drawDate(&cur_date);
-    _last_date = time;
-  }
-  dsp->unlock();
-  _reconfig(&cur_date);
-  return true;
-};
-
-void ClockWidget::_drawTime(tm* t){
-  _clear_clk();
-  char buff[std::size("hh:mm")];
-  
-  std::strftime(std::data(buff), std::size(buff), "%R", t);    // "%R" equivalent to "%H:%M", t->tm_sec % 2 ? "%R" : "%H %M" would blink semicolon
-  LOGD(T_Clock, println, buff );
-  // recalculate area for clock and save it to be cleared later
-  dsp->getTextBounds(buff, _config.left, _config.top, &_time_block_x, &_time_block_y, &_time_block_w, &_time_block_h);
-
-  if (t->tm_sec % 2){   // draw ':'
-    dsp->gfxDrawText(_config.left, _config.top, buff, config.theme.clock, config.theme.background, _config.textsize, &CLK_FONT1);
-  } else {
-    // let's draw time in parts so that ':' is drawn with background color maintaining same area dimensions
-    std::strftime(std::data(buff), std::size(buff), "%H", t);
-    dsp->gfxDrawText(_config.left, _config.top, buff, config.theme.clock, config.theme.background, _config.textsize, &CLK_FONT1);
-    // write semicolon
-    dsp->gfxDrawText(dsp->getCursorX(), dsp->getCursorY(), ":", config.theme.background, config.theme.background, _config.textsize, &CLK_FONT1);
-//    dsp->drawChar(dsp->getCursorX(), dsp->getCursorY(), 0x3a /* ':' */, RGB565_RED, RGB565_RED);
-    std::strftime(std::data(buff), std::size(buff), "%M", t);
-    dsp->gfxDrawText(dsp->getCursorX(), dsp->getCursorY(), buff, config.theme.clock, config.theme.background, _config.textsize, &CLK_FONT1);
-  }
-
-  // make seconds
-  std::strftime(std::data(buff), std::size(buff), "%S", t);
-  dsp->setFont(&CLK_FONT2);
-  // recalculate area for clock and save it to be cleared later
-  dsp->getTextBounds(buff, dsp->getCursorX() + CLOCK_SECONDS_X_OFFSET, dsp->getCursorY() + CLOCK_SECONDS_Y_OFFSET, &_seconds_block_x, &_seconds_block_y, &_seconds_block_w, &_seconds_block_h);
-  // print seconds
-  dsp->gfxDrawText(dsp->getCursorX() + CLOCK_SECONDS_X_OFFSET, dsp->getCursorY() + CLOCK_SECONDS_Y_OFFSET, buff, config.theme.clock, config.theme.background, _config.textsize, &CLK_FONT2);
-}
-
-void ClockWidget::_drawDate(tm* t){
-  char buff[100];
-  // date format "1 января 2025 / понедельник"
-  snprintf(buff, std::size(buff), "%d %s %d / %s", t->tm_mday, mnths[t->tm_mon], t->tm_year + 1900, dowf[t->tm_wday]);
-  LOGD(T_Clock, println, buff );
-  // recalculate area for clock and save it to be cleared later
-  dsp->setFont();
-  dsp->setTextSize(_datecfg->textsize);
-
-  if (!_date_block_w || !_date_block_h){
-    // on the first run clear area for current date
-    dsp->getTextBounds(buff, _datecfg->left, _datecfg->top, &_date_block_x, &_date_block_y, &_date_block_w, &_date_block_h);
-    _clear_date();
-  } else {
-    _clear_date();
-    dsp->getTextBounds(buff, _datecfg->left, _datecfg->top, &_date_block_x, &_date_block_y, &_date_block_w, &_date_block_h);
-  }
-  // draw date with default font
-  dsp->gfxDrawText(
-    _datecfg->left,
-    _datecfg->top,
-    buff,
-    config.theme.date,
-    config.theme.background,
-    _datecfg->textsize
-  );
-}
-
-void ClockWidget::_clear_clk(){
-  // Очищаем область под текущими часами
-  dsp->gfxFillRect(_time_block_x, _time_block_y, _time_block_w, _time_block_h, config.theme.background);  // RGB565_DARKGREY); // 
-  dsp->gfxFillRect(_seconds_block_x, _seconds_block_y, _seconds_block_w, _seconds_block_h, config.theme.background); // RGB565_DARKGREEN); //config.theme.background);
-}
-
-void ClockWidget::_clear_date(){
-  // Очищаем область под датой
-  dsp->gfxFillRect(_date_block_x, _date_block_y, _date_block_w, _date_block_h, config.theme.background);  // RGB565_DARKGREY);
-}
-
-void ClockWidget::_reconfig(tm* t){
-  // todo: this is a wrong place for this code, should be in display/dspcore
-  #if LIGHT_SENSOR!=255
-  if(config.store.dspon) {
-    config.store.brightness = AUTOBACKLIGHT(analogRead(LIGHT_SENSOR));
-    config.setBrightness();
-  }
-#endif
-  if (config.isScreensaver && t->tm_sec == 0){
-    #ifdef GXCLOCKFONT
-      uint16_t ft=static_cast<uint16_t>(random(TFT_FRAMEWDT, (dsp->height()-dsp->plItemHeight-TFT_FRAMEWDT*2-clockConf.textsize)));
-    #else
-      uint16_t ft=static_cast<uint16_t>(random(TFT_FRAMEWDT+clockConf.textsize, (dsp->height()-dsp->plItemHeight-TFT_FRAMEWDT*2)));
-    #endif
-    moveTo({_config.left, ft, 0});
-  }
-}
-
 
 void BitrateWidget::init(BitrateConfig bconf, uint16_t fgcolor, uint16_t bgcolor){
   Widget::init(bconf.widget, fgcolor, bgcolor);
@@ -585,3 +471,4 @@ void BitrateWidget::_draw(){
 void BitrateWidget::_clear() {
   dsp->fillRect(_config.left, _config.top, _dimension, _dimension, _bgcolor);
 }
+#endif // NOT_NEEDED

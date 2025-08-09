@@ -109,8 +109,10 @@ void Player::setError(const char *e){
 void Player::_stop(bool alreadyStopped){
   log_i("%s called", __func__);
   std::lock_guard<std::mutex> lock(_mtx);
+/*
   if(config.getMode()==PM_SDCARD && !alreadyStopped)
-    config.sdResumePos = player->getFilePos();
+    config.sdResumePos = player->getFilePos();  // getFilePos() is obsolete
+*/
   _status = STOPPED;
   stopSong();
   setOutputPins(false);

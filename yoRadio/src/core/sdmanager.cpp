@@ -2,6 +2,7 @@
 
 #define USE_SD
 #include "sdmanager.h"
+#include "config.h"
 #include "../displays/dspcore.h"
 #include "player.h"
 

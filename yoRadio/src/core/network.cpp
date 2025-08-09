@@ -22,7 +22,7 @@ bool getWeather(char *wstr);
 void doSync(void * pvParameters);
 
 void ticks() {
-  if(!display->ready()) return; //waiting for SD is ready
+  //if(!display->ready()) return; //waiting for SD is ready
   pm.on_ticker();
   static const uint16_t weatherSyncInterval=1800;
   //static const uint16_t weatherSyncIntervalFail=10;

@@ -258,33 +258,6 @@ class ProgressWidget: public TextWidget {
     bool _checkDelay(int m, uint32_t &tstamp);
 };
 
-class ClockWidget: public Widget {
-  std::time_t _last{0}, _last_date{0};
-  // vars to save time block bounds, needed to clear time blocks on next run
-  int16_t _time_block_x{0}, _time_block_y{0}, _seconds_block_x{0}, _seconds_block_y{0}, _date_block_x{0}, _date_block_y{0};
-  uint16_t  _time_block_w{0}, _time_block_h{0}, _seconds_block_w{0}, _seconds_block_h{0}, _date_block_w{0}, _date_block_h{0};
-
-
-public:
-    ClockWidget() = default;
-    //~ClockWidget();
-    //void setActive(bool act, bool clr=false) override;
-
-    bool run(bool force = false) override;
-
-    // a dirty hack for now
-    const WidgetConfig* _datecfg{nullptr};
-
-private:
-    void _drawTime(tm* t);
-    void _drawDate(tm* t);
-    void inline _clear(){ _clear_clk(); _clear_date(); };
-    void _clear_clk();
-    void _clear_date();
-    // move clock in screensaver mode / measure brightness
-    void _reconfig(tm* t);
-};
-
 class BitrateWidget: public Widget {
   public:
     BitrateWidget() {}
