@@ -4,7 +4,7 @@
 #include "config.h"
 #include "telnet.h"
 #include "../displays/dspcore.h"
-#include "../displays/tools/l10n.h"
+#include "locale/l10n.h"
 #include "sdmanager.h"
 #include "netserver.h"
 #include "evtloop.h"

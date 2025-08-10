@@ -13,7 +13,7 @@
 #if DSP_MODEL==DSP_DUMMY
   #define DUMMYDISPLAY
   #define DSP_NOT_FLIPPED
-  #include "tools/l10n.h"
+  #include "locale/l10n.h"
 #elif DSP_MODEL==DSP_ST7735
   #include "displayST7735.h"
 #elif DSP_MODEL==DSP_SSD1306 || DSP_MODEL==DSP_SSD1306x32

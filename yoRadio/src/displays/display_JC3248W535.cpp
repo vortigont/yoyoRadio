@@ -7,7 +7,7 @@
 //#include "fonts/bootlogo.h"
 #include "../core/config.h"
 //#include "../core/network.h"
-//#include "tools/l10n.h"
+//#include "locale/l10n.h"
 #include "../core/log.h"
 
 static Arduino_DataBus *bus{nullptr};

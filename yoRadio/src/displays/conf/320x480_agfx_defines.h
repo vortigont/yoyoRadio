@@ -13,8 +13,8 @@
 #define CLOCK_DATE_USE_U8G2_FONT
 
 // clock fonts
-#include "../fonts/DirectiveFour56.h"
-#include "../fonts/DirectiveFour30.h"
+#include "fonts/DirectiveFour56.h"
+#include "fonts/DirectiveFour30.h"
 #define FONT_CLOCK_H DirectiveFour56       // font for Hours
 #define FONT_CLOCK_S DirectiveFour30       // font for Seconds
 

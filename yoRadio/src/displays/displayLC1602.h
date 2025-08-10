@@ -3,7 +3,7 @@
 #include "../core/options.h"
 
 #include "Arduino.h"
-#include "tools/l10n.h"
+#include "locale/l10n.h"
 
 #define DSP_NOT_FLIPPED
 #define DSP_LCD

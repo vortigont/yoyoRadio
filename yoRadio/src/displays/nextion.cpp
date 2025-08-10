@@ -8,7 +8,7 @@
 #include "../core/controls.h"
 #include "../core/netserver.h"
 #include "../core/network.h"
-#include "tools/l10n.h"
+#include "locale/l10n.h"
 #include "../core/evtloop.h"
 
 #ifndef CORE_STACK_SIZE

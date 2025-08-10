@@ -1,7 +1,7 @@
 #include "dspcore.h"
 #include "widgets/muipp_widgets.hpp"
 #include "gfx_engine.h"
-#include "tools/l10n.h"
+#include "locale/l10n.h"
 #include "../core/config.h"
 #include "../core/network.h"
 #include "../core/player.h"

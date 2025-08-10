@@ -7,7 +7,7 @@
 #include "../core/config.h"
 #include "../core/network.h"
 
-#include "tools/l10n.h"
+#include "locale/l10n.h"
 
 #define DSI_PANEL
 

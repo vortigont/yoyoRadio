@@ -3,7 +3,7 @@
 #include "../gfx_engine.h"
 #include "widgets.h"
 #include "../../core/player.h"    //  for VU widget
-#include "../tools/l10n.h"
+#include "locale/l10n.h"
 #include "../../core/log.h"
 
 static constexpr const char* P_na = "n/a";

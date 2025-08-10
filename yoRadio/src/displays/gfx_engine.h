@@ -5,7 +5,7 @@
 #if DSP_MODEL==DSP_DUMMY
   #define DUMMYDISPLAY
   #define DSP_NOT_FLIPPED
-  #include "tools/l10n.h"
+  #include "locale/l10n.h"
   #define CHARWIDTH 1
   #define CHARHEIGHT 1
 #elif DSP_MODEL==DSP_ST7735
