@@ -1,4 +1,6 @@
 .pio
 .vscode/
+embed/
+include/embed.h
 myoptions*
 user_*.ini
