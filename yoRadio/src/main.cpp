@@ -1,7 +1,6 @@
 #include "Arduino.h"
 #include "core/options.h"
 #include "core/config.h"
-#include "core/telnet.h"
 #include "core/player.h"
 #include "displays/dspcore.h"
 #include "core/network.h"
@@ -58,7 +57,7 @@ void setup() {
 
   LOGI(T_BOOT, println, "Start WebServer");
   netserver.begin();
-  telnet.begin();
+  //telnet.begin();
 
   if(SDC_CS!=255) {
     LOGI(T_BOOT, println, "Wait for SDCARD");
@@ -91,7 +90,7 @@ void setup() {
 }
 
 void loop() {
-  telnet.loop();
+  //telnet.loop();
   if (network.status == CONNECTED || network.status==SDREADY) {
     player->loop();
     //loopControls();

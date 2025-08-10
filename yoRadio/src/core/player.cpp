@@ -2,7 +2,6 @@
 #include "options.h"
 #include "player.h"
 #include "config.h"
-#include "telnet.h"
 #include "../displays/dspcore.h"
 #include "locale/l10n.h"
 #include "sdmanager.h"
@@ -96,7 +95,6 @@ void Player::dac_init(){
 
 void Player::stopInfo() {
   config.setSmartStart(0);
-  //telnet.info();
   netserver.requestOnChange(MODE, 0);
 }
 
@@ -104,7 +102,6 @@ void Player::setError(const char *e){
   strlcpy(_plError, e, PLERR_LN);
   if(hasError()) {
     config.setTitle(_plError);
-    telnet.printf("##ERROR#:\t%s\n", e);
   }
 }
 
@@ -234,7 +231,7 @@ void Player::_play(uint16_t stationId) {
       player_on_start_play();
     pm.on_start_play();
   } else {
-    telnet.printf("##ERROR#:\tError connecting to %s\n", config.station.url);
+    //telnet.printf("##ERROR#:\tError connecting to %s\n", config.station.url);
     SET_PLAY_ERROR("Error connecting to %s", config.station.url);
     _stop(true);
   };
@@ -261,7 +258,7 @@ void Player::browseUrl(){
     if (player_on_start_play) player_on_start_play();
     pm.on_start_play();
   }else{
-    telnet.printf("##ERROR#:\tError connecting to %s\n", burl);
+    //telnet.printf("##ERROR#:\tError connecting to %s\n", burl);
     SET_PLAY_ERROR("Error connecting to %s", burl);
     _stop(true);
   }
@@ -404,7 +401,7 @@ void PlayerES8311::dac_init(){
 void audio_info(const char *info) {
   if(player->lockOutput) return;
   LOGI(T_Player, printf, "Audio info:\t%s\n", info);
-  if(config.store.audioinfo) telnet.printf("##AUDIO.INFO#: %s\n", info);
+  //if(config.store.audioinfo) telnet.printf("##AUDIO.INFO#: %s\n", info);
   #ifdef USE_NEXTION
     nextion.audioinfo(info);
   #endif
@@ -479,7 +476,8 @@ void audio_showstreamtitle(const char *info) {
 void audio_error(const char *info) {
   //config.setTitle(info);
   player->setError(info);
-  telnet.printf("##ERROR#:\t%s\n", info);
+  LOGE(T_Player, println, info);
+  //telnet.printf("##ERROR#:\t%s\n", info);
 }
 
 void audio_id3artist(const char *info){
@@ -515,8 +513,7 @@ void audio_beginSDread(){
 
 void audio_id3data(const char *info){  //id3 metadata
   LOGI(T_Player, printf, "id3: %s\n", info);
-    if(player->lockOutput) return;
-    telnet.printf("##AUDIO.ID3#: %s\n", info);
+  //telnet.printf("##AUDIO.ID3#: %s\n", info);
 }
 
 void audio_eof_mp3(const char *info){  //end of file

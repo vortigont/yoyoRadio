@@ -3,7 +3,6 @@
 #include "locale/l10n.h"
 #include "options.h"
 #include "config.h"
-#include "telnet.h"
 #include "netserver.h"
 #include "player.h"
 #include "mqtt.h"
@@ -186,7 +185,7 @@ void searchWiFi(void * pvParameters){
   }else{
     network.status = CONNECTED;
     netserver.begin(true);
-    telnet.begin(true);
+    //telnet.begin(true);
     network.setWifiParams();
     EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewIP));
   }

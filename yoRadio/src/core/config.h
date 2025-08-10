@@ -5,9 +5,7 @@
 #include <SPI.h>
 #include <LittleFS.h>
 #include <EEPROM.h>
-//#include "SD.h"
 #include "options.h"
-#include "telnet.h"
 #include "rtcsupport.h"
 #include "../pluginsManager/pluginsManager.h"
 
@@ -33,7 +31,8 @@
 #define DBGVB( ... )
 #define DBGH()
 #endif
-#define BOOTLOG( ... ) { char buf[120]; sprintf( buf, __VA_ARGS__ ) ; telnet.print("##[BOOT]#\t"); telnet.printf("%s\n",buf); }
+#define BOOTLOG( ... ) { char buf[120]; sprintf( buf, __VA_ARGS__ ) ; }
+//#define BOOTLOG( ... ) { char buf[120]; sprintf( buf, __VA_ARGS__ ) ; telnet.print("##[BOOT]#\t"); telnet.printf("%s\n",buf); }
 #define EVERY_MS(x)  static uint32_t tmr; bool flag = millis() - tmr >= (x); if (flag) tmr += (x); if (flag)
 #define REAL_PLAYL   getMode()==PM_WEB?PLAYLIST_PATH:PLAYLIST_SD_PATH
 #define REAL_INDEX   getMode()==PM_WEB?INDEX_PATH:INDEX_SD_PATH

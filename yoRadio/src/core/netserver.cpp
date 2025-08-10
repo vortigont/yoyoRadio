@@ -6,7 +6,6 @@
 #include "const_strings.h"
 #include "config.h"
 #include "player.h"
-#include "telnet.h"
 #include "../displays/dspcore.h"
 #include "options.h"
 #include "network.h"
@@ -388,7 +387,7 @@ void NetServer::processQueue(){
         JsonObject o = a.add<JsonObject>();
         o["id"] = "meta";
         o["value"] = config.station.title;
-        telnet.printf("##CLI.META#: %s\n> ", config.station.title);
+        //telnet.printf("##CLI.META#: %s\n> ", config.station.title);
         break;
       }
       case VOLUME: {
@@ -396,7 +395,7 @@ void NetServer::processQueue(){
         JsonObject o = a.add<JsonObject>();
         o["id"] = "volume";
         o["value"] = config.store.volume;
-        telnet.printf("##CLI.VOL#: %d\n", config.store.volume);
+        //telnet.printf("##CLI.VOL#: %d\n", config.store.volume);
         break;
       }
       case NRSSI: {
@@ -427,7 +426,7 @@ void NetServer::processQueue(){
         JsonObject o = a.add<JsonObject>();
           o["id"] = "playerwrap";
           o["value"] = player->status() == PLAYING ? "playing" : "stopped";
-          telnet.info();
+          //telnet.info();
           break;
       }
       case EQUALIZER: {
