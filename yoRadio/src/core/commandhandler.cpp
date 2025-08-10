@@ -86,11 +86,6 @@ bool CommandHandler::exec(const char *command, const char *value, uint8_t cid) {
   if (strEquals(command, "screensaverplayingtimeout")){ config.setScreensaverPlayingTimeout(static_cast<uint16_t>(atoi(value))); return true; }
   if (strEquals(command, "screensaverplayingblank"))  { config.setScreensaverPlayingBlank(static_cast<bool>(atoi(value))); return true; }
   
-  if (strEquals(command, "tzh"))    { config.saveValue(&config.store.tzHour, static_cast<int8_t>(atoi(value))); return true; }
-  if (strEquals(command, "tzm"))    { config.saveValue(&config.store.tzMin, static_cast<int8_t>(atoi(value))); return true; }
-  if (strEquals(command, "sntp2"))  { config.saveValue(config.store.sntp2, value, 35, false); return true; }
-  if (strEquals(command, "sntp1"))  {  config.setSntpOne(value); return true; }
-  
   if (strEquals(command, "volsteps"))         { config.saveValue(&config.store.volsteps, static_cast<uint8_t>(atoi(value))); return true; }
   if (strEquals(command, "encacc"))  { setEncAcceleration(static_cast<uint16_t>(atoi(value))); return true; }
   if (strEquals(command, "irtlp"))            { setIRTolerance(static_cast<uint8_t>(atoi(value))); return true; }

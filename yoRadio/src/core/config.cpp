@@ -381,20 +381,7 @@ void Config::setScreensaverPlayingBlank(bool val){
   EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
 #endif
 }
-void Config::setSntpOne(const char *val){
-  bool tzdone = false;
-  if (strlen(val) > 0 && strlen(store.sntp2) > 0) {
-    configTime(store.tzHour * 3600 + store.tzMin * 60, getTimezoneOffset(), val, store.sntp2);
-    tzdone = true;
-  } else if (strlen(val) > 0) {
-    configTime(store.tzHour * 3600 + store.tzMin * 60, getTimezoneOffset(), val);
-    tzdone = true;
-  }
-  if (tzdone) {
-    network.forceTimeSync = true;
-    saveValue(config.store.sntp1, val, 35);
-  }
-}
+
 void Config::setShowweather(bool val){
   config.saveValue(&config.store.showweather, val);
   network.trueWeather=false;
@@ -469,16 +456,7 @@ void Config::resetSystem(const char *val, uint8_t clientId){
     netserver.requestOnChange(GETSCREEN, clientId);
     return;
   }
-  if (strcmp(val, "timezone") == 0) {
-    saveValue(&store.tzHour, (int8_t)3, false);
-    saveValue(&store.tzMin, (int8_t)0, false);
-    saveValue(store.sntp1, "pool.ntp.org", 35, false);
-    saveValue(store.sntp2, "0.ru.pool.ntp.org", 35);
-    configTime(store.tzHour * 3600 + store.tzMin * 60, getTimezoneOffset(), store.sntp1, store.sntp2);
-    network.forceTimeSync = true;
-    netserver.requestOnChange(GETTIMEZONE, clientId);
-    return;
-  }
+
   if (strcmp(val, "weather") == 0) {
     saveValue(&store.showweather, false, false);
     saveValue(store.weatherlat, "55.7512", 10, false);
@@ -523,9 +501,6 @@ void Config::setDefaults() {
   store.lastSSID = 0;
   store.audioinfo = false;
   store.smartstart = 2;
-  store.tzHour = 3;
-  store.tzMin = 0;
-  store.timezoneOffset = 0;
 
   store.vumeter=false;
   store.softapdelay=0;
@@ -537,8 +512,6 @@ void Config::setDefaults() {
   store.dspon=true;
   store.brightness=100;
   store.contrast=55;
-  strlcpy(store.sntp1,"pool.ntp.org", 35);
-  strlcpy(store.sntp2,"1.ru.pool.ntp.org", 35);
   store.showweather=false;
   strlcpy(store.weatherlat,"55.7512", 10);
   strlcpy(store.weatherlon,"37.6184", 10);
@@ -570,19 +543,6 @@ void Config::setDefaults() {
   store.screensaverPlayingTimeout = 5;
   store.screensaverPlayingBlank = false;
   eepromWrite(EEPROM_START, store);
-}
-
-void Config::setTimezone(int8_t tzh, int8_t tzm) {
-  saveValue(&store.tzHour, tzh, false);
-  saveValue(&store.tzMin, tzm);
-}
-
-void Config::setTimezoneOffset(uint16_t tzo) {
-  saveValue(&store.timezoneOffset, tzo);
-}
-
-uint16_t Config::getTimezoneOffset() {
-  return 0; // TODO
 }
 
 void Config::setSnuffle(bool sn){

@@ -8,7 +8,9 @@
 #include "sdmanager.h"
 #include "netserver.h"
 #include "evtloop.h"
+#include "templates.hpp"
 #include "log.h"
+
 
 Player* player{nullptr};
 

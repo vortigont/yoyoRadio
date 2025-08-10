@@ -8,6 +8,7 @@
 */
 #pragma once
 #include "esp_event.h"
+#include "traits.hpp"     // embui's traits, needed for e2int()
 
 // helper macro to reduce typing
 #define EVT_POST(event_base, event_id) esp_event_post_to(evt::get_hndlr(), event_base, event_id, NULL, 0, portMAX_DELAY)
@@ -147,12 +148,3 @@ struct audio_into_t {
   };
 
 } // namespace evt
-
-// cast enum to int
-template <class E>
-constexpr std::common_type_t<int, std::underlying_type_t<E>>
-e2int(E e) {
-    return static_cast<std::common_type_t<int, std::underlying_type_t<E>>>(e);
-}
-
-

@@ -40,7 +40,7 @@ class Player: public Audio {
     void _play(uint16_t stationId);
     void _loadVol(uint8_t volume);
 
-  protected:
+protected:
     virtual void dac_init();
 
 public:

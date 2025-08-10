@@ -5,3 +5,5 @@ include/embed.h
 myoptions*
 user_*.ini
 displayL10n_custom.h
+myoptions*
+user_*.ini

@@ -99,9 +99,6 @@ struct config_t
   uint8_t   lastSSID;
   bool      audioinfo;
   uint8_t   smartstart;
-  int8_t    tzHour;
-  int8_t    tzMin;
-  uint16_t  timezoneOffset;
   bool      vumeter;
   uint8_t   softapdelay;
   bool      flipscreen;
@@ -112,8 +109,6 @@ struct config_t
   bool      dspon;
   uint8_t   brightness;
   uint8_t   contrast;
-  char      sntp1[35];
-  char      sntp2[35];
   bool      showweather;
   char      weatherlat[10];
   char      weatherlon[10];
