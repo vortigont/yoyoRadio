@@ -71,7 +71,7 @@ void ClockWidget::_drawDate(tm* t, Arduino_GFX* dsp){
   char buff[100];
   // date format "1 января / понедельник"
   snprintf(buff, std::size(buff), "%d %s / %s", t->tm_mday, mnths[t->tm_mon], dcfg.dow_short ? dowf[t->tm_wday] : dowf[t->tm_wday]);
-  LOGD(T_Clock, println, buff);
+  //LOGD(T_Clock, println, buff);
   // recalculate area for clock and save it to be cleared later
   dsp->setFont(dcfg.font);
   dsp->setTextSize(dcfg.font_date_size);

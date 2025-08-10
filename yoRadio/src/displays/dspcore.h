@@ -5,7 +5,9 @@
 #include "gfx_lib.h"
 #include "Ticker.h"
 #include "nextion.h"
-#include "muiplusplus.hpp"
+#ifdef _ARDUINO_GFX_H_
+#include "widgets/muipp_widgets.hpp"
+#endif
 
 #ifdef NOT_NEEDED
 /**
@@ -249,8 +251,6 @@ private:
     void _layoutChange(bool played);
     void _setRSSI(int rssi);
 
-    void _build_main_screen();
-
     /**
      * @brief create and initialize widgets
      * 
@@ -284,6 +284,24 @@ private:
 
     // state change events handler
     void _events_chg_hndlr(int32_t id, void* data);
+
+    // *************************************************
+    // ************* MuiPP screen sets *****************
+
+    // *** Main Screen ***
+    // a set of widgets for Main screen (where radio plays)
+
+    /**
+     * @brief static text with device's status
+     * i.e. 'mode', 'playback'...
+     * 
+     */
+    MuiItem_pt _title_status;
+
+    void _build_main_screen();
+
+
+
 };
 #endif    // _ARDUINO_GFX_H_
 

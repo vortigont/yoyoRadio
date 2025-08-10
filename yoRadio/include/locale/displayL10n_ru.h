@@ -1,82 +1,86 @@
-#ifndef dsp_full_loc
-#define dsp_full_loc
-#include <pgmspace.h>
+#pragma once
+#include <array>
 /*************************************************************************************
     HOWTO:
     Copy this file to yoRadio/locale/displayL10n_custom.h
     and modify it
 *************************************************************************************/
-const char mon[] PROGMEM = "пн";
-const char tue[] PROGMEM = "вт";
-const char wed[] PROGMEM = "ср";
-const char thu[] PROGMEM = "чт";
-const char fri[] PROGMEM = "пт";
-const char sat[] PROGMEM = "сб";
-const char sun[] PROGMEM = "вс";
+static const char mon[] = "пн";
+static const char tue[] = "вт";
+static const char wed[] = "ср";
+static const char thu[] = "чт";
+static const char fri[] = "пт";
+static const char sat[] = "сб";
+static const char sun[] = "вс";
 
-const char monf[] PROGMEM = "понедельник";
-const char tuef[] PROGMEM = "вторник";
-const char wedf[] PROGMEM = "среда";
-const char thuf[] PROGMEM = "четверг";
-const char frif[] PROGMEM = "пятница";
-const char satf[] PROGMEM = "суббота";
-const char sunf[] PROGMEM = "воскресенье";
+static const char monf[] = "понедельник";
+static const char tuef[] = "вторник";
+static const char wedf[] = "среда";
+static const char thuf[] = "четверг";
+static const char frif[] = "пятница";
+static const char satf[] = "суббота";
+static const char sunf[] = "воскресенье";
 
-const char jan[] PROGMEM = "января";
-const char feb[] PROGMEM = "февраля";
-const char mar[] PROGMEM = "марта";
-const char apr[] PROGMEM = "апреля";
-const char may[] PROGMEM = "мая";
-const char jun[] PROGMEM = "июня";
-const char jul[] PROGMEM = "июля";
-const char aug[] PROGMEM = "августа";
-const char sep[] PROGMEM = "сентября";
-const char octt[] PROGMEM = "октября";
-const char nov[] PROGMEM = "ноября";
-const char decc[] PROGMEM = "декабря";
+static const char jan[] = "января";
+static const char feb[] = "февраля";
+static const char mar[] = "марта";
+static const char apr[] = "апреля";
+static const char may[] = "мая";
+static const char jun[] = "июня";
+static const char jul[] = "июля";
+static const char aug[] = "августа";
+static const char sep[] = "сентября";
+static const char octt[] = "октября";
+static const char nov[] = "ноября";
+static const char decc[] = "декабря";
 
-const char wn_N[]      PROGMEM = "СЕВ";
-const char wn_NNE[]    PROGMEM = "ССВ";
-const char wn_NE[]     PROGMEM = "СВ";
-const char wn_ENE[]    PROGMEM = "ВСВ";
-const char wn_E[]      PROGMEM = "ВОСТ";
-const char wn_ESE[]    PROGMEM = "ВЮВ";
-const char wn_SE[]     PROGMEM = "ЮВ";
-const char wn_SSE[]    PROGMEM = "ЮЮВ";
-const char wn_S[]      PROGMEM = "ЮЖ";
-const char wn_SSW[]    PROGMEM = "ЮЮЗ";
-const char wn_SW[]     PROGMEM = "ЮЗ";
-const char wn_WSW[]    PROGMEM = "ЗЮЗ";
-const char wn_W[]      PROGMEM = "ЗАП";
-const char wn_WNW[]    PROGMEM = "ЗСЗ";
-const char wn_NW[]     PROGMEM = "СЗ";
-const char wn_NNW[]    PROGMEM = "ССЗ";
+static const char wn_N[]      = "СЕВ";
+static const char wn_NNE[]    = "ССВ";
+static const char wn_NE[]     = "СВ";
+static const char wn_ENE[]    = "ВСВ";
+static const char wn_E[]      = "ВОСТ";
+static const char wn_ESE[]    = "ВЮВ";
+static const char wn_SE[]     = "ЮВ";
+static const char wn_SSE[]    = "ЮЮВ";
+static const char wn_S[]      = "ЮЖ";
+static const char wn_SSW[]    = "ЮЮЗ";
+static const char wn_SW[]     = "ЮЗ";
+static const char wn_WSW[]    = "ЗЮЗ";
+static const char wn_W[]      = "ЗАП";
+static const char wn_WNW[]    = "ЗСЗ";
+static const char wn_NW[]     = "СЗ";
+static const char wn_NNW[]    = "ССЗ";
 
-const char* const dow[]     PROGMEM = { sun, mon, tue, wed, thu, fri, sat };
-const char* const dowf[]    PROGMEM = { sunf, monf, tuef, wedf, thuf, frif, satf };
-const char* const mnths[]   PROGMEM = { jan, feb, mar, apr, may, jun, jul, aug, sep, octt, nov, decc };
-const char* const wind[]    PROGMEM = { wn_N, wn_NNE, wn_NE, wn_ENE, wn_E, wn_ESE, wn_SE, wn_SSE, wn_S, wn_SSW, wn_SW, wn_WSW, wn_W, wn_WNW, wn_NW, wn_NNW, wn_N };
+static const char* const dow[]     = { sun, mon, tue, wed, thu, fri, sat };
+static const char* const dowf[]    = { sunf, monf, tuef, wedf, thuf, frif, satf };
+static const char* const mnths[]   = { jan, feb, mar, apr, may, jun, jul, aug, sep, octt, nov, decc };
+static const char* const wind[]    = { wn_N, wn_NNE, wn_NE, wn_ENE, wn_E, wn_ESE, wn_SE, wn_SSE, wn_S, wn_SSW, wn_SW, wn_WSW, wn_W, wn_WNW, wn_NW, wn_NNW, wn_N };
 
-const char    const_PlReady[]    PROGMEM = "[готов]";
-const char  const_PlStopped[]    PROGMEM = "[остановлено]";
-const char  const_PlConnect[]    PROGMEM = "[соединение]";
-const char  const_DlgVolume[]    PROGMEM = "ГРОМКОСТЬ";
-const char    const_DlgLost[]    PROGMEM = "ОТКЛЮЧЕНО";
-const char  const_DlgUpdate[]    PROGMEM = "ОБНОВЛЕНИЕ";
-const char const_DlgNextion[]    PROGMEM = "NEXTION";
-const char const_getWeather[]    PROGMEM = "";
-const char  const_waitForSD[]    PROGMEM = "ИНДЕКС SD";
+// device states, must match to evt::yo_state enum
+static constexpr std::array<const char*,2> device_state_literal = {
+"[простой]",
+"[web-поток]"
+};
 
-const char        apNameTxt[]    PROGMEM = "ТОЧКА ДОСТУПА";
-const char        apPassTxt[]    PROGMEM = "ПАРОЛЬ";
-const char       bootstrFmt[]    PROGMEM = "Соединяюсь с %s";
-const char        apSettFmt[]    PROGMEM = "НАСТРОЙКИ: HTTP://%s/";
+static const char    const_PlReady[]    = "[готов]";
+static const char  const_PlStopped[]    = "[остановлено]";
+static const char  const_PlConnect[]    = "[соединение]";
+static const char  const_DlgVolume[]    = "ГРОМКОСТЬ";
+static const char    const_DlgLost[]    = "ОТКЛЮЧЕНО";
+static const char  const_DlgUpdate[]    = "ОБНОВЛЕНИЕ";
+static const char const_DlgNextion[]    = "NEXTION";
+static const char const_getWeather[]    = "";
+static const char  const_waitForSD[]    = "ИНДЕКС SD";
+
+static const char        apNameTxt[]    = "ТОЧКА ДОСТУПА";
+static const char        apPassTxt[]    = "ПАРОЛЬ";
+static const char       bootstrFmt[]    = "Соединяюсь с %s";
+static const char        apSettFmt[]    = "НАСТРОЙКИ: HTTP://%s/";
 #if EXT_WEATHER
-const char       weatherFmt[]    PROGMEM = "%s, %.1f\011C \007 ощущается: %.1f\011C \007 давление: %d мм \007 влажность: %s%% \007 ветер: %.1f м/с [%s]";
+static const char       weatherFmt[]    = "%s, %.1f\011C \007 ощущается: %.1f\011C \007 давление: %d мм \007 влажность: %s%% \007 ветер: %.1f м/с [%s]";
 #else
-const char       weatherFmt[]    PROGMEM = "%s, %.1f\011C \007 давление: %d mm \007 влажность: %s%%";
+static const char       weatherFmt[]    = "%s, %.1f\011C \007 давление: %d mm \007 влажность: %s%%";
 #endif
-const char     weatherUnits[]    PROGMEM = "metric";   /* standard, metric, imperial */
-const char      weatherLang[]    PROGMEM = "ru";       /* https://openweathermap.org/current#multi */
+static const char     weatherUnits[]    = "metric";   /* standard, metric, imperial */
+static const char      weatherLang[]    = "ru";       /* https://openweathermap.org/current#multi */
 
-#endif

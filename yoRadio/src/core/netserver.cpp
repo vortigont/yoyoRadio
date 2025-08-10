@@ -52,9 +52,9 @@ void send_playlist(AsyncWebServerRequest * request);
 
 // **************
 // EmbUI handlers declarations
-void ui_page_selector(Interface *interf, JsonObjectConst data, const char* action);
+void ui_page_selector(Interface *interf, JsonVariantConst data, const char* action);
 void ui_page_main(Interface *interf, JsonVariantConst data, const char* action);
-void ui_page_radio(Interface *interf, JsonObjectConst data, const char* action);
+void ui_page_radio(Interface *interf, JsonVariantConst data, const char* action);
 
 
 // **************
@@ -91,7 +91,7 @@ void ui_page_main(Interface *interf, JsonVariantConst data, const char* action){
  * using common selector simplifes and reduces a number of registered actions required 
  * 
  */
-void ui_page_selector(Interface *interf, JsonObjectConst data, const char* action){
+void ui_page_selector(Interface *interf, JsonVariantConst data, const char* action){
   // get a page index
   int idx = data;
 
@@ -105,7 +105,7 @@ void ui_page_selector(Interface *interf, JsonObjectConst data, const char* actio
 
 
 // build page with radio (default page that opens on new conects)
-void ui_page_radio(Interface *interf, JsonObjectConst data, const char* action){
+void ui_page_radio(Interface *interf, JsonVariantConst data, const char* action){
   interf->json_frame_interface();
   interf->json_section_uidata();
     interf->uidata_pick( "yo.pages.radio" );
@@ -124,7 +124,9 @@ void embui_actions_register(){
   // simple handlers
 
   // Player - play station # from a playlist
-  embui.action.add(T_player_playstation, [](Interface *interf, JsonObjectConst data, const char* action){ int v = data; EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &v, sizeof(v)); });
+  embui.action.add(T_player_playstation, [](Interface *interf, JsonVariantConst data, const char* action){
+                    int v = data.as<int>(); LOGI("Ntwrk", printf, "CMD Play station:%d\n", v); EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &v, sizeof(v));
+                  });
 }
 
 void handleIndex(AsyncWebServerRequest * request);

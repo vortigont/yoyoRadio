@@ -20,7 +20,7 @@ ESP_EVENT_DECLARE_BASE(YO_GET_STATE_EVENTS);    // declaration of Yo "Get State"
 ESP_EVENT_DECLARE_BASE(YO_NTF_STATE_EVENTS);    // declaration of Yo "Notify State" command events - this a current state reporting event (those events are published on request, not on change!!!)
 ESP_EVENT_DECLARE_BASE(YO_CHG_STATE_EVENTS);    // declaration of Yo "Change State" notification events base (those events are published when some state changes or in reply to "cmd set" events)
 
-// Lamp's Event Loop
+// Radio's Event Loop
 namespace evt {
 
 
@@ -56,6 +56,7 @@ enum class yo_event_t:int32_t {
   playerAudioInfo,          // player notifies about current's data/stream meta, param audio_into_t
 
   // Device modes
+  devMode = 50,             // set/notify about generic device mode changes, param - a member of yo_state enum. Dev modes has respective literal naming
 
   // Display events
   displayAudioInfo = 60,
@@ -101,7 +102,17 @@ enum class yo_event_t:int32_t {
   noop_end                  // NoOp
 };
 
+/**
+ * @brief generic device states
+ * @note mnemonic strings for the states should be places in static array 'device_state_literal'
+ * should be located in locale's header file
+ * 
+ */
+enum class yo_state:int32_t {
+  idle = 0,
+  webstream
 
+};
 
 // structs that could be used as event payload
 
@@ -113,6 +124,8 @@ struct audio_into_t {
   uint32_t bitRate;
   const char *codecName;
 };
+
+
 
 
   /**

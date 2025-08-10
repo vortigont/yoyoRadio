@@ -190,11 +190,11 @@ void Player::_play(uint16_t stationId) {
   setOutputPins(false);
   //config.setTitle(config.getMode()==PM_WEB?const_PlConnect:"");
   if(!config.loadStation(stationId)) return;
-  config.setTitle(config.getMode()==PM_WEB?const_PlConnect:"[next track]");
+  //config.setTitle(config.getMode() == PM_WEB ? const_PlConnect:"[next track]");
   
   _loadVol(config.store.volume);
 
-  EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewStation));
+  //EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewStation));
 
   netserver.requestOnChange(STATION, 0);
   // todo: why do this netserver loop calls from here??? it's a wrong thread to execute without proper locking!
@@ -209,7 +209,10 @@ void Player::_play(uint16_t stationId) {
   } else {
     config.saveValue(&config.store.play_mode, static_cast<uint8_t>(PM_WEB));
   }
-  if(config.getMode()==PM_WEB) isConnected=connecttohost(config.station.url);
+  // try to connect to remote host
+  if(config.getMode()==PM_WEB)
+    isConnected=connecttohost(config.station.url);
+
   if(isConnected){
   //if (config.store.play_mode==PM_WEB?connecttohost(config.station.url):connecttoFS(SD,config.station.url,config.sdResumePos==0?_resumeFilePos:config.sdResumePos-player.sd_min)) {
     _status = PLAYING;
@@ -223,13 +226,14 @@ void Player::_play(uint16_t stationId) {
     netserver.requestOnChange(MODE, 0);
     setOutputPins(true);
 
-    int32_t d = PLAYER;
-    EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
-    EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayPStart));
+    // notify that device has switched to 'webstream' playback mode
+    int32_t d = e2int(evt::yo_state::webstream);
+    EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::devMode), &d, sizeof(d));
 
-    if (player_on_start_play) player_on_start_play();
+    if (player_on_start_play)
+      player_on_start_play();
     pm.on_start_play();
-  }else{
+  } else {
     telnet.printf("##ERROR#:\tError connecting to %s\n", config.station.url);
     SET_PLAY_ERROR("Error connecting to %s", config.station.url);
     _stop(true);
@@ -371,7 +375,7 @@ void Player::_play_station_from_playlist(int idx){
   if (idx > 0)
     config.setLastStation(idx);
 
-  _play(abs(idx));
+   _play(abs(idx));
 
   EVT_POST(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerPlay));
   if (player_on_station_change)   // todo: this should be moved to event handling

@@ -22,6 +22,17 @@ static const clock_date_cfg_t date_cfg{
   true, false, false      //print_date, dow_short, month_short;
 };
 
+// Device status text widet
+#define TITLE_STATUS_POSITION_X TFT_WIDTH/2
+#define TITLE_STATUS_POSITION_Y 10
+
+static constexpr AGFX_text_t title_status_cfg{
+  RGB565_WHITE, 0,        // color, bgcolor;
+  FONT_DEFAULT_U8G2,
+  muipp::text_align_t::center, muipp::text_align_t::baseline, //  muipp::text_align_t halign{muipp::text_align_t::left}, valign{muipp::text_align_t::baseline};
+  true                    // transp_bg
+};
+
 /* STRINGS  */
 static const char         numtxtFmt[]    = "%d";
 static const char           rssiFmt[]    = "WiFi %d";

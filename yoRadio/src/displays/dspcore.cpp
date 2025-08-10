@@ -1,5 +1,4 @@
 #include "dspcore.h"
-#include "widgets/muipp_widgets.hpp"
 #include "gfx_engine.h"
 #include "locale/l10n.h"
 #include "../core/config.h"
@@ -404,6 +403,7 @@ void DisplayGFX::_apScreen() {
 }
 
 void DisplayGFX::_start() {
+  _mpp.clear();
   _build_main_screen();
   _mode = PLAYER;
   config.setTitle(const_PlReady);
@@ -859,6 +859,7 @@ void DisplayGFX::_events_cmd_hndlr(int32_t id, void* data){
   }
 }
 
+// notifications events
 void DisplayGFX::_events_chg_hndlr(int32_t id, void* data){
   LOGV(T_Display, printf, "chg event rcv:%d\n", id);
 
@@ -880,20 +881,33 @@ void DisplayGFX::_events_chg_hndlr(int32_t id, void* data){
       break;
     }
 
+    // device mode change - update "title_status" widget
+    case evt::yo_event_t::devMode : {
+      int32_t v = *static_cast<int32_t*>(data);
+      if (v >= 0 && v < device_state_literal.size()){
+        _title_status->setName(device_state_literal.at(v));
+      }
+    }
+
     default:;
   }
 
 }
 
 void DisplayGFX::_build_main_screen(){
-  _mpp.clear();
   muiItemId root_page = _mpp.makePage();  // root page
+  // Status title
+  _title_status = std::make_shared<MuiItem_AGFX_StaticText>( _mpp.nextIndex(), device_state_literal.at(0), TITLE_STATUS_POSITION_X, TITLE_STATUS_POSITION_Y, title_status_cfg);
+  _mpp.addMuippItem(_title_status, root_page);
+
+  // Clock
   ClockWidget* clk = new ClockWidget(_mpp.nextIndex());
   // pick configs from display-specific include file (conf/display_*)
   clk->cfg = clock_cfg;
   clk->dcfg = date_cfg;
   // move clock object to root page
   _mpp.addMuippItem(clk, root_page);
+
   // this is not a real menu, so no need to activate the items
   //pageAutoSelect(root_page, some_id);
   // start menu from page mainmenu
