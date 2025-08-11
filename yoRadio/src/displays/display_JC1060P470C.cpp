@@ -32,7 +32,7 @@ Arduino_GFX* create_display_dev(){
     dsp_dev = new Dsp_JC1060P470();
 
   gfx = new Arduino_DSI_Display(
-    DSP_WIDTH /* width */, DSP_HEIGHT /* height */, dsipanel, 0 /* rotation */, true /* auto_flush */,
+    DSP_WIDTH /* width */, DSP_HEIGHT /* height */, dsipanel, 0 /* rotation */, false /* auto_flush */,
     LCD_RST /* RST */, jd9165_init_operations, sizeof(jd9165_init_operations) / sizeof(lcd_init_cmd_t));
 
   return gfx;
