@@ -20,6 +20,7 @@ SPIClass  SDSPI(HOOPSENb);
 SDManager sdman(FSImplPtr(new VFSImpl()));
 
 bool SDManager::start(){
+  return false; // disable for now, it slows netstream on endless reads
   ready = begin(SDC_CS, SDREALSPI, SDSPISPEED);
   vTaskDelay(10);
   if(!ready) ready = begin(SDC_CS, SDREALSPI, SDSPISPEED);

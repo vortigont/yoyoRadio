@@ -95,7 +95,7 @@ void AudioController::_stop(bool alreadyStopped){
 
 void AudioController::initHeaders(const char *file) {
   if(strlen(file)==0 || true) return; //TODO Read TAGs
-  audio.connecttoFS(sdman,file);
+  //audio.connecttoFS(sdman,file);
   //eofHeader = false;
   //while(!eofHeader) Audio::loop();
   //netserver.requestOnChange(SDPOS, 0);
@@ -167,7 +167,9 @@ void AudioController::_play(uint16_t stationId) {
   bool isConnected = false;
   audio.stopSong();
   if(config.getMode()==PM_SDCARD && SDC_CS!=255){
-    isConnected = audio.connecttoFS(sdman,config.station.url,config.sdResumePos==0?_resumeFilePos:config.sdResumePos - sd_min);
+    isConnected = false;
+    // disable it for now
+    //isConnected = audio.connecttoFS(sdman,config.station.url,config.sdResumePos==0?_resumeFilePos:config.sdResumePos - sd_min);
   } else {
     config.saveValue(&config.store.play_mode, static_cast<uint8_t>(PM_WEB));
   }
