@@ -53,5 +53,3 @@ private:
   // move clock in screensaver mode / measure brightness
   //void _reconfig(tm* t);
 };
-
-  

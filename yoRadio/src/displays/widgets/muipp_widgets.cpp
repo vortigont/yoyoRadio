@@ -35,7 +35,7 @@ void ClockWidget::_drawTime(tm* t, Arduino_GFX* dsp){
   char buff[std::size("hh:mm")];
   
   std::strftime(std::data(buff), std::size(buff), "%R", t);    // "%R" equivalent to "%H:%M", t->tm_sec % 2 ? "%R" : "%H %M" would blink semicolon
-  LOGD(T_Clock, println, buff );
+  LOGV(T_Clock, println, buff );
   // recalculate area for clock and save it to be cleared later
   dsp->setFont(cfg.font_hours);
   dsp->setTextSize(cfg.font_hours_size);
