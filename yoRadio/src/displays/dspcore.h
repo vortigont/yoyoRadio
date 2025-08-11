@@ -297,6 +297,11 @@ private:
      * 
      */
     MuiItem_pt _title_status;
+    /**
+     * @brief Scroller - for station name
+     * 
+     */
+    std::shared_ptr<MuiItem_AGFX_TextScroller> _scroll_title1;
 
     void _build_main_screen();
 

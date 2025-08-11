@@ -58,7 +58,7 @@ static const char* const wind[]    = { wn_N, wn_NNE, wn_NE, wn_ENE, wn_E, wn_ESE
 
 // device states, must match to evt::yo_state enum
 static constexpr std::array<const char*,2> device_state_literal = {
-"[простой]",
+"[часы]",
 "[web-поток]"
 };
 

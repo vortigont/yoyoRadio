@@ -41,7 +41,7 @@ class Player: public Audio {
     void _loadVol(uint8_t volume);
 
 protected:
-    virtual void dac_init();
+  virtual void dac_init();
 
 public:
     bool lockOutput = true;
@@ -73,6 +73,7 @@ public:
     void stopInfo();
     void setOutputPins(bool isPlaying);
     void setResumeFilePos(uint32_t pos) { _resumeFilePos = pos; }
+
 
 private:
     std::mutex _mtx;

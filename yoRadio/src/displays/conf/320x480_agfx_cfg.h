@@ -22,16 +22,33 @@ static const clock_date_cfg_t date_cfg{
   true, false, false      //print_date, dow_short, month_short;
 };
 
+// ************************
 // Device status text widet
 #define TITLE_STATUS_POSITION_X TFT_WIDTH/2
 #define TITLE_STATUS_POSITION_Y 10
 
-static constexpr AGFX_text_t title_status_cfg{
+static constexpr AGFX_text_t title_status_cfg {
   RGB565_WHITE, 0,        // color, bgcolor;
   FONT_DEFAULT_U8G2,
   muipp::text_align_t::center, muipp::text_align_t::baseline, //  muipp::text_align_t halign{muipp::text_align_t::left}, valign{muipp::text_align_t::baseline};
   true                    // transp_bg
 };
+
+// ************************
+// Scroller
+#define SCROLLER_STATION_POSITION_X 0
+#define SCROLLER_STATION_POSITION_Y 20
+#define SCROLLER_STATION_POSITION_W TFT_WIDTH
+#define SCROLLER_STATION_POSITION_H 20
+#define SCROLLER_STATION_SPEED      40    // pix per second
+
+static constexpr AGFX_text_t scroller_station_cfg {
+  RGB565_OLIVE, 0,        // color, bgcolor;
+  FONT_MEDIUM_U8G2,
+  muipp::text_align_t::left, muipp::text_align_t::baseline, //  muipp::text_align_t halign{muipp::text_align_t::left}, valign{muipp::text_align_t::baseline};
+  false                             // transp_bg
+};
+
 
 /* STRINGS  */
 static const char         numtxtFmt[]    = "%d";

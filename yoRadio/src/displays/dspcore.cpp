@@ -870,25 +870,29 @@ void DisplayGFX::_events_chg_hndlr(int32_t id, void* data){
       evt::audio_into_t* i = reinterpret_cast<evt::audio_into_t*>(data);
       char buf[20];
       snprintf(buf, 20, bitrateFmt, i->codecName);
-/*
-      if (_bitrate)
-        { _bitrate->setText(i->bitRate == 0 ? "n/a" : buf); }
-      if(_fullbitrate) {
-        _fullbitrate->setBitrate(i->bitRate);
-        _fullbitrate->setFormat(i->codecName);
-      } 
-*/
       break;
     }
 
     // device mode change - update "title_status" widget
     case evt::yo_event_t::devMode : {
       int32_t v = *static_cast<int32_t*>(data);
-      if (v >= 0 && v < device_state_literal.size()){
+      if (_title_status && v >= 0 && v < device_state_literal.size()){
         _title_status->setName(device_state_literal.at(v));
       }
     }
+    break;
 
+    // device mode change - update "title_status" widget
+    case evt::yo_event_t::playerStationTitle : {
+      // this is not thread-safe, to be fixed later
+      const char* c = static_cast<const char*>(data);
+      LOGV(T_Display, printf, "get new station title: %s\n", c);
+
+      if (_scroll_title1)
+        _scroll_title1->setText(static_cast<const char*>(data), SCROLLER_STATION_SPEED);
+    }
+    break;
+    
     default:;
   }
 
@@ -907,6 +911,10 @@ void DisplayGFX::_build_main_screen(){
   clk->dcfg = date_cfg;
   // move clock object to root page
   _mpp.addMuippItem(clk, root_page);
+
+  // Scroller - radio title
+  _scroll_title1 = std::make_shared<MuiItem_AGFX_TextScroller>(_mpp.nextIndex(), SCROLLER_STATION_POSITION_X, SCROLLER_STATION_POSITION_Y, SCROLLER_STATION_POSITION_W, SCROLLER_STATION_POSITION_H, scroller_station_cfg);
+  _mpp.addMuippItem(_scroll_title1, root_page);
 
   // this is not a real menu, so no need to activate the items
   //pageAutoSelect(root_page, some_id);

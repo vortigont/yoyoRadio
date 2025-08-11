@@ -6,6 +6,7 @@
 
 // default unicode font
 #define FONT_DEFAULT_U8G2   u8g2_font_6x12_t_cyrillic
+#define FONT_MEDIUM_U8G2    u8g2_font_10x20_t_cyrillic
 #define FONT_DEFAULT_COLOR  62979
 
 // what type of fonts are used for CLock widget (mandatory)

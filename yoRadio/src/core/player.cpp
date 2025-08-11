@@ -225,7 +225,7 @@ void Player::_play(uint16_t stationId) {
 
     // notify that device has switched to 'webstream' playback mode
     int32_t d = e2int(evt::yo_state::webstream);
-    EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::devMode), &d, sizeof(d));
+    EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::devMode), &d, sizeof(d));
 
     if (player_on_start_play)
       player_on_start_play();
@@ -451,18 +451,15 @@ bool printable(const char *info) {
 }
 
 void audio_showstation(const char *info) {
-  LOGI(T_Player, printf, "station: %s\n", info);
-  bool p = printable(info) && (strlen(info) > 0);(void)p;
-  //config.setTitle(p?info:config.station.name);
-  if(player->remoteStationName){
-    config.setStation(p?info:config.station.name);
-    display->putRequest(NEWSTATION);
-    netserver.requestOnChange(STATION, 0);
+  if (strlen(info)){
+    LOGI(T_Player, printf, "Station title: %s\n", info);
+    // copy by value including null terminator
+    EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerStationTitle), info, strlen(info)+1);
   }
 }
 
 void audio_showstreamtitle(const char *info) {
-  LOGI(T_Player, printf, "title: %s\n", info);
+  LOGI(T_Player, printf, "Stream title: %s\n", info);
   //DBGH();
   if (strstr(info, "Account already in use") != NULL || strstr(info, "HTTP/1.0 401") != NULL) player->setError(info);
   bool p = printable(info) && (strlen(info) > 0);
@@ -512,7 +509,7 @@ void audio_beginSDread(){
 }
 
 void audio_id3data(const char *info){  //id3 metadata
-  LOGI(T_Player, printf, "id3: %s\n", info);
+  LOGI(T_Player, printf, "id3data: %s\n", info);
   //telnet.printf("##AUDIO.ID3#: %s\n", info);
 }
 
