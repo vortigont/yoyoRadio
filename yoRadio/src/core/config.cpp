@@ -136,7 +136,8 @@ void Config::changeMode(int newmode){
     sdResumePos = player->getFilePos();   // getFilePos() is not available in recent audio lib
   }
 */
-  if(network.status==SOFT_AP || display->mode()==LOST){
+  // wtf???
+  if(/* network.status==SOFT_AP || */ display->mode()==LOST){
     saveValue(&store.play_mode, static_cast<uint8_t>(PM_SDCARD));
     delay(50);
     ESP.restart();
@@ -168,7 +169,7 @@ void Config::changeMode(int newmode){
     delay(50);
   }
   if(getMode()==PM_WEB) {
-    if(network.status==SDREADY) ESP.restart();
+    //if(network.status==SDREADY) ESP.restart();
     sdman.stop();
   }
   if(!_bootDone) return;
