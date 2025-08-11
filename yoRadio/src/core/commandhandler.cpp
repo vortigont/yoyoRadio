@@ -36,7 +36,7 @@ bool CommandHandler::exec(const char *command, const char *value, uint8_t cid) {
   if (strEquals(command, "vol")){
     int v = atoi(value);
     config.store.volume = v < 0 ? 0 : (v > 254 ? 254 : v);
-    player->setVol(v);
+    player->setVolume(v);
     return true;
   }
   if (strEquals(command, "dspon"))     { config.setDspOn(atoi(value)!=0); return true; }
@@ -95,7 +95,7 @@ bool CommandHandler::exec(const char *command, const char *value, uint8_t cid) {
   if (strEquals(command, "lon"))              { config.saveValue(config.store.weatherlon, value, 10, false); return true; }
   if (strEquals(command, "key"))              { config.setWeatherKey(value); return true; }
   //<-----TODO
-  if (strEquals(command, "volume"))  { player->setVol(static_cast<uint8_t>(atoi(value))); return true; }
+  if (strEquals(command, "volume"))  { player->setVolume(static_cast<uint8_t>(atoi(value))); return true; }
   if (strEquals(command, "sdpos"))   { config.setSDpos(static_cast<uint32_t>(atoi(value))); return true; }
   if (strEquals(command, "snuffle")) { config.setSnuffle(strcmp(value, "true") == 0); return true; }
   if (strEquals(command, "balance")) { config.setBalance(static_cast<uint8_t>(atoi(value))); return true; }

@@ -11,66 +11,59 @@
 #include "log.h"
 
 
-Player* player{nullptr};
+AudioController* player{nullptr};
 
-Player::Player() {}
-
-Player::~Player(){
+AudioController::~AudioController(){
   _events_unsubsribe();
 }
 
 
 void create_player(dac_type_t dac){
   switch (dac){
+    case   dac_type_t::esp32internal :
+      player = new ESP32_Internal_DAC();
+      break;
     case   dac_type_t::ES8311 :
-      player = new PlayerES8311();
+      player = new ES8311Audio();
       break;
     default:
-      player = new Player();
+      player = new ESP32_I2S_Generic();
   }
-
 }
 
 
-void Player::init() {
+void AudioController::init() {
   Serial.print("##[BOOT]#\tplayer.init\t");
   _resumeFilePos = 0;
-  setOutputPins(false);
-  delay(50);
   memset(_plError, 0, PLERR_LN);
-#ifdef MQTT_ROOT_TOPIC
+  #ifdef MQTT_ROOT_TOPIC
   memset(burl, 0, MQTT_BURL_SIZE);
-#endif
-  if(MUTE_PIN!=255) pinMode(MUTE_PIN, OUTPUT);
+  #endif
+  if(MUTE_PIN!=255)
+    pinMode(MUTE_PIN, OUTPUT);
+  setOutputPins(false);
   dac_init();
   setBalance(config.store.balance);
   setTone(config.store.bass, config.store.middle, config.store.trebble);
-  setVolume(0);
   _status = STOPPED;
-  //setOutputPins(false);
   _volTimer=false;
   //randomSeed(analogRead(0));
   #if PLAYER_FORCE_MONO
     forceMono(true);
   #endif
-  _loadVol(config.store.volume);
-  setConnectionTimeout(1700, 3700);
+  _loadVol(40);  // for now
+  //_loadVol(config.store.volume);
+  audio.setConnectionTimeout(1700, 3700);
+  // event bus subscription
   _events_subsribe();
-  Serial.println("done");
 }
 
-void Player::dac_init(){
-  #if !I2S_INTERNAL
-    setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
-  #endif
-}
-
-void Player::stopInfo() {
+void AudioController::stopInfo() {
   config.setSmartStart(0);
   netserver.requestOnChange(MODE, 0);
 }
 
-void Player::setError(const char *e){
+void AudioController::setError(const char *e){
   LOGE(T_Player, printf, "Some error:%s\n", e);
   //strlcpy(_plError, e, PLERR_LN);
   //if(hasError()) {
@@ -78,7 +71,7 @@ void Player::setError(const char *e){
   //}
 }
 
-void Player::_stop(bool alreadyStopped){
+void AudioController::_stop(bool alreadyStopped){
   log_i("%s called", __func__);
   std::lock_guard<std::mutex> lock(_mtx);
 /*
@@ -86,11 +79,11 @@ void Player::_stop(bool alreadyStopped){
     config.sdResumePos = player->getFilePos();  // getFilePos() is obsolete
 */
   _status = STOPPED;
-  stopSong();
+  audio.stopSong();
   setOutputPins(false);
 
   // update stream's meta info
-  evt::audio_into_t info{ 0, player->getCodecname() };
+  evt::audio_into_t info{ 0, audio.getCodecname() };
   EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerAudioInfo), &info, sizeof(info));
   EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayPStop));
 
@@ -100,9 +93,9 @@ void Player::_stop(bool alreadyStopped){
   pm.on_stop_play();
 }
 
-void Player::initHeaders(const char *file) {
+void AudioController::initHeaders(const char *file) {
   if(strlen(file)==0 || true) return; //TODO Read TAGs
-  connecttoFS(sdman,file);
+  audio.connecttoFS(sdman,file);
   //eofHeader = false;
   //while(!eofHeader) Audio::loop();
   //netserver.requestOnChange(SDPOS, 0);
@@ -115,9 +108,9 @@ void Player::initHeaders(const char *file) {
 #ifndef PL_QUEUE_TICKS_ST
   #define PL_QUEUE_TICKS_ST 15
 #endif
-void Player::loop() {
-  Audio::loop();
-  if(!isRunning() && _status==PLAYING)    // todo: remove this and rely on internal logical state instead. It may lead to problems with async events
+void AudioController::loop() {
+  audio.loop();
+  if(!audio.isRunning() && _status==PLAYING)    // todo: remove this and rely on internal logical state instead. It may lead to problems with async events
     _stop(true);
 
   // some volume save timer
@@ -134,13 +127,13 @@ void Player::loop() {
 #endif
 }
 
-void Player::setOutputPins(bool isPlaying) {
+void AudioController::setOutputPins(bool isPlaying) {
   if(REAL_LEDBUILTIN!=255) digitalWrite(REAL_LEDBUILTIN, LED_INVERT?!isPlaying:isPlaying);
-  bool _ml = MUTE_LOCK?!MUTE_VAL:(isPlaying?!MUTE_VAL:MUTE_VAL);
+  bool _ml = MUTE_LOCK ? !MUTE_VAL : ( isPlaying ? !MUTE_VAL : MUTE_VAL );
   if(MUTE_PIN!=255) digitalWrite(MUTE_PIN, _ml);
 }
 
-void Player::_play(uint16_t stationId) {
+void AudioController::_play(uint16_t stationId) {
   // todo - this mutex here is taking too much, need to split this method into more atomic calls
   std::lock_guard<std::mutex> lock(_mtx);
   log_i("%s called, stationId=%d", __func__, stationId);
@@ -161,7 +154,7 @@ void Player::_play(uint16_t stationId) {
   if(!config.loadStation(stationId)) return;
   //config.setTitle(config.getMode() == PM_WEB ? const_PlConnect:"[next track]");
   
-  _loadVol(config.store.volume);
+  //_loadVol(config.store.volume);
 
   //EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewStation));
 
@@ -172,15 +165,15 @@ void Player::_play(uint16_t stationId) {
   if(config.store.smartstart!=2)
     config.setSmartStart(0);
   bool isConnected = false;
-  stopSong();
+  audio.stopSong();
   if(config.getMode()==PM_SDCARD && SDC_CS!=255){
-    isConnected=connecttoFS(sdman,config.station.url,config.sdResumePos==0?_resumeFilePos:config.sdResumePos - sd_min);
+    isConnected = audio.connecttoFS(sdman,config.station.url,config.sdResumePos==0?_resumeFilePos:config.sdResumePos - sd_min);
   } else {
     config.saveValue(&config.store.play_mode, static_cast<uint8_t>(PM_WEB));
   }
   // try to connect to remote host
   if(config.getMode()==PM_WEB)
-    isConnected=connecttohost(config.station.url);
+    isConnected = audio.connecttohost(config.station.url);
 
   if(isConnected){
   //if (config.store.play_mode==PM_WEB?connecttohost(config.station.url):connecttoFS(SD,config.station.url,config.sdResumePos==0?_resumeFilePos:config.sdResumePos-player.sd_min)) {
@@ -210,7 +203,7 @@ void Player::_play(uint16_t stationId) {
 }
 
 #ifdef MQTT_ROOT_TOPIC
-void Player::browseUrl(){
+void AudioController::browseUrl(){
   setError("");
   remoteStationName = true;
   config.setDspOn(1);
@@ -238,7 +231,7 @@ void Player::browseUrl(){
 }
 #endif
 
-void Player::prev() {
+void AudioController::prev() {
   uint16_t lastStation = config.lastStation();
   if(config.getMode()==PM_WEB || !config.store.sdsnuffle){;
     if (lastStation == 1)
@@ -249,7 +242,7 @@ void Player::prev() {
   _play_station_from_playlist(config.lastStation());
 }
 
-void Player::next() {
+void AudioController::next() {
   uint16_t lastStation = config.lastStation();
   if(config.getMode()==PM_WEB || !config.store.sdsnuffle){
     if (lastStation == config.playlistLength())
@@ -262,7 +255,7 @@ void Player::next() {
   _play_station_from_playlist(config.lastStation());
 }
 
-void Player::toggle() {
+void AudioController::toggle() {
   if (_status == PLAYING) {
     _stop();
   } else {
@@ -270,54 +263,56 @@ void Player::toggle() {
   }
 }
 
-void Player::stepVol(bool up) {
+void AudioController::stepVol(bool up) {
   if (up) {
     if (config.store.volume <= 254 - config.store.volsteps) {
-      setVol(config.store.volume + config.store.volsteps);
+      setVolume(config.store.volume + config.store.volsteps);
     }else{
-      setVol(254);
+      setVolume(254);
     }
   } else {
     if (config.store.volume >= config.store.volsteps) {
-      setVol(config.store.volume - config.store.volsteps);
+      setVolume(config.store.volume - config.store.volsteps);
     }else{
-      setVol(0);
+      setVolume(0);
     }
   }
 }
 
-uint8_t Player::volToI2S(uint8_t volume) {
+uint8_t AudioController::volume_level_adjustment(uint8_t volume) {
+  // some kind of normalizer ?
   int vol = map(volume, 0, 254 - config.station.ovol * 3 , 0, 254);
   if (vol > 254) vol = 254;
   if (vol < 0) vol = 0;
   return vol;
 }
 
-void Player::_loadVol(uint8_t volume) {
-  setVolume(volToI2S(volume));
+void AudioController::_loadVol(uint8_t volume) {
+  setDACVolume(volume_level_adjustment(volume));
 }
 
-void Player::setVol(int32_t volume) {
+void AudioController::setVolume(int32_t volume) {
+  LOGD(T_Player, printf, "setVol:%d\n", volume);
   _volTicks = millis();
   _volTimer = true;
   config.setVolume(volume);
-  Audio::setVolume(volToI2S(volume));
+  setDACVolume(volume_level_adjustment(volume));
 }
 
-void Player::_events_subsribe(){
+void AudioController::_events_subsribe(){
   // command events
   esp_event_handler_instance_register_with(evt::get_hndlr(), YO_CMD_EVENTS, ESP_EVENT_ANY_ID,
-    [](void* self, esp_event_base_t base, int32_t id, void* data){ static_cast<Player*>(self)->_events_cmd_hndlr(id, data); },
+    [](void* self, esp_event_base_t base, int32_t id, void* data){ static_cast<AudioController*>(self)->_events_cmd_hndlr(id, data); },
     this, &_hdlr_cmd_evt
   );
 }
 
-void Player::_events_unsubsribe(){
+void AudioController::_events_unsubsribe(){
   esp_event_handler_instance_unregister_with(evt::get_hndlr(), YO_CMD_EVENTS, ESP_EVENT_ANY_ID, _hdlr_cmd_evt);
 
 }
 
-void Player::_events_cmd_hndlr(int32_t id, void* data){
+void AudioController::_events_cmd_hndlr(int32_t id, void* data){
   switch (static_cast<evt::yo_event_t>(id)){
 
     // Play radio station from a playlist
@@ -333,14 +328,14 @@ void Player::_events_cmd_hndlr(int32_t id, void* data){
 
     // volume control
     case evt::yo_event_t::playerVolume :
-      setVol(*reinterpret_cast<int32_t*>(data));
+      setVolume(*reinterpret_cast<int32_t*>(data));
       break;
 
     default:;
   }
 }
 
-void Player::_play_station_from_playlist(int idx){
+void AudioController::_play_station_from_playlist(int idx){
   if (idx > 0)
     config.setLastStation(idx);
 
@@ -352,18 +347,32 @@ void Player::_play_station_from_playlist(int idx){
   pm.on_station_change();   // todo: this should be moved to event handling  
 }
 
+void AudioController::pubCodecInfo(){
+  evt::audio_into_t info{ audio.getBitRate() / 1000, audio.getCodecname() };
+  EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerAudioInfo), &info, sizeof(info));
+}
 
 
-void PlayerES8311::init(){
-  Player::init();
-  if(!_es.begin(I2C_SDA, I2C_SCL, 400000)) log_e("ES8311 begin failed");
-  _es.setVolume(50);
+//  **************************
+//  *** ESP32_Internal_DAC ***
+//  **************************
+
+
+//  **************************
+//  *** ES8311 DAC         ***
+//  **************************
+
+void ES8311Audio::init(){
+  if(!_es.begin(I2C_SDA, I2C_SCL, 400000)){
+    log_e("ES8311 begin failed");
+    return;
+  }    
+  AudioController::init();
   _es.setBitsPerSample(16);
+  // set program vol to max
+  audio.setVolume(255);
 }
 
-void PlayerES8311::dac_init(){
-  setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT, I2S_MCLK);
-}
 
 
 //=============================================//
@@ -383,8 +392,8 @@ void audio_info(const char *info) {
     so we can use it as a generic trigget to update metadata
   */
   if (strstr(info, "BitsPerSample")  != NULL){
-    evt::audio_into_t info{ player->getBitRate() / 1000, player->getCodecname() };
-    EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerAudioInfo), &info, sizeof(info));
+    // a hackish call
+    player->pubCodecInfo();
   }
 
   if (strstr(info, "Account already in use") != NULL || strstr(info, "HTTP/1.0 401") != NULL) {

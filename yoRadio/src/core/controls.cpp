@@ -471,7 +471,7 @@ void controlsEvent(bool toRight, int8_t volDelta) {
       int nv = config.store.volume+volDelta;
       if(nv<0) nv=0;
       if(nv>254) nv=254;
-      player->setVol((uint8_t)nv);
+      player->setVolume((uint8_t)nv);
     }else{
       player->stepVol(toRight);
     }

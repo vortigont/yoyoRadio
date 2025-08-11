@@ -14,6 +14,7 @@
 
 
 // I2S codec ES8311     http://www.everest-semi.com/pdf/ES8311%20PB.pdf
+// https://components.espressif.com/components/espressif/esp_codec_dev
 #define CODEC_I2S0_DSDIN        9   // I2S_DO
 #define CODEC_I2S0_MCLK         13  // I2S_MCK
 

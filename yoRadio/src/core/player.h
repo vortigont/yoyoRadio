@@ -2,11 +2,8 @@
 #define player_h
 #include "options.h"
 #include <mutex>
-
-#if I2S_DOUT!=255 || I2S_INTERNAL
-  #include "Audio.h"
-  #include "es8311.h"
-#endif
+#include "Audio.h"
+#include "es8311.h"
 
 #ifndef MQTT_BURL_SIZE
   #define MQTT_BURL_SIZE  512
@@ -21,14 +18,20 @@
 
 enum class dac_type_t {
   generic = 0,
+  esp32internal,
   ES8311
 };
 
 enum plStatus_e : uint8_t{ PLAYING = 1, STOPPED = 2 };
 
 
-
-class Player: public Audio {
+/**
+ * @brief generic class to manage Audio lib
+ * it connects Audio lib with playlists, manages states, sends / receives control messages via event bus
+ * HW specific implementations could be implemented in derived classes, i.e. for amplifiers control, etc...
+ * 
+ */
+class AudioController {
 
     uint32_t    _volTicks;   /* delayed volume save  */
     bool        _volTimer;   /* delayed volume save  */
@@ -38,10 +41,34 @@ class Player: public Audio {
 
     void _stop(bool alreadyStopped = false);
     void _play(uint16_t stationId);
+    // restore volume value from nvram
     void _loadVol(uint8_t volume);
 
 protected:
-  virtual void dac_init();
+  Audio audio;
+  /**
+   * @brief DAC initialization, procedure
+   * must be implemented in derived classes
+   */
+  virtual void dac_init() = 0;
+  /**
+   * @brief set DAC volume
+   * must be implemented in derived class
+   * 
+   * @param vol 
+   * @param curve 
+   */
+  virtual void setDACVolume(uint8_t vol, uint8_t curve = 0) = 0;
+  virtual uint8_t getDACVolume() = 0;
+
+  /**
+   * @brief adjusts station's volume according to playlist's correction value
+   * i.e. poor man's normalizer
+   * 
+   * @param volume 
+   * @return uint8_t 
+   */
+  uint8_t volume_level_adjustment(uint8_t volume);
 
 public:
     bool lockOutput = true;
@@ -51,10 +78,34 @@ public:
     char      burl[MQTT_BURL_SIZE];  /* buffer for browseUrl  */
     #endif
 
-    Player();
-    virtual ~Player();
+    AudioController() = default;
+    virtual ~AudioController();
 
+    // virtual methods
     virtual void init();
+    // volume, tembre control - maps to Audio lib methods by default
+    virtual void setBalance(int8_t bal = 0){ audio.setBalance(bal); };
+    virtual void setTone(int8_t low, int8_t band, int8_t high){ audio.setTone(low, band, high); }
+
+    /**
+     * @brief Set player's Volume
+     * @note volume range is 0-255 (defined by Audio lib)
+     * @note saves applied volume value to nvram
+     * @param vol 
+     */
+    void setVolume(int32_t vol);
+
+    /**
+     * @brief Get player's Volume
+     * should do reverse scaling (not implemented yet)
+     * 
+     * @return int32_t 
+     */
+    int32_t getVolume() { return getDACVolume(); };
+    
+    //virtual void setVolumeSteps(uint8_t steps){ audio.setVolumeSteps(steps); };
+
+
     void loop();
     void initHeaders(const char *file);
     void setError(const char *e);
@@ -68,11 +119,21 @@ public:
     void next();
     void toggle();
     void stepVol(bool up);
-    void setVol(int32_t volume);
-    uint8_t volToI2S(uint8_t volume);
+
     void stopInfo();
     void setOutputPins(bool isPlaying);
     void setResumeFilePos(uint32_t pos) { _resumeFilePos = pos; }
+
+    // publishing methods (a hack due to missing callbacks in Audio lib)
+    void pubCodecInfo();
+    // needed in Config::changeMode for some reason
+    bool isRunning(){ return audio.isRunning(); }
+    bool setFilePos(uint32_t pos){ return audio.setFilePos(pos); };
+    // needed in src/core/netserver.cpp
+    uint32_t getFileSize(){ return audio.getFileSize(); };
+    uint32_t getAudioCurrentTime(){ return audio.getAudioCurrentTime(); };
+    uint32_t getAudioFileDuration(){ return getAudioFileDuration(); };
+
 
 
 private:
@@ -105,19 +166,46 @@ private:
     void _events_cmd_hndlr(int32_t id, void* data);
 };
 
+// 
+/**
+ * @brief ESP32 internal DAC
+ * @note only for classic ESP32 boards! Not applicable for S2/S3 and newer
+ * 
+ */
+class ESP32_Internal_DAC : public AudioController {
+  void dac_init() override {};
+  void setDACVolume(uint8_t vol, uint8_t curve = 0) override { audio.setVolume( vol, curve); }
+  uint8_t getDACVolume() override { return audio.getVolume(); }
 
-class PlayerES8311 : public Player {
+public:
+  ESP32_Internal_DAC() = default;
+};
+
+// generic I2S DAC for ESP32 with software volume control
+class ESP32_I2S_Generic : public AudioController {
+  void dac_init() override { audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT); };
+  void setDACVolume(uint8_t vol, uint8_t curve = 0) override { audio.setVolume( vol, curve); }
+  uint8_t getDACVolume() override { return audio.getVolume(); }
+
+public:
+  ESP32_I2S_Generic() = default;
+};
+
+// ES8311 chip DAC with volume control over i2c
+class ES8311Audio : public AudioController {
   ES8311 _es;
-  void dac_init() override;
 
-  public:
-  PlayerES8311() = default;
+  void dac_init() override { audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT, I2S_MCLK); };
+  void setDACVolume(uint8_t vol, uint8_t curve = 0) override { _es.setVolume(vol); };
+  uint8_t getDACVolume() override { return _es.getVolume(); }
+
+public:
+  ES8311Audio() = default;
   void init() override;
-
 };
 
 // ******************
-extern Player* player;
+extern AudioController* player;
 
 extern __attribute__((weak)) void player_on_start_play();
 extern __attribute__((weak)) void player_on_stop_play();
