@@ -108,23 +108,6 @@ The connection tables are located here https://github.com/e2002/yoradio#connecti
   #define I2C_RST -1
 #endif
 
-/*        VS1053                  */
-#ifndef VS1053_CS
-  #define VS1053_CS     255 // 27
-#endif
-#ifndef VS1053_DCS
-  #define VS1053_DCS    25
-#endif
-#ifndef VS1053_DREQ
-  #define VS1053_DREQ   26
-#endif
-#ifndef VS1053_RST
-  #define VS1053_RST    -1    // set to -1 if connected to Esp EN pin
-#endif
-#ifndef VS_HSPI
-  #define VS_HSPI   false      // use HSPI for VS1053 (miso=12, mosi=13, clk=14) instead of VSPI (by default)
-#endif
-
 /*        I2S DAC                 */
 #ifndef DAC_TYPE
   #define DAC_TYPE      dac_type_t::generic  // type if used DAC, must a member of dac_type_t

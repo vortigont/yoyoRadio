@@ -6,8 +6,6 @@
 #if I2S_DOUT!=255 || I2S_INTERNAL
   #include "Audio.h"
   #include "es8311.h"
-#else
-  #include "../audioVS1053/audioVS1053Ex.h"
 #endif
 
 #ifndef MQTT_BURL_SIZE
@@ -27,6 +25,8 @@ enum class dac_type_t {
 };
 
 enum plStatus_e : uint8_t{ PLAYING = 1, STOPPED = 2 };
+
+
 
 class Player: public Audio {
 

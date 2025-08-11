@@ -13,29 +13,7 @@
 
 Player* player{nullptr};
 
-#if VS1053_CS!=255 && !I2S_INTERNAL
-  #if VS_HSPI
-    Player::Player(): Audio(VS1053_CS, VS1053_DCS, VS1053_DREQ, &SPI2) {}
-  #else
-    Player::Player(): Audio(VS1053_CS, VS1053_DCS, VS1053_DREQ, &SPI) {}
-  #endif
-  void ResetChip(){
-    pinMode(VS1053_RST, OUTPUT);
-    digitalWrite(VS1053_RST, LOW);
-    delay(30);
-    digitalWrite(VS1053_RST, HIGH);
-    delay(100);
-  }
-#else
-  Player::Player() {}
-/*
-  #if !I2S_INTERNAL
-    Player::Player() {}
-  #else
-    Player::Player(): Audio(true, I2S_DAC_CHANNEL_BOTH_EN)  {}
-  #endif
-*/
-#endif
+Player::Player() {}
 
 Player::~Player(){
   _events_unsubsribe();
@@ -82,15 +60,9 @@ void Player::init() {
 }
 
 void Player::dac_init(){
-  #if I2S_DOUT!=255
-    #if !I2S_INTERNAL
-      setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
-    #endif
-  #else
-    SPI.begin();
-    if(VS1053_RST>0) ResetChip();
-    begin();
-  #endif  
+  #if !I2S_INTERNAL
+    setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
+  #endif
 }
 
 void Player::stopInfo() {
