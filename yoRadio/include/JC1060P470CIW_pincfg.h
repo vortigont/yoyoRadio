@@ -1,7 +1,5 @@
 #pragma once
 
-#define JC1060P470
-
 // Display driver JD9165BA-DS
 #define LCD_H_RES   1024
 #define LCD_V_RES   600
@@ -62,7 +60,9 @@
 #define MUTE_PIN    PA_ENABLE
 #define MUTE_VAL    LOW
 #define DAC_TYPE    dac_type_t::ES8311
+#ifndef DSP_MODEL
 #define DSP_MODEL   DSP_JC1060P470
+#endif
 #define DSP_WIDTH       LCD_H_RES
 #define DSP_HEIGHT      LCD_V_RES
 

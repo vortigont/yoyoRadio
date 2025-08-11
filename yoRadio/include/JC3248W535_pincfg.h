@@ -54,9 +54,9 @@
 #define TS_RST  TOUCH_GPIO_RST
 #define TS_CS   -1
 
-// ArduinoGFX 
-#define DISPLAY_CREATE_OBJECT
-#define DSP_TASK_DELAY      40      // cap display refresh to 25 fsp
+#ifndef DSP_MODEL
+#define DSP_MODEL   DSP_JC3248W535
+#endif
 
 /*
 Links:
