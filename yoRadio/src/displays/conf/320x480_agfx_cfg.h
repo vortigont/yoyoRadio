@@ -35,9 +35,9 @@ static constexpr AGFX_text_t title_status_cfg {
 };
 
 // ************************
-// Scroller
+// Scroller 1 - Station
 #define SCROLLER_STATION_POSITION_X 0
-#define SCROLLER_STATION_POSITION_Y 20
+#define SCROLLER_STATION_POSITION_Y 15
 #define SCROLLER_STATION_POSITION_W TFT_WIDTH
 #define SCROLLER_STATION_POSITION_H 20
 #define SCROLLER_STATION_SPEED      40    // pix per second
@@ -49,6 +49,20 @@ static constexpr AGFX_text_t scroller_station_cfg {
   false                             // transp_bg
 };
 
+// ************************
+// Scroller 2 - Track Title
+#define SCROLLER_TRACK_POSITION_X 0
+#define SCROLLER_TRACK_POSITION_Y 40
+#define SCROLLER_TRACK_POSITION_W TFT_WIDTH
+#define SCROLLER_TRACK_POSITION_H 20
+#define SCROLLER_TRACK_SPEED      40    // pix per second
+
+static constexpr AGFX_text_t scroller_track_cfg {
+  RGB565_CYAN, 0,        // color, bgcolor;
+  FONT_MEDIUM_U8G2,
+  muipp::text_align_t::left, muipp::text_align_t::baseline, //  muipp::text_align_t halign{muipp::text_align_t::left}, valign{muipp::text_align_t::baseline};
+  false                             // transp_bg
+};
 
 /* STRINGS  */
 static const char         numtxtFmt[]    = "%d";

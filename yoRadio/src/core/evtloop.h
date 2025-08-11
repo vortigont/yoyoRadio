@@ -54,7 +54,8 @@ enum class yo_event_t:int32_t {
   playerVolume,             // player's state command/state, param: int n
   playerMode,               // player mode webradio/sdcard, param int n: 0 - for webradio, 1 - for SDCARD
   playerAudioInfo,          // player notifies about current's data/stream meta, param audio_into_t
-  playerStationTitle,       // player notifies about new station title, param - const char* to the station name
+  playerStationTitle,       // player notifies about new station title, param - const char[] to the station name
+  playerTrackTitle,         // player notifies about new track title, param - const char[] to the track name
 
   // Device modes
   devMode = 50,             // set/notify about generic device mode changes, param - a member of yo_state enum. Dev modes has respective literal naming

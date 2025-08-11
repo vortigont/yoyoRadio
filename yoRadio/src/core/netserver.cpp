@@ -370,7 +370,7 @@ void NetServer::processQueue(){
 
       case STATION:
         requestOnChange(STATIONNAME, clientId); requestOnChange(ITEM, clientId); break;
-
+/*
       case STATIONNAME: {
         JsonArray a = obj[P_payload].to<JsonArray>();
         JsonObject o = a.add<JsonObject>();
@@ -378,10 +378,11 @@ void NetServer::processQueue(){
         o["value"] = config.station.name;
         break;
       }
+*/
       case ITEM:
         obj["current"] = config.lastStation();
         break;
-
+/*
       case TITLE: {
         JsonArray a = obj[P_payload].to<JsonArray>();
         JsonObject o = a.add<JsonObject>();
@@ -390,6 +391,7 @@ void NetServer::processQueue(){
         //telnet.printf("##CLI.META#: %s\n> ", config.station.title);
         break;
       }
+*/
       case VOLUME: {
         JsonArray a = obj[P_payload].to<JsonArray>();
         JsonObject o = a.add<JsonObject>();

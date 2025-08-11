@@ -406,7 +406,6 @@ void DisplayGFX::_start() {
   _mpp.clear();
   _build_main_screen();
   _mode = PLAYER;
-  config.setTitle(const_PlReady);
   _state = state_t::normal;
   return;
   LOGV(T_Display, println, "DisplayGFX::_start() end");
@@ -882,14 +881,21 @@ void DisplayGFX::_events_chg_hndlr(int32_t id, void* data){
     }
     break;
 
-    // device mode change - update "title_status" widget
+    // new station title - update "title_status" widget
     case evt::yo_event_t::playerStationTitle : {
       // this is not thread-safe, to be fixed later
       const char* c = static_cast<const char*>(data);
-      LOGV(T_Display, printf, "get new station title: %s\n", c);
-
       if (_scroll_title1)
         _scroll_title1->setText(static_cast<const char*>(data), SCROLLER_STATION_SPEED);
+    }
+    break;
+
+    // new track title - update "title_status" widget
+    case evt::yo_event_t::playerTrackTitle : {
+      // this is not thread-safe, to be fixed later
+      const char* c = static_cast<const char*>(data);
+      if (_scroll_title2)
+        _scroll_title2->setText(static_cast<const char*>(data), SCROLLER_TRACK_SPEED);
     }
     break;
     
@@ -914,8 +920,14 @@ void DisplayGFX::_build_main_screen(){
 
   // Scroller - radio title
   _scroll_title1 = std::make_shared<MuiItem_AGFX_TextScroller>(_mpp.nextIndex(), SCROLLER_STATION_POSITION_X, SCROLLER_STATION_POSITION_Y, SCROLLER_STATION_POSITION_W, SCROLLER_STATION_POSITION_H, scroller_station_cfg);
+  // let it scroll "ёRadio" by default :)
+  _scroll_title1->setText("ёRadio", SCROLLER_STATION_SPEED);
   _mpp.addMuippItem(_scroll_title1, root_page);
 
+  // Scroller - track title
+  _scroll_title2 = std::make_shared<MuiItem_AGFX_TextScroller>(_mpp.nextIndex(), SCROLLER_TRACK_POSITION_X, SCROLLER_TRACK_POSITION_Y, SCROLLER_TRACK_POSITION_W, SCROLLER_TRACK_POSITION_H, scroller_track_cfg);
+  _mpp.addMuippItem(_scroll_title2, root_page);
+  
   // this is not a real menu, so no need to activate the items
   //pageAutoSelect(root_page, some_id);
   // start menu from page mainmenu
@@ -941,7 +953,7 @@ void DisplayDummy::putRequest(displayRequestType_e type, int payload){
 void DisplayNextion::_start(){
   //nextion.putcmd("page player");
   nextion.start();
-  config.setTitle(const_PlReady);
+  //config.setTitle(const_PlReady);
 }
 
 void DisplayNextion::putRequest(displayRequestType_e type, int payload){
@@ -953,7 +965,7 @@ void DisplayNextion::putRequest(displayRequestType_e type, int payload){
 }
 
 void DisplayNextion::_station() {
-  nextion.newNameset(config.station.name);
+  //nextion.newNameset(config.station.name);
   nextion.bitrate(config.station.bitrate);
   nextion.bitratePic(ICON_NA);
 }

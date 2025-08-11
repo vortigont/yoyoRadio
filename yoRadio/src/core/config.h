@@ -150,9 +150,9 @@ struct ircodes_t
 
 struct station_t
 {
-  char name[BUFLEN];
+  //char name[BUFLEN];
   char url[BUFLEN];
-  char title[BUFLEN];
+  //char title[BUFLEN];
   uint32_t bitrate;
   int  ovol;
 };
@@ -200,8 +200,6 @@ class Config {
     uint8_t setLastStation(uint16_t val);
     uint8_t setCountStation(uint16_t val);
     uint8_t setLastSSID(uint8_t val);
-    void setTitle(const char* title);
-    void setStation(const char* station);
     void escapeQuotes(const char* input, char* output, size_t maxLen);
     bool parseCSV(const char* line, char* name, char* url, int &ovol);
     bool parseJSON(const char* line, char* name, char* url, int &ovol);

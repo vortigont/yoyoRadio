@@ -297,11 +297,18 @@ private:
      * 
      */
     MuiItem_pt _title_status;
+
     /**
-     * @brief Scroller - for station name
+     * @brief Scroller #1 - for station name
      * 
      */
     std::shared_ptr<MuiItem_AGFX_TextScroller> _scroll_title1;
+
+    /**
+     * @brief Scroller #2 - for track title
+     * 
+     */
+    std::shared_ptr<MuiItem_AGFX_TextScroller> _scroll_title2;
 
     void _build_main_screen();
 

@@ -99,10 +99,11 @@ void Player::stopInfo() {
 }
 
 void Player::setError(const char *e){
-  strlcpy(_plError, e, PLERR_LN);
-  if(hasError()) {
-    config.setTitle(_plError);
-  }
+  LOGE(T_Player, printf, "Some error:%s\n", e);
+  //strlcpy(_plError, e, PLERR_LN);
+  //if(hasError()) {
+  //  config.setTitle(_plError);
+  //}
 }
 
 void Player::_stop(bool alreadyStopped){
@@ -115,7 +116,6 @@ void Player::_stop(bool alreadyStopped){
   _status = STOPPED;
   stopSong();
   setOutputPins(false);
-  if(!hasError()) config.setTitle((display->mode()==LOST || display->mode()==UPDATING)?"":const_PlStopped);
 
   // update stream's meta info
   evt::audio_into_t info{ 0, player->getCodecname() };
@@ -415,7 +415,6 @@ void audio_info(const char *info) {
     EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerAudioInfo), &info, sizeof(info));
   }
 
-  if (strstr(info, "skip metadata") != NULL) config.setTitle(config.station.name);
   if (strstr(info, "Account already in use") != NULL || strstr(info, "HTTP/1.0 401") != NULL) {
     player->setError(info);
   }
@@ -451,23 +450,14 @@ bool printable(const char *info) {
 }
 
 void audio_showstation(const char *info) {
-  if (strlen(info)){
-    LOGI(T_Player, printf, "Station title: %s\n", info);
-    // copy by value including null terminator
-    EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerStationTitle), info, strlen(info)+1);
-  }
+  LOGI(T_Player, printf, "Station title: %s\n", info);
+  // copy by value including null terminator
+  EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerStationTitle), info, strlen(info)+1);
 }
 
 void audio_showstreamtitle(const char *info) {
   LOGI(T_Player, printf, "Stream title: %s\n", info);
-  //DBGH();
-  if (strstr(info, "Account already in use") != NULL || strstr(info, "HTTP/1.0 401") != NULL) player->setError(info);
-  bool p = printable(info) && (strlen(info) > 0);
-  #ifdef DEBUG_TITLES
-    config.setTitle(DEBUG_TITLES);
-  #else
-    config.setTitle( p ? info : config.station.name);
-  #endif
+  EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerTrackTitle), info, strlen(info)+1);
 }
 
 void audio_error(const char *info) {
@@ -479,33 +469,22 @@ void audio_error(const char *info) {
 
 void audio_id3artist(const char *info){
   LOGI(T_Player, printf, "id3artist: %s\n", info);
-  if(printable(info)) config.setStation(info);
-  display->putRequest(NEWSTATION);
-  netserver.requestOnChange(STATION, 0);
+  //if(printable(info)) config.setStation(info);
+  //display->putRequest(NEWSTATION);
+  //netserver.requestOnChange(STATION, 0);
 }
 
 void audio_id3album(const char *info){
   LOGI(T_Player, printf, "id3album: %s\n", info);
-  if(player->lockOutput) return;
-  if(printable(info)){
-    if(strlen(config.station.title)==0){
-      config.setTitle(info);
-    }else{
-      char out[BUFLEN]= {0};
-      strlcat(out, config.station.title, BUFLEN);
-      strlcat(out, " - ", BUFLEN);
-      strlcat(out, info, BUFLEN);
-      config.setTitle(out);
-    }
-  }
 }
 
 void audio_id3title(const char *info){
-  audio_id3album(info);
+  LOGI(T_Player, printf, "id3title: %s\n", info);
+  //audio_id3album(info);
 }
 
 void audio_beginSDread(){
-  config.setTitle("n/a");
+  //config.setTitle("n/a");
 }
 
 void audio_id3data(const char *info){  //id3 metadata

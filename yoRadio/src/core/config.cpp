@@ -600,22 +600,6 @@ uint8_t Config::setLastSSID(uint8_t val) {
   return store.lastSSID;
 }
 
-void Config::setTitle(const char* title) {
-  vuThreshold = 0;
-  memset(config.station.title, 0, BUFLEN);
-  strlcpy(config.station.title, title, BUFLEN);
-  u8fix(config.station.title);
-  netserver.requestOnChange(TITLE, 0);
-  netserver.loop();
-  EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewTitle));
-}
-
-void Config::setStation(const char* station) {
-  memset(config.station.name, 0, BUFLEN);
-  strlcpy(config.station.name, station, BUFLEN);
-  u8fix(config.station.title);
-}
-
 void Config::indexPlaylist() {
   File playlist = LittleFS.open(PLAYLIST_PATH, "r");
   if (!playlist) {
@@ -660,8 +644,8 @@ bool Config::loadStation(uint16_t ls) {
   uint16_t cs = playlistLength();
   if (cs == 0) {
     memset(station.url, 0, BUFLEN);
-    memset(station.name, 0, BUFLEN);
-    strncpy(station.name, "ёRadio", BUFLEN);
+    //memset(station.name, 0, BUFLEN);
+    //strncpy(station.name, "ёRadio", BUFLEN);
     station.ovol = 0;
     return false;
   }
@@ -677,8 +661,8 @@ bool Config::loadStation(uint16_t ls) {
   playlist.seek(pos, SeekSet);
   if (parseCSV(playlist.readStringUntil('\n').c_str(), sName, sUrl, sOvol)) {
     memset(station.url, 0, BUFLEN);
-    memset(station.name, 0, BUFLEN);
-    strncpy(station.name, sName, BUFLEN);
+    //memset(station.name, 0, BUFLEN);
+    //strncpy(station.name, sName, BUFLEN);
     strncpy(station.url, sUrl, BUFLEN);
     station.ovol = sOvol;
     setLastStation(ls);
