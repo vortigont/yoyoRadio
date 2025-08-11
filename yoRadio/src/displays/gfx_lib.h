@@ -64,9 +64,5 @@
   #include "canvas/Arduino_Canvas.h"
   typedef Arduino_Canvas Canvas;
   #define DISPLAY_ENGINE  Arduino_DSI_Display
-  #if __has_include("conf/display_1024x600_conf_custom.h")
-    #include "conf/display_1024x600_conf_custom.h"
-  #else
-    #include "conf/display_1024x600_conf.h"
-  #endif
+  #include "conf/1024x600_agfx_cfg.h"
 #endif

@@ -1,12 +1,12 @@
 #pragma once
-#include "320x480_agfx_defines.h"
+#include "1024x600_agfx_defines.h"
 #include "../widgets/muipp_widgets.hpp"
 
 // this file contains static structs for widget's configs related to display layout
 
 // Clock
 static const clock_time_cfg_t clock_cfg{
-  0, 100,   // clock print position
+  600, 130,   // clock print position
   &FONT_CLOCK_H, &FONT_CLOCK_S,
   FONT_DEFAULT_COLOR, 0,    // color, bgcolor;
   1, 1,       // font_hours_size, font_seconds_size;
@@ -16,10 +16,10 @@ static const clock_time_cfg_t clock_cfg{
 
 // Date
 static const clock_date_cfg_t date_cfg{
-  0, 150,                 // date print position
+  600, 200,                 // date print position
   FONT_DATE,
   FONT_DEFAULT_COLOR, 0,  //  uint16_t color, bgcolor;
-  2,                      // int font_date_size;
+  1,                      // int font_date_size;
   true, false, false      //print_date, dow_short, month_short;
 };
 
@@ -54,7 +54,7 @@ static constexpr AGFX_text_t scroller_station_cfg {
 // Scroller 2 - Track Title
 #define SCROLLER_TRACK_POSITION_X 0
 #define SCROLLER_TRACK_POSITION_Y 40
-#define SCROLLER_TRACK_POSITION_W TFT_WIDTH
+#define SCROLLER_TRACK_POSITION_W DSP_WIDTH
 #define SCROLLER_TRACK_POSITION_H 20
 #define SCROLLER_TRACK_SPEED      40    // pix per second
 

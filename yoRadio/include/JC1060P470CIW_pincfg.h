@@ -65,3 +65,5 @@
 #define DSP_MODEL   DSP_JC1060P470
 #define DSP_WIDTH       LCD_H_RES
 #define DSP_HEIGHT      LCD_V_RES
+
+#define TFT_BLK     LCD_LED           // display backlight

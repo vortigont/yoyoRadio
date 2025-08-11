@@ -1,5 +1,6 @@
 #if __has_include("Arduino_GFX.h")
-#include "muipp_widgets.hpp"
+#include "../gfx_engine.h"
+//#include "muipp_widgets.hpp"
 #include "agfx.h"
 #include "locale/l10n.h"
 #include "../../core/log.h"
