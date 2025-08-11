@@ -28,13 +28,9 @@ void ticks() {
 #if RTCSUPPORTED
   static const uint32_t timeSyncInterval=86400;
   static uint32_t timeSyncTicks = 0;
-#else
-  static const uint16_t timeSyncInterval=3600;
-  static uint16_t timeSyncTicks = 0;
 #endif
   static uint16_t weatherSyncTicks = 0;
   static bool divrssi;
-  timeSyncTicks++;
   weatherSyncTicks++;
   divrssi = !divrssi;
   if(network.status == CONNECTED){
@@ -220,7 +216,8 @@ void MyNetwork::begin() {
   Serial.println("##[BOOT]#\tdone");
   if(REAL_LEDBUILTIN!=255) digitalWrite(REAL_LEDBUILTIN, LOW);
   
-  ctimer.attach(1, ticks);
+  // disable it for now
+  //ctimer.attach(1, ticks);
   if (network_on_connect) network_on_connect();
   pm.on_connect();
 }
