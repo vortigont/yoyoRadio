@@ -428,7 +428,7 @@ boolean checklpdelay(int m, unsigned long &tstamp) {
 }
 
 void onBtnDuringLongPress(int id) {
-  if (network.status != CONNECTED && network.status!=SDREADY) return;
+  //if (network.status != CONNECTED && network.status!=SDREADY) return;
   if (checklpdelay(BTN_LONGPRESS_LOOP_DELAY, lpdelay)) {
     switch ((controlEvt_e)id) {
       case EVT_BTNLEFT: {
@@ -491,7 +491,7 @@ void onBtnClick(int id) {
   bool passBnCenter = (controlEvt_e)id==EVT_BTNCENTER || (controlEvt_e)id==EVT_ENCBTNB || (controlEvt_e)id==EVT_ENC2BTNB;
   controlEvt_e btnid = static_cast<controlEvt_e>(id);
   pm.on_btn_click(btnid);
-  if (network.status != CONNECTED && network.status!=SDREADY && (controlEvt_e)id!=EVT_BTNMODE && !passBnCenter) return;
+  //if (network.status != CONNECTED && network.status!=SDREADY && (controlEvt_e)id!=EVT_BTNMODE && !passBnCenter) return;
   switch (btnid) {
     case EVT_BTNLEFT: {
         controlsEvent(false);
@@ -523,11 +523,11 @@ void onBtnClick(int id) {
           #endif
           EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &display->currentPlItem, sizeof(display->currentPlItem));
         }
-        if(network.status==SOFT_AP || display->mode()==LOST){
+        //if(network.status==SOFT_AP || display->mode()==LOST){
           #ifdef USE_SD
             config.changeMode();
           #endif
-        }
+        //}
         break;
       }
     case EVT_BTNRIGHT: {
@@ -580,7 +580,7 @@ void onBtnDoubleClick(int id) {
   switch ((controlEvt_e)id) {
     case EVT_BTNLEFT: {
         if (display->mode() != PLAYER) return;
-        if (network.status != CONNECTED && network.status!=SDREADY) return;
+        //if (network.status != CONNECTED && network.status!=SDREADY) return;
         player->prev();
         break;
       }
@@ -592,7 +592,7 @@ void onBtnDoubleClick(int id) {
       }
     case EVT_BTNRIGHT: {
         if (display->mode() != PLAYER) return;
-        if (network.status != CONNECTED && network.status!=SDREADY) return;
+        //if (network.status != CONNECTED && network.status!=SDREADY) return;
         player->next();
         break;
       }

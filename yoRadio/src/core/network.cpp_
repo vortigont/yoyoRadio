@@ -12,7 +12,7 @@
   #define WIFI_ATTEMPTS  16
 #endif
 
-MyNetwork network;
+//MyNetwork network;
 
 TaskHandle_t syncTaskHandle;
 //TaskHandle_t reconnectTaskHandle;

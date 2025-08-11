@@ -35,8 +35,8 @@ class MyNetwork {
     static void WiFiReconnected(WiFiEvent_t event, WiFiEventInfo_t info);
 };
 
-extern MyNetwork network;
+//extern MyNetwork network;
 
-extern __attribute__((weak)) void network_on_connect();
+//extern __attribute__((weak)) void network_on_connect();
 
 #endif

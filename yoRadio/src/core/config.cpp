@@ -384,14 +384,14 @@ void Config::setScreensaverPlayingBlank(bool val){
 
 void Config::setShowweather(bool val){
   config.saveValue(&config.store.showweather, val);
-  network.trueWeather=false;
-  network.forceWeather = true;
+  //network.trueWeather=false;
+  //network.forceWeather = true;
   EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayShowWeather));
 
 }
 void Config::setWeatherKey(const char *val){
   saveValue(store.weatherkey, val, WEATHERKEY_LENGTH);
-  network.trueWeather=false;
+  //network.trueWeather=false;
   int32_t d = CLEAR;
   EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
   d = PLAYER;
@@ -462,7 +462,7 @@ void Config::resetSystem(const char *val, uint8_t clientId){
     saveValue(store.weatherlat, "55.7512", 10, false);
     saveValue(store.weatherlon, "37.6184", 10, false);
     saveValue(store.weatherkey, "", WEATHERKEY_LENGTH);
-    network.trueWeather=false;
+    //network.trueWeather=false;
     int32_t d = CLEAR;
     EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
     d = PLAYER;

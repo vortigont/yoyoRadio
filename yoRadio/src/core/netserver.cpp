@@ -149,7 +149,6 @@ NetServer::~NetServer(){
 }
 
 bool NetServer::begin(bool quiet) {
-  if(network.status==SDREADY) return true;
   if(!quiet) Serial.print("##[BOOT]#\tnetserver.begin\t");
   importRequest = IMDONE;
   irRecordEnable = false;
@@ -275,7 +274,6 @@ void NetServer::processQueue(){
           bool dbgact = false, nxtn=false;
           JsonArray act = obj["act"].to<JsonArray>();
           act.add("group_wifi");
-          if (network.status == CONNECTED) {
             act.add("group_system");
             if (BRIGHTNESS_PIN != 255 || DSP_CAN_FLIPPED || DSP_MODEL == DSP_NOKIA5110 || dbgact)
               act.add("group_display");
@@ -309,7 +307,6 @@ void NetServer::processQueue(){
               act.add("group_encoder");
             if (IR_PIN != 255 || dbgact)
               act.add("group_ir");
-          }
           break;
         }
       //case STARTUP:       sprintf (wsbuf, "{\"command\":\"startup\", \"payload\": {\"mode\":\"%s\", \"version\":\"%s\"}}", network.status == CONNECTED ? "player" : "ap", YOVERSION); break;
@@ -491,7 +488,6 @@ void NetServer::processQueue(){
 }
 
 void NetServer::loop() {
-  if(network.status==SDREADY) return;
   if (shouldReboot) {
     Serial.println("Rebooting...");
     delay(100);
@@ -757,7 +753,8 @@ void send_playlist(AsyncWebServerRequest * request){
   request->send(LittleFS, request->url().c_str(), asyncsrv::T_text_plain);
 }
 
-void handleNotFound(AsyncWebServerRequest * request) {
+void handleNotFound(AsyncWebServerRequest * request) {}
+/*
 #if defined(HTTP_USER) && defined(HTTP_PASS)
   if(network.status == CONNECTED)
     if (request->url() == "/logout") {
@@ -817,6 +814,7 @@ void handleNotFound(AsyncWebServerRequest * request) {
   Serial.println(request->url());
   request->send(404, "text/plain", "Not found");
 }
+*/
 
 void handleIndex(AsyncWebServerRequest * request) {
   if(config.emptyFS){
@@ -847,11 +845,14 @@ void handleIndex(AsyncWebServerRequest * request) {
       return request->requestAuthentication();
     }
 #endif
+/*
+  // obsolete due to EmbUI
   if (strcmp(request->url().c_str(), "/") == 0 && request->params() == 0) {
     if(network.status == CONNECTED) request->send(200, asyncsrv::T_text_html, index_html); else request->redirect("/settings.html");
     return;
   }
-  if(network.status == CONNECTED){
+*/
+  //if(network.status == CONNECTED){
     int paramsNr = request->params();
     if(paramsNr==1){
       const AsyncWebParameter* p = request->getParam(0);
@@ -879,7 +880,7 @@ void handleIndex(AsyncWebServerRequest * request) {
         return;
       }
     }
-  }
+  //}
 
   request->send(404, asyncsrv::T_text_plain, "Not found");  
 }

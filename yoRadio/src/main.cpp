@@ -52,9 +52,6 @@ void setup() {
   LOGI(T_BOOT, println, "Load playlist");
   config.initPlaylistMode();
   
-  LOGI(T_BOOT, println, "Start NetWork");
-  network.begin();
-
   LOGI(T_BOOT, println, "Start WebServer");
   netserver.begin();
   //telnet.begin();
@@ -91,10 +88,7 @@ void setup() {
 
 void loop() {
   //telnet.loop();
-  if (network.status == CONNECTED || network.status==SDREADY) {
-    player->loop();
-    //loopControls();
-  }
+  player->loop();
   loopControls();
   netserver.loop();
   vTaskDelay(1);
