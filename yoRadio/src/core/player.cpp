@@ -1,11 +1,8 @@
-#include <string_view>
 #include "nvs_handle.hpp"
-#include "options.h"
 #include "config.h"
 #include "common.h"
 #include "player.h"
 #include "const_strings.h"
-#include "../displays/dspcore.h"
 #include "locale/l10n.h"
 #include "sdmanager.h"
 #include "netserver.h"
@@ -18,6 +15,7 @@ AudioController* player{nullptr};
 
 AudioController::~AudioController(){
   _events_unsubsribe();
+  _embui_actions_unregister();
 }
 
 void create_player(dac_type_t dac){
@@ -51,6 +49,8 @@ void AudioController::init() {
   audio.setConnectionTimeout(1700, 3700);
   // event bus subscription
   _events_subsribe();
+  // EmbUI messages
+  _embui_actions_register();
 }
 
 void AudioController::stopInfo() {
@@ -259,9 +259,9 @@ void AudioController::_loadVol() {
   }
 }
 
-void AudioController::setVolume(int32_t volume) {
+void AudioController::setVolume(int32_t vol) {
   // since Audio lib takes uint8_t for volume, let's clamp it here anyway
-  volume = clamp(volume, 0L, 255L);
+  volume = clamp(vol, 0L, 255L);
   LOGD(T_Player, printf, "setVolume:%d\n", volume);
   setDACVolume(volume_level_adjustment(volume));
   // save volume value to nvs
@@ -322,7 +322,8 @@ void AudioController::_play_station_from_playlist(int idx){
   if (idx > 0)
     config.setLastStation(idx);
 
-   _play(abs(idx));
+  LOGI(T_Player, printf, "Play station:%d\n", idx);
+  _play(abs(idx));
 
   EVT_POST(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerPlay));
   if (player_on_station_change)   // todo: this should be moved to event handling
@@ -333,6 +334,34 @@ void AudioController::_play_station_from_playlist(int idx){
 void AudioController::pubCodecInfo(){
   evt::audio_into_t info{ audio.getBitRate() / 1000, audio.getCodecname() };
   EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerAudioInfo), &info, sizeof(info));
+}
+
+void AudioController::_embui_actions_register(){
+  // process "player_*" messages from EmbUI
+  embui.action.add(T_player__all, [this](Interface *interf, JsonVariantConst data, const char* action){ _embui_player_commands(interf, data, action); } );
+ 
+}
+
+void AudioController::_embui_actions_unregister(){
+  embui.action.remove(T_player__all);
+}
+
+void AudioController::_embui_player_commands(Interface *interf, JsonVariantConst data, const char* action){
+  // extract message action
+  std::string_view a(action);
+  a.remove_prefix(std::string_view(T_player__all).length()-1); // chop off prefix before '*'
+
+  if(a.compare(T_prev) == 0) return prev();
+
+  if(a.compare(T_next) == 0) return next();
+
+  if(a.compare(T_toggle) == 0) return toggle();
+
+  if(a.compare(T_volUp) == 0) return stepVolume(10);        // for now set the step to 10, todo: make con configurable
+
+  if(a.compare(T_volDown) == 0) return stepVolume(-10);     // for now set the step to 10, todo: make con configurable
+
+  if(a.compare(T_playstation) == 0) return _play_station_from_playlist(data.as<int>());
 }
 
 

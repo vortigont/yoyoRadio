@@ -122,10 +122,6 @@ void embui_actions_register(){
   // ***************
   // simple handlers
 
-  // Player - play station # from a playlist
-  embui.action.add(T_player_playstation, [](Interface *interf, JsonVariantConst data, const char* action){
-                    int v = data.as<int>(); LOGI("Ntwrk", printf, "CMD Play station:%d\n", v); EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &v, sizeof(v));
-                  });
 }
 
 void handleIndex(AsyncWebServerRequest * request);

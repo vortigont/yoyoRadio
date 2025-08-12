@@ -4,6 +4,7 @@
 #include <mutex>
 #include "Audio.h"
 #include "es8311.h"
+#include "EmbUI.h"
 
 #ifndef MQTT_BURL_SIZE
   #define MQTT_BURL_SIZE  512
@@ -103,7 +104,7 @@ public:
      * 
      * @param step value to increment/decrement volume
      */
-    void stepVol(int32_t step){ setVolume( volume + step); };
+    void stepVolume(int32_t step){ setVolume( volume + step); };
     
     //virtual void setVolumeSteps(uint8_t steps){ audio.setVolumeSteps(steps); };
 
@@ -173,6 +174,12 @@ private:
 
     // command events handler
     void _events_cmd_hndlr(int32_t id, void* data);
+
+    // EmbUI handlers
+    void _embui_actions_register();
+    void _embui_actions_unregister();
+    // process "player_*" messages from EmbUI
+    void _embui_player_commands(Interface *interf, JsonVariantConst data, const char* action);
 };
 
 // generic I2S DAC for ESP32 with software volume control

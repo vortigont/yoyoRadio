@@ -17,8 +17,8 @@ bool CommandHandler::exec(const char *command, const char *value, uint8_t cid) {
   if (strEquals(command, "toggle"))   { player->toggle(); return true; }
   if (strEquals(command, "prev"))     { player->prev(); return true; }
   if (strEquals(command, "next"))     { player->next(); return true; }
-  if (strEquals(command, "volm"))     { player->stepVol(false); return true; }
-  if (strEquals(command, "volp"))     { player->stepVol(true); return true; }
+  if (strEquals(command, "volm"))     { player->stepVolume(false); return true; }
+  if (strEquals(command, "volp"))     { player->stepVolume(true); return true; }
 #ifdef USE_SD
   if (strEquals(command, "mode"))     { config.changeMode(atoi(value)); return true; }
 #endif

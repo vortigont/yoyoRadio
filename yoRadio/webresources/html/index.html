@@ -222,11 +222,11 @@
 
 		{{#if html == "playerbuttons"}}
 			<div class="playerbyttonwrap">
-				<div class="playerbytton" id="prevbutton" data-name="prev"></div>
-				<div class="playerbytton stopped" id="playbutton" data-name="play"></div>
-				<div class="playerbytton" id="nextbutton" data-name="next"></div>
-				<div class="playerbytton" id="volmbutton" data-name="volm"></div>
-				<div class="playerbytton" id="volpbutton" data-name="volp"></div>
+				<div class="playerbytton" id="prevbutton" data-name="prev" {{onevent "click", "on_change", "player_prev"}}></div>
+				<div class="playerbytton stopped" id="playbutton" data-name="play" {{onevent "click", "on_change", "player_toggle"}}></div>
+				<div class="playerbytton" id="nextbutton" data-name="next" {{onevent "click", "on_change", "player_next"}}></div>
+				<div class="playerbytton" id="volmbutton" data-name="volm" {{onevent "click", "on_change", "player_volDown"}}></div>
+				<div class="playerbytton" id="volpbutton" data-name="volp" {{onevent "click", "on_change", "player_volUp"}}></div>
 				<div class="playerbytton" id="eqalbutton" data-name="equalizer"></div>
 			</div>
 		{{/if}}
