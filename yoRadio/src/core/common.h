@@ -14,5 +14,10 @@ struct requestParams_t
 enum controlEvt_e { EVT_NONE=255, EVT_BTNLEFT=0, EVT_BTNCENTER=1, EVT_BTNRIGHT=2, EVT_ENCBTNB=3, EVT_BTNUP=4, EVT_BTNDOWN=5, EVT_ENC2BTNB=6, EVT_BTNMODE=7 };
 
 
+// a simple constrain function
+template<typename T>
+T clamp(T value, T min, T max){
+  return (value < min)? min : (value > max)? max : value;
+}
 
 #endif

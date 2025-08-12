@@ -162,18 +162,16 @@ void loopControls() {
 void encodersLoop(yoEncoder *enc, bool first){
   if (network.status != CONNECTED && network.status!=SDREADY) return;
   if(display->mode()==LOST) return;
-  int8_t encoderDelta = enc->encoderChanged();
+  int32_t encoderDelta = enc->encoderChanged();
   if (encoderDelta!=0)
   {
     uint8_t encBtnState = digitalRead(first?ENC_BTNB:ENC2_BTNB);
 #   if defined(DUMMYDISPLAY) && !defined(USE_NEXTION)
     first = first?(first && encBtnState):(!encBtnState);
     if(first){
-      int nv = config.store.volume+encoderDelta;
-      if(nv<0) nv=0;
-      if(nv>254) nv=254;
-      player->setVol((uint8_t)nv);  
-    }else{
+      // send event cmd to step the volume
+      EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::playerVolumeStep), &encoderDelta, sizeof(encoderDelta));
+    } else {
       if(encoderDelta > 0) player->next(); else player->prev();
     }
 #   else
@@ -467,14 +465,12 @@ void controlsEvent(bool toRight, int8_t volDelta) {
       int32_t d = VOL;
       EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
     #endif
-    if(volDelta!=0){
-      int nv = config.store.volume+volDelta;
-      if(nv<0) nv=0;
-      if(nv>254) nv=254;
-      player->setVolume((uint8_t)nv);
-    }else{
-      player->stepVol(toRight);
-    }
+    // find volume change step
+    int32_t volume = volDelta;
+    if (volDelta == 0)
+      volume = toRight ? 1 : -1;
+    // send event cmd to step the volume
+    EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::playerVolumeStep), &volume, sizeof(volume));
   }
   if (display->mode() == STATIONS) {
     display->resetQueue();

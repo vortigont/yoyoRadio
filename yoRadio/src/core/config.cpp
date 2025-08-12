@@ -492,7 +492,6 @@ void Config::resetSystem(const char *val, uint8_t clientId){
 void Config::setDefaults() {
   store.config_set = 4262;
   store.version = CONFIG_VERSION;
-  store.volume = 12;
   store.balance = 0;
   store.trebble = 0;
   store.middle = 0;
@@ -556,17 +555,6 @@ void Config::saveIR(){
   eepromWrite(EEPROM_START_IR, ircodes);
 }
 #endif
-
-void Config::saveVolume(){
-  saveValue(&store.volume, store.volume, true, true);
-}
-
-uint8_t Config::setVolume(uint8_t val) {
-  store.volume = val;
-  EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayDrawVol));
-  netserver.requestOnChange(VOLUME, 0);
-  return store.volume;
-}
 
 void Config::setTone(int8_t bass, int8_t middle, int8_t trebble) {
   saveValue(&store.bass, bass, false);

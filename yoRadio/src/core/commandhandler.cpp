@@ -33,12 +33,6 @@ bool CommandHandler::exec(const char *command, const char *value, uint8_t cid) {
 
     return true;
   }
-  if (strEquals(command, "vol")){
-    int v = atoi(value);
-    config.store.volume = v < 0 ? 0 : (v > 254 ? 254 : v);
-    player->setVolume(v);
-    return true;
-  }
   if (strEquals(command, "dspon"))     { config.setDspOn(atoi(value)!=0); return true; }
   if (strEquals(command, "dim"))       { int d=atoi(value); config.store.brightness = (uint8_t)(d < 0 ? 0 : (d > 100 ? 100 : d)); config.setBrightness(true); return true; }
   if (strEquals(command, "clearspiffs")){ config.spiffsCleanup(); config.saveValue(&config.store.play_mode, static_cast<uint8_t>(PM_WEB)); return true; }

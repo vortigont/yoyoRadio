@@ -379,24 +379,6 @@ void NetServer::processQueue(){
       case ITEM:
         obj["current"] = config.lastStation();
         break;
-/*
-      case TITLE: {
-        JsonArray a = obj[P_payload].to<JsonArray>();
-        JsonObject o = a.add<JsonObject>();
-        o["id"] = "meta";
-        o["value"] = config.station.title;
-        //telnet.printf("##CLI.META#: %s\n> ", config.station.title);
-        break;
-      }
-*/
-      case VOLUME: {
-        JsonArray a = obj[P_payload].to<JsonArray>();
-        JsonObject o = a.add<JsonObject>();
-        o["id"] = "volume";
-        o["value"] = config.store.volume;
-        //telnet.printf("##CLI.VOL#: %d\n", config.store.volume);
-        break;
-      }
       case NRSSI: {
         JsonArray a = obj[P_payload].to<JsonArray>();
         JsonObject o = a.add<JsonObject>();

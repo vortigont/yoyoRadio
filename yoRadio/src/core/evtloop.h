@@ -45,23 +45,36 @@ enum class yo_event_t:int32_t {
   brightness_step,          // step brightness incr/decr w/o fade, param: int n - step to shift
   gradualFade,              // start gradual brightness fade, param gradual_fade_t
 
+  // Device modes
+  devMode = 30,             // set/notify about generic device mode changes, param - a member of yo_state enum. Dev modes has respective literal naming
+
   // Audio player
-  plsStation = 40,          // play radio station from a playlist, param: int n - index in a playlist entry
   // Audio player states
-  playerStop,               // player's state command/state, no param allowed
+  playerStop = 100,         // player's state command/state, no param allowed
   playerPlay,               // player's state command/state, no param allowed
   playerPause,              // player's state command/state, no param allowed
-  playerVolume,             // player's state command/state, param: int n
-  playerMode,               // player mode webradio/sdcard, param int n: 0 - for webradio, 1 - for SDCARD
-  playerAudioInfo,          // player notifies about current's data/stream meta, param audio_into_t
+  playerToggle,             // toggle Play/Stop state command/state, no param allowed
+  playerPrev,               // previous track
+  playerNext,               // next track
+  plsStation,               // play radio station from a playlist, param: int n - index in a playlist entry
+  // Sound control
+  playerVolume = 110,       // player's volume value command/state, param: int n
+  playerVolumeStep,         // player's volume step incr/decr command, param: int n
+  playerMute,
+  playerUnMute,
+  playerMuteToggle,
+
+  playerMode = 120,         // player mode webradio/sdcard, param int n: 0 - for webradio, 1 - for SDCARD
+
+  // Audio player metadata
+  playerAudioInfo = 130,     // player notifies about current's data/stream meta, param audio_into_t
   playerStationTitle,       // player notifies about new station title, param - const char[] to the station name
   playerTrackTitle,         // player notifies about new track title, param - const char[] to the track name
 
-  // Device modes
-  devMode = 50,             // set/notify about generic device mode changes, param - a member of yo_state enum. Dev modes has respective literal naming
+  // Audio Playlist control
 
   // Display events
-  displayAudioInfo = 60,
+  displayAudioInfo = 200,
   displayBootstring,
   displayClock,
   displayDrawPlaylist,
@@ -83,22 +96,17 @@ enum class yo_event_t:int32_t {
   displayWait4SD,
 
   // ext devices control
-  btnLock = 100,            // Lock button
+  btnLock = 300,            // Lock button
   btnUnLock,                // UnLock button
   btnLockState,             // request for button lock state, ButtonEventHandler will reply with YO_STATE_EVENTS:: btnUnLock/btnLock
 
-  encoderMode = 110,        // change event, which mode encoder has switched to, param: unsigned
+  encoderMode = 310,        // change event, which mode encoder has switched to, param: unsigned
 
   // Module manager
-  modClk = 250,             // Enable/disable Clock module. param: unsigned n, if zero, disable, other - enable
+  modClk = 1000,             // Enable/disable Clock module. param: unsigned n, if zero, disable, other - enable
   modClkPreset,             // switch Clock preset, param: signed n, if negative switch to random profile
   modTxtScroller,           // Enable/disable Text module. param: unsigned n, if zero, disable, other - enable
   modTxtScrollerPreset,     // switch TextScroller preset, param: signed n, if negative switch to random profile
-
-
-  // **** state change / notification events ****
-  fadeStart = 1000,
-  fadeEnd,                  // param: signed int - brightness level that fader ended with
 
 
   noop_end                  // NoOp

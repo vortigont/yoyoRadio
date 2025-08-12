@@ -32,9 +32,6 @@ enum plStatus_e : uint8_t{ PLAYING = 1, STOPPED = 2 };
  * 
  */
 class AudioController {
-
-    uint32_t    _volTicks;   /* delayed volume save  */
-    bool        _volTimer;   /* delayed volume save  */
     uint32_t    _resumeFilePos;
     plStatus_e  _status;
     char        _plError[PLERR_LN];
@@ -42,10 +39,13 @@ class AudioController {
     void _stop(bool alreadyStopped = false);
     void _play(uint16_t stationId);
     // restore volume value from nvram
-    void _loadVol(uint8_t volume);
+    void _loadVol();
 
 protected:
+  // audio processing obj
   Audio audio;
+  // current raw volume value (unscaled), i.e. one that is supplied from external calls
+  int32_t volume;
 
   /**
    * @brief set DAC volume
@@ -97,6 +97,13 @@ public:
      * @return int32_t 
      */
     int32_t getVolume() { return getDACVolume(); };
+
+    /**
+     * @brief step adjust volume up or down
+     * 
+     * @param step value to increment/decrement volume
+     */
+    void stepVol(int32_t step){ setVolume( volume + step); };
     
     //virtual void setVolumeSteps(uint8_t steps){ audio.setVolumeSteps(steps); };
 
@@ -121,7 +128,7 @@ public:
     void prev();
     void next();
     void toggle();
-    void stepVol(bool up);
+
 
     void stopInfo();
     void setResumeFilePos(uint32_t pos) { _resumeFilePos = pos; }

@@ -1,15 +1,18 @@
 #include <string_view>
+#include "nvs_handle.hpp"
 #include "options.h"
-#include "player.h"
 #include "config.h"
+#include "common.h"
+#include "player.h"
+#include "const_strings.h"
 #include "../displays/dspcore.h"
 #include "locale/l10n.h"
 #include "sdmanager.h"
 #include "netserver.h"
 #include "evtloop.h"
-#include "templates.hpp"
 #include "log.h"
 
+#define DEFAULT_VOLUME_VALUE 50
 
 AudioController* player{nullptr};
 
@@ -41,13 +44,10 @@ void AudioController::init() {
   setBalance(config.store.balance);
   setTone(config.store.bass, config.store.middle, config.store.trebble);
   _status = STOPPED;
-  _volTimer=false;
-  //randomSeed(analogRead(0));
   #if PLAYER_FORCE_MONO
     forceMono(true);
   #endif
-  _loadVol(40);  // for now
-  //_loadVol(config.store.volume);
+  _loadVol();  // restore volume value from NVS
   audio.setConnectionTimeout(1700, 3700);
   // event bus subscription
   _events_subsribe();
@@ -106,13 +106,6 @@ void AudioController::loop() {
   if(!audio.isRunning() && _status==PLAYING)    // todo: remove this and rely on internal logical state instead. It may lead to problems with async events
     _stop(true);
 
-  // some volume save timer
-  if(_volTimer){
-    if((millis()-_volTicks)>3000){
-      config.saveVolume();
-      _volTimer=false;
-    }
-  }
 #ifdef MQTT_ROOT_TOPIC
   if(strlen(burl)>0){
     browseUrl();
@@ -141,8 +134,6 @@ void AudioController::_play(uint16_t stationId) {
   if(!config.loadStation(stationId)) return;
   //config.setTitle(config.getMode() == PM_WEB ? const_PlConnect:"[next track]");
   
-  //_loadVol(config.store.volume);
-
   //EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewStation));
 
   netserver.requestOnChange(STATION, 0);
@@ -249,22 +240,6 @@ void AudioController::toggle() {
   }
 }
 
-void AudioController::stepVol(bool up) {
-  if (up) {
-    if (config.store.volume <= 254 - config.store.volsteps) {
-      setVolume(config.store.volume + config.store.volsteps);
-    }else{
-      setVolume(254);
-    }
-  } else {
-    if (config.store.volume >= config.store.volsteps) {
-      setVolume(config.store.volume - config.store.volsteps);
-    }else{
-      setVolume(0);
-    }
-  }
-}
-
 uint8_t AudioController::volume_level_adjustment(uint8_t volume) {
   // some kind of normalizer ?
   int vol = map(volume, 0, 254 - config.station.ovol * 3 , 0, 254);
@@ -273,16 +248,28 @@ uint8_t AudioController::volume_level_adjustment(uint8_t volume) {
   return vol;
 }
 
-void AudioController::_loadVol(uint8_t volume) {
-  setDACVolume(volume_level_adjustment(volume));
+void AudioController::_loadVol() {
+  // load volume value from nvs
+  esp_err_t err;
+  std::unique_ptr<nvs::NVSHandle> handle = nvs::open_nvs_handle(T_Player, NVS_READONLY, &err);
+  if (err == ESP_OK){
+    volume = DEFAULT_VOLUME_VALUE;
+    handle->get_item(T_volume, volume);
+    setDACVolume(volume_level_adjustment(volume));
+  }
 }
 
 void AudioController::setVolume(int32_t volume) {
-  LOGD(T_Player, printf, "setVol:%d\n", volume);
-  _volTicks = millis();
-  _volTimer = true;
-  config.setVolume(volume);
+  // since Audio lib takes uint8_t for volume, let's clamp it here anyway
+  volume = clamp(volume, 0L, 255L);
+  LOGD(T_Player, printf, "setVolume:%d\n", volume);
   setDACVolume(volume_level_adjustment(volume));
+  // save volume value to nvs
+  esp_err_t err;
+  std::unique_ptr<nvs::NVSHandle> handle = nvs::open_nvs_handle(T_Player, NVS_READWRITE, &err);
+  if (err == ESP_OK){
+    handle->set_item(T_volume, volume);
+  }
 }
 
 void AudioController::_events_subsribe(){
@@ -307,12 +294,22 @@ void AudioController::_events_cmd_hndlr(int32_t id, void* data){
       break;
     }
 
-    // Stop player
     case evt::yo_event_t::playerStop :
       _stop();
       break;
 
-    // volume control
+    case evt::yo_event_t::playerToggle :
+      toggle();
+      break;
+
+    case evt::yo_event_t::playerPrev :
+      prev();
+      break;
+
+    case evt::yo_event_t::playerNext :
+      next();
+      break;
+
     case evt::yo_event_t::playerVolume :
       setVolume(*reinterpret_cast<int32_t*>(data));
       break;

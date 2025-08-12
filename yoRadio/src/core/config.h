@@ -88,7 +88,6 @@ struct config_t
 {
   uint16_t  config_set; //must be 4262
   uint16_t  version;
-  uint8_t   volume;
   int8_t    balance;
   int8_t    trebble;
   int8_t    middle;
@@ -193,8 +192,6 @@ class Config {
 #endif
     void init();
     void loadTheme();
-    uint8_t setVolume(uint8_t val);
-    void saveVolume();
     void setTone(int8_t bass, int8_t middle, int8_t trebble);
     void setBalance(int8_t balance);
     uint8_t setLastStation(uint16_t val);
