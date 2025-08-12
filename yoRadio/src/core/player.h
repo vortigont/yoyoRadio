@@ -46,11 +46,7 @@ class AudioController {
 
 protected:
   Audio audio;
-  /**
-   * @brief DAC initialization, procedure
-   * must be implemented in derived classes
-   */
-  virtual void dac_init() = 0;
+
   /**
    * @brief set DAC volume
    * must be implemented in derived class
@@ -105,6 +101,14 @@ public:
     
     //virtual void setVolumeSteps(uint8_t steps){ audio.setVolumeSteps(steps); };
 
+    /**
+     * @brief mute DAC/amplifier
+     * 
+     * @param mute 
+     */
+    virtual void setMute(bool mute) = 0;
+    // get mute state
+    virtual bool getMute() const = 0;
 
     void loop();
     void initHeaders(const char *file);
@@ -121,7 +125,6 @@ public:
     void stepVol(bool up);
 
     void stopInfo();
-    void setOutputPins(bool isPlaying);
     void setResumeFilePos(uint32_t pos) { _resumeFilePos = pos; }
 
     // publishing methods (a hack due to missing callbacks in Audio lib)
@@ -166,42 +169,44 @@ private:
     void _events_cmd_hndlr(int32_t id, void* data);
 };
 
-// 
-/**
- * @brief ESP32 internal DAC
- * @note only for classic ESP32 boards! Not applicable for S2/S3 and newer
- * 
- */
-class ESP32_Internal_DAC : public AudioController {
-  void dac_init() override {};
-  void setDACVolume(uint8_t vol, uint8_t curve = 0) override { audio.setVolume( vol, curve); }
-  uint8_t getDACVolume() override { return audio.getVolume(); }
-
-public:
-  ESP32_Internal_DAC() = default;
-};
-
 // generic I2S DAC for ESP32 with software volume control
 class ESP32_I2S_Generic : public AudioController {
-  void dac_init() override { audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT); };
+  int32_t _mute_gpio;
+  bool _mute_level, _mute_state; // soft mute state
+  // stashed volume value for software mute (if no mute gpio defined)
+  uint8_t _soft_mute_volume;
+
   void setDACVolume(uint8_t vol, uint8_t curve = 0) override { audio.setVolume( vol, curve); }
   uint8_t getDACVolume() override { return audio.getVolume(); }
 
 public:
-  ESP32_I2S_Generic() = default;
+  ESP32_I2S_Generic(int32_t mute_gpio = -1, bool mute_level = HIGH) : _mute_gpio(mute_gpio), _mute_level(mute_level) {};
+  ESP32_I2S_Generic(int32_t bclk, int32_t lcr,  int32_t dout, int32_t mclk = -1, int32_t mute_gpio = -1, bool mute_level = HIGH) : _mute_gpio(mute_gpio), _mute_level(mute_level) { audio.setPinout(bclk, lcr, dout, mclk); };
+
+  void init() override;
+
+  void setMute(bool mute) override;
+  // get mute state
+  bool getMute() const override;
 };
 
 // ES8311 chip DAC with volume control over i2c
 class ES8311Audio : public AudioController {
+  int32_t _mute_gpio;
+  bool _mute_state; // mute state
   ES8311 _es;
 
-  void dac_init() override { audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT, I2S_MCLK); };
   void setDACVolume(uint8_t vol, uint8_t curve = 0) override { _es.setVolume(vol); };
   uint8_t getDACVolume() override { return _es.getVolume(); }
 
 public:
-  ES8311Audio() = default;
+  ES8311Audio(int32_t bclk, int32_t lcr,  int32_t dout, int32_t mclk, int32_t mute_gpio) : _mute_gpio(mute_gpio) { audio.setPinout(bclk, lcr, dout, mclk); };
+
   void init() override;
+
+  void setMute(bool mute) override;
+  // get mute state
+  bool getMute() const override { return _mute_state; };
 };
 
 // ******************

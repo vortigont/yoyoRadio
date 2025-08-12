@@ -17,17 +17,16 @@ AudioController::~AudioController(){
   _events_unsubsribe();
 }
 
-
 void create_player(dac_type_t dac){
   switch (dac){
     case   dac_type_t::esp32internal :
-      player = new ESP32_Internal_DAC();
+      player = new ESP32_I2S_Generic(MUTE_PIN, MUTE_VAL);
       break;
     case   dac_type_t::ES8311 :
-      player = new ES8311Audio();
+      player = new ES8311Audio(I2S_BCLK, I2S_LRC, I2S_DOUT, I2S_MCLK, MUTE_PIN);
       break;
     default:
-      player = new ESP32_I2S_Generic();
+      player = new ESP32_I2S_Generic(I2S_BCLK, I2S_LRC, I2S_DOUT, I2S_MCLK, MUTE_PIN, MUTE_VAL);
   }
 }
 
@@ -39,10 +38,6 @@ void AudioController::init() {
   #ifdef MQTT_ROOT_TOPIC
   memset(burl, 0, MQTT_BURL_SIZE);
   #endif
-  if(MUTE_PIN!=255)
-    pinMode(MUTE_PIN, OUTPUT);
-  setOutputPins(false);
-  dac_init();
   setBalance(config.store.balance);
   setTone(config.store.bass, config.store.middle, config.store.trebble);
   _status = STOPPED;
@@ -80,7 +75,7 @@ void AudioController::_stop(bool alreadyStopped){
 */
   _status = STOPPED;
   audio.stopSong();
-  setOutputPins(false);
+  setMute(true);
 
   // update stream's meta info
   evt::audio_into_t info{ 0, audio.getCodecname() };
@@ -127,12 +122,6 @@ void AudioController::loop() {
 #endif
 }
 
-void AudioController::setOutputPins(bool isPlaying) {
-  if(REAL_LEDBUILTIN!=255) digitalWrite(REAL_LEDBUILTIN, LED_INVERT?!isPlaying:isPlaying);
-  bool _ml = MUTE_LOCK ? !MUTE_VAL : ( isPlaying ? !MUTE_VAL : MUTE_VAL );
-  if(MUTE_PIN!=255) digitalWrite(MUTE_PIN, _ml);
-}
-
 void AudioController::_play(uint16_t stationId) {
   // todo - this mutex here is taking too much, need to split this method into more atomic calls
   std::lock_guard<std::mutex> lock(_mtx);
@@ -149,7 +138,7 @@ void AudioController::_play(uint16_t stationId) {
   if(config.getMode()!=PM_SDCARD) {
     EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayPStop));
   }
-  setOutputPins(false);
+  setMute(false);
   //config.setTitle(config.getMode()==PM_WEB?const_PlConnect:"");
   if(!config.loadStation(stationId)) return;
   //config.setTitle(config.getMode() == PM_WEB ? const_PlConnect:"[next track]");
@@ -188,7 +177,6 @@ void AudioController::_play(uint16_t stationId) {
     if(config.store.smartstart!=2)
       config.setSmartStart(1);
     netserver.requestOnChange(MODE, 0);
-    setOutputPins(true);
 
     // notify that device has switched to 'webstream' playback mode
     int32_t d = e2int(evt::yo_state::webstream);
@@ -214,13 +202,11 @@ void AudioController::browseUrl(){
   EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayPStart));
 
 //  setDefaults();
-  setOutputPins(false);
   config.setTitle(const_PlConnect);
   if (connecttohost(burl)){
     _status = PLAYING;
     config.setTitle("");
     netserver.requestOnChange(MODE, 0);
-    setOutputPins(true);
     EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayPStart));
     if (player_on_start_play) player_on_start_play();
     pm.on_start_play();
@@ -356,9 +342,37 @@ void AudioController::pubCodecInfo(){
 
 
 //  **************************
-//  *** ESP32_Internal_DAC ***
+//  *** ESP32 DAC ***
 //  **************************
+void ESP32_I2S_Generic::init(){
+  if (_mute_gpio != -1){
+    pinMode(_mute_gpio, OUTPUT);
+  }
+  AudioController::init();
+};
 
+void ESP32_I2S_Generic::setMute(bool mute){
+  if (_mute_gpio == -1){
+    // soft mute
+    // save current DAC volume
+    if (mute)
+      _soft_mute_volume = getDACVolume();
+    setDACVolume(mute ? 0 : _soft_mute_volume);
+    _mute_state = mute;
+  } else {
+    digitalWrite(_mute_gpio, mute ? _mute_level : !_mute_level);
+  } 
+}
+
+// get mute state
+bool ESP32_I2S_Generic::getMute() const {
+  if (_mute_gpio == -1){
+    // soft mute
+    return _mute_state;
+  } else {
+    return digitalRead(_mute_gpio);
+  } 
+}
 
 //  **************************
 //  *** ES8311 DAC         ***
@@ -369,12 +383,17 @@ void ES8311Audio::init(){
     log_e("ES8311 begin failed");
     return;
   }    
-  AudioController::init();
   _es.setBitsPerSample(16);
   // set program vol to max
   audio.setVolume(255);
+  pinMode(_mute_gpio, OUTPUT);
+  AudioController::init();
 }
 
+void ES8311Audio::setMute(bool mute){
+  digitalWrite(_mute_gpio, mute ? LOW : HIGH);    // NS4150's mute level is LOW
+  _mute_state = mute;
+}
 
 
 //=============================================//
