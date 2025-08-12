@@ -73,7 +73,6 @@ void setup() {
     mqttInit();
   #endif
   if (config.getMode()==PM_SDCARD) player->initHeaders(config.station.url);
-  player->lockOutput=false;
 
   #ifndef NO_AUTOPLAY_ONBOOT
   if (config.store.smartstart == 1) {

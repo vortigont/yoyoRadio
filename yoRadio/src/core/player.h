@@ -67,7 +67,6 @@ protected:
   uint8_t volume_level_adjustment(uint8_t volume);
 
 public:
-    bool lockOutput = true;
     bool resumeAfterUrl = false;
     uint32_t sd_min, sd_max;
     #ifdef MQTT_ROOT_TOPIC

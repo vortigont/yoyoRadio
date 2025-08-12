@@ -82,8 +82,6 @@ void AudioController::_stop(bool alreadyStopped){
   EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerAudioInfo), &info, sizeof(info));
   EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayPStop));
 
-  //setDefaults();
-  if(!lockOutput) stopInfo();
   if (player_on_stop_play) player_on_stop_play();
   pm.on_stop_play();
 }
@@ -401,7 +399,6 @@ void ES8311Audio::setMute(bool mute){
 //=============================================//
 
 void audio_info(const char *info) {
-  if(player->lockOutput) return;
   LOGI(T_Player, printf, "Audio info:\t%s\n", info);
   //if(config.store.audioinfo) telnet.printf("##AUDIO.INFO#: %s\n", info);
   #ifdef USE_NEXTION
