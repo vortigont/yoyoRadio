@@ -30,6 +30,16 @@
           "class":"container_centered"
         },
         {
+          "id":"player_volume",
+          "html":"input",
+          "type": "range",
+          "min": 0,
+          "max": 255,
+          "step": 5,
+          "label": "📢 Громкость",
+          "onChange": true
+        },
+        {
           "id":"equalizerwrap",
           "html":"div",
           "type":"js",

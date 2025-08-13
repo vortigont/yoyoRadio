@@ -361,6 +361,8 @@ void AudioController::_embui_player_commands(Interface *interf, JsonVariantConst
 
   if(a.compare(T_volDown) == 0) return stepVolume(-10);     // for now set the step to 10, todo: make con configurable
 
+  if(a.compare(T_volume) == 0) return setVolume(data.as<int32_t>());     // volume slider
+
   if(a.compare(T_playstation) == 0) return _play_station_from_playlist(data.as<int>());
 }
 
