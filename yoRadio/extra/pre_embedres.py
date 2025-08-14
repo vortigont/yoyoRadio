@@ -28,7 +28,7 @@ in_gz_files = ["webresources/html/index.html",
                "webresources/html/js/yo.js",
                "webresources/html/js/yo_style.css"
                ]
-#combine_js_files = ["resources/html/js/lamp.js", "resources/html/js/drawing.js"]
+combine_css_files = ["webresources/html/js/yo_theme.css", "webresources/stock_www/style.css"]
 static_gz_files = [
     outdir + "/ui_embui.json.gz",
     outdir + "/ui_embui.i18n.json.gz",
@@ -89,11 +89,11 @@ def embed_resources():
         for f in in_gz_files:
             compress_file(f, f_hdr)
 
-        # combine js scripts
-        #jsall = ''.join([open(f, 'r', encoding='utf-8').read() for f in combine_js_files])
-        #fpath = outdir + '/script.js.gz'
-        #compress_data(jsall, fpath)
-        #print_hdr_data(fpath, f_hdr)
+        # combine css files
+        cssall = ''.join([open(f, 'r', encoding='utf-8').read() for f in combine_css_files])
+        fpath = outdir + 'yo_style.css.gz'
+        compress_data(cssall, fpath)
+        print_hdr_data(fpath, f_hdr)
 
         # make header data for static files
         for f in static_gz_files:
