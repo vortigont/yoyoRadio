@@ -91,7 +91,7 @@ def embed_resources():
 
         # combine css files
         cssall = ''.join([open(f, 'r', encoding='utf-8').read() for f in combine_css_files])
-        fpath = outdir + 'yo_style.css.gz'
+        fpath = outdir + '/yo_style.css.gz'
         compress_data(cssall, fpath)
         print_hdr_data(fpath, f_hdr)
 
