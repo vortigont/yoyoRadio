@@ -20,6 +20,7 @@
 	<link rel="stylesheet" href="js/pure.css">
 	<link rel="stylesheet" href="js/embui_style.css" type="text/css">
 	<link rel="stylesheet" href="js/yo_style.css" type="text/css">
+	<link rel="stylesheet" href="js/yo_theme.css" type="text/css">
 
 	<title>yoRadio Player</title>
 </head>
@@ -85,7 +86,7 @@
 
 	<script type="text/html" id="tmpl_section">
 		<section id="{{section}}" {{#class}}class="{{class}}"{{/class}}>
-			{{#if hidden}}<div class="pure-u-1 pure-button mr" {{onevent "click", "on_showhide", "block_"+section}} >{{label}}</div>{{/if}}
+			{{#if hidden && show_btn != false}}<div class="{{#class}}{{class}}{{/class}}{{^class}}pure-u-1 pure-button mr{{/class}}" {{onevent "click", "on_showhide", "block_"+section}} >{{label}}</div>{{/if}}
 			{{#if !hidden && label}}<div class="header-block">{{label}}</div>{{/if}}
 			{{^nodiv}}
 				<div id="block_{{section}}" class="{{#class}}{{class}}{{/class}}{{^class}}{{^line}}pure-g{{/line}}{{/class}} {{#label}}nested{{/label}}" {{#if hidden}}style="display:none;"{{/if}}>
@@ -188,7 +189,7 @@
 			<span>{{label}}</span>
 			{{#if2 type == "range" || type == "color"}}<span id="{{id}}-val">: {{value}}</span>{{/if2}}
 			{{#if2 type == "text" || type == "password"}}<span id="{{id}}-val"> ({{calc value.length || 0}})</span>{{/if2}}
-			<input type="{{type}}" id="{{id}}" name="{{id}}" class="pure-u-1" value="{{value}}"
+			<input type="{{type}}" id="{{id}}" name="{{id}}" class="{{#class}}{{class}}{{/class}}{{^class}}pure-u-1{{/class}}" value="{{value}}"
 				{{#if2 (min || min === 0)}}min="{{min}}"{{/if2}}
 				{{#if2 (max || max === 0)}}max="{{max}}"{{/if2}}
 				{{#if2 (step || step === 0)}}step="{{step}}"{{/if2}}
@@ -227,7 +228,7 @@
 				<div class="playerbytton" id="nextbutton" data-name="next" {{onevent "click", "on_change", "player_next"}}></div>
 				<div class="playerbytton" id="volmbutton" data-name="volm" {{onevent "click", "on_change", "player_volDown"}}></div>
 				<div class="playerbytton" id="volpbutton" data-name="volp" {{onevent "click", "on_change", "player_volUp"}}></div>
-				<div class="playerbytton" id="eqalbutton" data-name="equalizer"></div>
+				<div class="playerbytton" id="eqalbutton" data-name="equalizer" {{onevent "click", "on_showhide", "block_player_equalizer"}}></div>
 			</div>
 		{{/if}}
 

@@ -364,6 +364,10 @@ void AudioController::_embui_player_commands(Interface *interf, JsonVariantConst
   if(a.compare(T_volume) == 0) return setVolume(data.as<int32_t>());     // volume slider
 
   if(a.compare(T_playstation) == 0) return _play_station_from_playlist(data.as<int>());
+
+  if(a.compare(T_balance) == 0) return setBalance(data.as<int8_t>());
+
+  if(a.compare(T_equalizer) == 0) return setTone(data[T_bass], data[T_middle], data[T_trebble]);
 }
 
 

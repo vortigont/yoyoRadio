@@ -105,8 +105,10 @@ public:
      * @param step value to increment/decrement volume
      */
     void stepVolume(int32_t step){ setVolume( volume + step); };
-    
     //virtual void setVolumeSteps(uint8_t steps){ audio.setVolumeSteps(steps); };
+    
+    void setTone(int8_t gainLowPass, int8_t gainBandPass, int8_t gainHighPass){ audio.setTone(gainLowPass, gainBandPass, gainHighPass); }
+    void setBalance(int8_t bal = 0){ setBalance(bal); };
 
     /**
      * @brief mute DAC/amplifier
