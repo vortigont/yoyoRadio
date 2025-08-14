@@ -67,15 +67,14 @@ enum class yo_event_t:int32_t {
   playerMode = 120,         // player mode webradio/sdcard, param int n: 0 - for webradio, 1 - for SDCARD
 
   // Audio player metadata
-  playerAudioInfo = 130,     // player notifies about current's data/stream meta, param audio_into_t
+  playerAudioInfo = 130,     // player notifies about current's data/stream meta - bitrate/codec, param audio_into_t
   playerStationTitle,       // player notifies about new station title, param - const char[] to the station name
   playerTrackTitle,         // player notifies about new track title, param - const char[] to the track name
 
   // Audio Playlist control
 
   // Display events
-  displayAudioInfo = 200,
-  displayBootstring,
+  displayBootstring = 200,
   displayClock,
   displayDrawPlaylist,
   displayDrawVol,

@@ -1,6 +1,7 @@
 #pragma once
 #include "muipp_agfx.hpp"
 #include "../gfx_lib.h"
+#include "core/evtloop.h"
 #include <ctime>
 
 // struct that defines clock position
@@ -52,4 +53,39 @@ private:
   void _clear_date(Arduino_GFX* dsp);
   // move clock in screensaver mode / measure brightness
   //void _reconfig(tm* t);
+};
+
+
+/**
+ * @brief shows codec/bitrate text box
+ * 
+ */
+class MuiItem_Bitrate_Widget : public MuiItem_Uncontrollable {
+  int16_t _x, _y;
+  uint16_t _w, _h;
+  AGFX_text_t _tcfg;
+  bool _pending;
+  evt::audio_into_t _info{0, nullptr};
+  esp_event_handler_instance_t _hdlr_chg_evt{nullptr};
+
+public:
+  /**
+   * @brief Construct a new MuiItem_U8g2_PageTitle object
+   * 
+   * @param id assigned id for the item
+   * @param x, y Coordinates of the top left corner to start printing
+   * @param w, h canvas size where data is printed
+   * @param tcfg text decoration config
+   */
+  MuiItem_Bitrate_Widget(muiItemId id,
+      int16_t x, int16_t y,
+      uint16_t w, uint16_t h,
+      AGFX_text_t tcfg = {});
+
+  ~MuiItem_Bitrate_Widget();
+
+  //void setText(const char* text, float speed){ _scroller.begin(text, speed, _tcfg.font); }
+  void render(const MuiItem* parent, void* r = nullptr) override;
+  bool refresh_req() const override { return _pending; };
+  void setInfo(evt::audio_into_t* i){ _info = *i; _pending = true; }
 };

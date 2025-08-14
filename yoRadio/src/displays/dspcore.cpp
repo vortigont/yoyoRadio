@@ -773,15 +773,6 @@ void DisplayGFX::_events_cmd_hndlr(int32_t id, void* data){
       _volume();
       break;
 
-    case evt::yo_event_t::displayAudioInfo :
-/*
-      if(_heapbar){
-        _heapbar->lock(!config.store.audioinfo);
-        _heapbar->setValue(player->inBufferFilled());
-      }
-*/
-      break;
-
     case evt::yo_event_t::displayShowVUMeter :
 /*
       if(_vuwidget){
@@ -927,7 +918,11 @@ void DisplayGFX::_build_main_screen(){
   // Scroller - track title
   _scroll_title2 = std::make_shared<MuiItem_AGFX_TextScroller>(_mpp.nextIndex(), SCROLLER_TRACK_POSITION_X, SCROLLER_TRACK_POSITION_Y, SCROLLER_TRACK_POSITION_W, SCROLLER_TRACK_POSITION_H, scroller_track_cfg);
   _mpp.addMuippItem(_scroll_title2, root_page);
-  
+
+  // BitRate Widget
+  _mpp.addMuippItem(new MuiItem_Bitrate_Widget(_mpp.nextIndex(), BITRATE_WDGT_POSITION_X, BITRATE_WDGT_POSITION_Y, BITRATE_WDGT_W, BITRATE_WDGT_H, bitrate_wdgt_cfg), root_page);
+
+
   // this is not a real menu, so no need to activate the items
   //pageAutoSelect(root_page, some_id);
   // start menu from page mainmenu

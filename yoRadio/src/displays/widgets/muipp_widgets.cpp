@@ -1,6 +1,5 @@
 #if __has_include("Arduino_GFX.h")
 #include "../gfx_engine.h"
-//#include "muipp_widgets.hpp"
 #include "agfx.h"
 #include "locale/l10n.h"
 #include "../../core/log.h"
@@ -108,4 +107,57 @@ void ClockWidget::_reconfig(tm* t){
   }
 }
 */
+
+MuiItem_Bitrate_Widget::MuiItem_Bitrate_Widget(muiItemId id,
+  int16_t x, int16_t y,
+  uint16_t w, uint16_t h,
+  AGFX_text_t tcfg)
+    : MuiItem_Uncontrollable(id), _x(x), _y(y), _w(w), _h(h),  _tcfg(tcfg) {
+
+  // bitrate state change event picker
+  esp_event_handler_instance_register_with(evt::get_hndlr(), YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerAudioInfo),
+    [](void* self, esp_event_base_t base, int32_t id, void* data){ static_cast<MuiItem_Bitrate_Widget*>(self)->setInfo(static_cast<evt::audio_into_t*>(data)); },
+    this, &_hdlr_chg_evt
+  );
+
+};
+
+MuiItem_Bitrate_Widget::~MuiItem_Bitrate_Widget(){
+  esp_event_handler_instance_unregister_with(evt::get_hndlr(), YO_CMD_EVENTS, e2int(evt::yo_event_t::playerAudioInfo), _hdlr_chg_evt);
+}
+
+void MuiItem_Bitrate_Widget::render(const MuiItem* parent, void* r){
+  Arduino_GFX* g = static_cast<Arduino_GFX*>(r);
+
+  g->fillRect(_x, _y, _w, _h, _tcfg.bgcolor);
+#ifdef BITRATE_WDGT_RADIUS
+  // draw rounded rect
+  g->drawRoundRect(_x, _y, _w, _h, BITRATE_WDGT_RADIUS, _tcfg.color);
+  g->fillRoundRect(_x, _y + _h/2, _w, _h/2, BITRATE_WDGT_RADIUS, _tcfg.color);
+#else
+  g->drawRect(_x, _y, _w, _h, _tcfg.color);
+  g->fillRect(_x, _y + _h/2, _w, _h/2, _tcfg.color);
+#endif
+  g->setFont(_tcfg.font);
+  g->setTextSize(_tcfg.font_size);
+  g->setTextColor(_tcfg.color, _tcfg.bgcolor);
+  char buff[16];
+  snprintf(buff, 16, bitrateFmt, _info.bitRate);
+  // text block
+  int16_t  xx{0}, yy{0};
+  uint16_t ww{0}, hh{0};
+  g->getTextBounds(buff, _x, _y + _h, &xx, &yy, &ww, &hh);
+  g->setCursor(_x + _w/2 - ww/2, (_y + _h/4) + hh/2);
+  g->printf(bitrateFmt, _info.bitRate);
+
+  std::string_view a(_info.codecName ? _info.codecName : "n/a");
+  g->getTextBounds(a.data(), _x, _y, &xx, &yy, &ww, &hh);
+  
+  // align text by h/v center 
+  g->setCursor(_x + _w/2 - ww/2, _y + _h - _h/4 + hh/2);
+  g->setTextColor(_tcfg.bgcolor);
+  g->print(a.data());
+  _pending = false;
+}
+
 #endif  // #if __has_include("Arduino_GFX.h")

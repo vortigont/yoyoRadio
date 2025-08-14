@@ -31,6 +31,7 @@ static const clock_date_cfg_t date_cfg{
 static constexpr AGFX_text_t title_status_cfg {
   RGB565_WHITE, 0,        // color, bgcolor;
   FONT_DEFAULT_U8G2,
+  1,                      // font size
   muipp::text_align_t::center, muipp::text_align_t::baseline, //  muipp::text_align_t halign{muipp::text_align_t::left}, valign{muipp::text_align_t::baseline};
   true                    // transp_bg
 };
@@ -46,6 +47,7 @@ static constexpr AGFX_text_t title_status_cfg {
 static constexpr AGFX_text_t scroller_station_cfg {
   RGB565_OLIVE, 0,        // color, bgcolor;
   FONT_MEDIUM_U8G2,
+  1,                      // font size
   muipp::text_align_t::left, muipp::text_align_t::baseline, //  muipp::text_align_t halign{muipp::text_align_t::left}, valign{muipp::text_align_t::baseline};
   false                             // transp_bg
 };
@@ -61,14 +63,32 @@ static constexpr AGFX_text_t scroller_station_cfg {
 static constexpr AGFX_text_t scroller_track_cfg {
   RGB565_CYAN, 0,        // color, bgcolor;
   FONT_MEDIUM_U8G2,
+  1,                      // font size
   muipp::text_align_t::left, muipp::text_align_t::baseline, //  muipp::text_align_t halign{muipp::text_align_t::left}, valign{muipp::text_align_t::baseline};
   false                             // transp_bg
 };
+
+// *************************
+// Bitrate / format
+#define BITRATE_WDGT_POSITION_X 0
+#define BITRATE_WDGT_POSITION_Y 160
+#define BITRATE_WDGT_W 60
+#define BITRATE_WDGT_H 50
+#define BITRATE_WDGT_RADIUS 10     // leave undefined for rectangular box
+static const char        bitrateFmt[]    = "%uk";
+static constexpr AGFX_text_t bitrate_wdgt_cfg {
+  RGB565_CYAN, 0,         // color, bgcolor;
+  FONT_DEFAULT_U8G2,
+  2,                      // font size
+  muipp::text_align_t::left, muipp::text_align_t::baseline, //  muipp::text_align_t halign{muipp::text_align_t::left}, valign{muipp::text_align_t::baseline};
+  false                             // transp_bg
+};
+
+
 
 /* STRINGS  */
 static const char         numtxtFmt[]    = "%d";
 static const char           rssiFmt[]    = "WiFi %d";
 static const char          iptxtFmt[]    = "%s";
 static const char         voltxtFmt[]    = "\023\025%d";
-static const char        bitrateFmt[]    = "%d kBs";
 
