@@ -79,9 +79,6 @@ public:
 
     // virtual methods
     virtual void init();
-    // volume, tembre control - maps to Audio lib methods by default
-    virtual void setBalance(int8_t bal = 0){ audio.setBalance(bal); };
-    virtual void setTone(int8_t low, int8_t band, int8_t high){ audio.setTone(low, band, high); }
 
     /**
      * @brief Set player's Volume
@@ -105,10 +102,10 @@ public:
      * @param step value to increment/decrement volume
      */
     void stepVolume(int32_t step){ setVolume( volume + step); };
-    //virtual void setVolumeSteps(uint8_t steps){ audio.setVolumeSteps(steps); };
     
-    void setTone(int8_t gainLowPass, int8_t gainBandPass, int8_t gainHighPass){ audio.setTone(gainLowPass, gainBandPass, gainHighPass); }
-    void setBalance(int8_t bal = 0){ setBalance(bal); };
+    virtual void setBalance(int8_t bal = 0){ audio.setBalance(bal); };
+    // volume, tembre control - maps to Audio lib methods by default
+    virtual void setTone(int8_t low, int8_t band, int8_t high){ audio.setTone(low, band, high); }
 
     /**
      * @brief mute DAC/amplifier
