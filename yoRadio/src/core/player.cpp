@@ -79,9 +79,6 @@ void AudioController::_stop(bool alreadyStopped){
   evt::audio_into_t info{ 0, audio.getCodecname() };
   EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerAudioInfo), &info, sizeof(info));
   EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayPStop));
-
-  if (player_on_stop_play) player_on_stop_play();
-  pm.on_stop_play();
 }
 
 void AudioController::initHeaders(const char *file) {
@@ -168,10 +165,6 @@ void AudioController::_play(uint16_t stationId) {
     // notify that device has switched to 'webstream' playback mode
     int32_t d = e2int(evt::yo_state::webstream);
     EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::devMode), &d, sizeof(d));
-
-    if (player_on_start_play)
-      player_on_start_play();
-    pm.on_start_play();
   } else {
     //telnet.printf("##ERROR#:\tError connecting to %s\n", config.station.url);
     SET_PLAY_ERROR("Error connecting to %s", config.station.url);
@@ -195,8 +188,6 @@ void AudioController::browseUrl(){
     config.setTitle("");
     netserver.requestOnChange(MODE, 0);
     EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayPStart));
-    if (player_on_start_play) player_on_start_play();
-    pm.on_start_play();
   }else{
     //telnet.printf("##ERROR#:\tError connecting to %s\n", burl);
     SET_PLAY_ERROR("Error connecting to %s", burl);
@@ -364,9 +355,6 @@ void AudioController::_play_station_from_playlist(int idx){
   _play(abs(idx));
 
   EVT_POST(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerPlay));
-  if (player_on_station_change)   // todo: this should be moved to event handling
-    player_on_station_change();
-  pm.on_station_change();   // todo: this should be moved to event handling  
 }
 
 void AudioController::pubCodecInfo(){

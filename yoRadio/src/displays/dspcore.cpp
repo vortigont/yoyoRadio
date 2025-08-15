@@ -456,7 +456,6 @@ void DisplayGFX::_swichMode(displayMode_e newmode) {
     config.isScreensaver = false;
     _pager.setPage( _pages.at(PG_PLAYER));
     config.setDspOn(config.store.dspon, false);
-    pm.on_display_player();
   }
   if (newmode == SCREENSAVER || newmode == SCREENBLANK) {
     config.isScreensaver = true;
@@ -549,7 +548,6 @@ void DisplayGFX::_loopDspTask() {
     requestParams_t request;
     if(xQueueReceive(_displayQueue, &request, DSP_QUEUE_TICKS)){
       bool pm_result = true;
-      pm.on_display_queue(request, pm_result);
       if(pm_result)
         switch (request.type){
           case NEWMODE: _swichMode((displayMode_e)request.payload); break;
@@ -681,8 +679,6 @@ void DisplayGFX::_title() {
     _title1.setText("");
     if(_title2) _title2->setText("");
   }
-  if (player_on_track_change) player_on_track_change();
-  pm.on_track_change();
 */
 }
 

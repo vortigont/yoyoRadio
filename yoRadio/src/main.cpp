@@ -42,8 +42,6 @@ void setup() {
   }
   display->init();
 
-  pm.on_setup();
-
   // cerate and init Player object
   LOGI(T_BOOT, println, "Init Player");
   create_player(DAC_TYPE);
@@ -81,7 +79,6 @@ void setup() {
     EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &v, sizeof(v));
   }
   #endif
-  pm.on_end_setup();
   LOGD(T_BOOT, println, "Setup complete");
 }
 
