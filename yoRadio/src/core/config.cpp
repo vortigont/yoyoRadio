@@ -492,10 +492,6 @@ void Config::resetSystem(const char *val, uint8_t clientId){
 void Config::setDefaults() {
   store.config_set = 4262;
   store.version = CONFIG_VERSION;
-  store.balance = 0;
-  store.trebble = 0;
-  store.middle = 0;
-  store.bass = 0;
   store.lastStation = 0;
   store.countStation = 0;
   store.lastSSID = 0;
@@ -556,22 +552,8 @@ void Config::saveIR(){
 }
 #endif
 
-void Config::setTone(int8_t bass, int8_t middle, int8_t trebble) {
-  saveValue(&store.bass, bass, false);
-  saveValue(&store.middle, middle, false);
-  saveValue(&store.trebble, trebble);
-  player->setTone(store.bass, store.middle, store.trebble);
-  netserver.requestOnChange(EQUALIZER, 0);
-}
-
 void Config::setSmartStart(uint8_t ss) {
   saveValue(&store.smartstart, ss);
-}
-
-void Config::setBalance(int8_t balance) {
-  saveValue(&store.balance, balance);
-  player->setBalance(store.balance);
-  netserver.requestOnChange(BALANCE, 0);
 }
 
 uint8_t Config::setLastStation(uint16_t val) {

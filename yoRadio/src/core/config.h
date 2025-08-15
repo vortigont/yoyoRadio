@@ -88,10 +88,6 @@ struct config_t
 {
   uint16_t  config_set; //must be 4262
   uint16_t  version;
-  int8_t    balance;
-  int8_t    trebble;
-  int8_t    middle;
-  int8_t    bass;
   uint16_t  lastStation;
   uint16_t  countStation;
   uint8_t   lastSSID;
@@ -192,8 +188,6 @@ class Config {
 #endif
     void init();
     void loadTheme();
-    void setTone(int8_t bass, int8_t middle, int8_t trebble);
-    void setBalance(int8_t balance);
     uint8_t setLastStation(uint16_t val);
     uint8_t setCountStation(uint16_t val);
     uint8_t setLastSSID(uint8_t val);

@@ -16,100 +16,108 @@
     ]
   },
   "pages":{
-    "radio":{
-      "section":"yo_main",
-      "main":true,
-      "class": "yo_body",
-      "block":[
-        {
-          "html":"yologo"
-        },
-        {
-          "id":"playerbuttons",
-          "html":"playerbuttons",
-          "class":"container_centered"
-        },
-        {
-          "id":"player_volume",
-          "html":"input",
-          "type": "range",
-          "class": "yoinput",
-          "min": 0,
-          "max": 255,
-          "step": 5,
-          "label": "📢 Громкость",
-          "onChange": true
-        },
-        {
-          "section": "player_equalizer",
-          "hidden": true,
-          "show_btn": false,
-          "block":[
-            {
-              "id":"player_balance",
-              "html":"input",
-              "type": "range",
-              "class": "yoinput",
-              "min": -16,
-              "max": 16,
-              "step": 1,
-              "label": "📢 Баланс",
-              "onChange": true
-            },
-            {
-              "id":"trebble",
-              "html":"input",
-              "type": "range",
-              "class": "yoinput",
-              "min": -16,
-              "max": 16,
-              "step": 1,
-              "label": "📢 Высокие"
-            },
-            {
-              "id":"middle",
-              "html":"input",
-              "type": "range",
-              "class": "yoinput",
-              "min": -16,
-              "max": 16,
-              "step": 1,
-              "label": "📢 Средние"
-            },
-            {
-              "id":"bass",
-              "html":"input",
-              "type": "range",
-              "class": "yoinput",
-              "min": -16,
-              "max": 16,
-              "step": 1,
-              "label": "📢 Низкие"
-            },
-            {
-              "id":"player_equalizer_btn",
-              "html":"button",
-              "type":"submit",
-              "form": "player_equalizer",
-              "label":"🖫 Сохранить"
-            }
-          ]
-        },
-        {
-          "id":"playlist_loader",
-          "html":"div",
-          "type":"js",
-          "class":"flex",
-          "value":"build_radio_playlist",
-          "params":"/data/playlist.csv"
-        },
-        {
-          "id":"podval",
-          "html":"comment",
-          "class": "yo_body",
-          "label":"some comment"
-        }
-      ]
-    }
+    "radio":[
+      {
+        "section":"yo_main",
+        "main":true,
+        "class": "yo_body",
+        "block":[
+          {
+            "html":"yologo"
+          },
+          {
+            "id":"playerbuttons",
+            "html":"playerbuttons",
+            "class":"container_centered"
+          },
+          {
+            "id":"player_volume",
+            "html":"input",
+            "type": "range",
+            "class": "yoinput",
+            "min": 0,
+            "max": 255,
+            "step": 5,
+            "label": "📢 Громкость",
+            "onChange": true
+          },
+          {
+            "section": "player_equalizer",
+            "hidden": true,
+            "show_btn": false,
+            "block":[
+              {
+                "id":"player_balance",
+                "html":"input",
+                "type": "range",
+                "class": "yoinput",
+                "min": -16,
+                "max": 16,
+                "step": 1,
+                "label": "📢 Баланс",
+                "onChange": true
+              },
+              {
+                "id":"trebble",
+                "html":"input",
+                "type": "range",
+                "class": "yoinput",
+                "min": -16,
+                "max": 16,
+                "step": 1,
+                "label": "📢 Высокие"
+              },
+              {
+                "id":"middle",
+                "html":"input",
+                "type": "range",
+                "class": "yoinput",
+                "min": -16,
+                "max": 16,
+                "step": 1,
+                "label": "📢 Средние"
+              },
+              {
+                "id":"bass",
+                "html":"input",
+                "type": "range",
+                "class": "yoinput",
+                "min": -16,
+                "max": 16,
+                "step": 1,
+                "label": "📢 Низкие"
+              },
+              {
+                "id":"player_equalizer_btn",
+                "html":"button",
+                "type":"submit",
+                "form": "player_equalizer",
+                "label":"🖫 Сохранить"
+              }
+            ]
+          },
+          {
+            "id":"playlist_loader",
+            "html":"div",
+            "type":"js",
+            "class":"flex",
+            "value":"build_radio_playlist",
+            "params":"/data/playlist.csv"
+          },
+          {
+            "id":"podval",
+            "html":"comment",
+            "class": "yo_body",
+            "label":"some comment"
+          }
+        ]
+      },
+      {
+        "section":"callback",
+        "block":[
+          {"action": "player_getValues"}
+        ]
+      }
+    ]
   }
 }

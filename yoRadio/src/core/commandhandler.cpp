@@ -23,7 +23,6 @@ bool CommandHandler::exec(const char *command, const char *value, uint8_t cid) {
   if (strEquals(command, "mode"))     { config.changeMode(atoi(value)); return true; }
 #endif
   if (strEquals(command, "reset") && cid==0)    { config.reset(); return true; }
-  if (strEquals(command, "ballance")) { config.setBalance(atoi(value)); return true; }
   if (strEquals(command, "playstation") || strEquals(command, "play")){ 
     int id = atoi(value);
     if (id < 1) id = 1;
@@ -92,7 +91,6 @@ bool CommandHandler::exec(const char *command, const char *value, uint8_t cid) {
   if (strEquals(command, "volume"))  { player->setVolume(static_cast<uint8_t>(atoi(value))); return true; }
   if (strEquals(command, "sdpos"))   { config.setSDpos(static_cast<uint32_t>(atoi(value))); return true; }
   if (strEquals(command, "snuffle")) { config.setSnuffle(strcmp(value, "true") == 0); return true; }
-  if (strEquals(command, "balance")) { config.setBalance(static_cast<uint8_t>(atoi(value))); return true; }
   if (strEquals(command, "reboot"))  { ESP.restart(); return true; }
   if (strEquals(command, "format"))  { LittleFS.format(); ESP.restart(); return true; }
   if (strEquals(command, "submitplaylist"))  { return true; }

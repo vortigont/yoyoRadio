@@ -170,7 +170,7 @@ void encodersLoop(yoEncoder *enc, bool first){
     first = first?(first && encBtnState):(!encBtnState);
     if(first){
       // send event cmd to step the volume
-      EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::playerVolumeStep), &encoderDelta, sizeof(encoderDelta));
+      EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::audioVolumeStep), &encoderDelta, sizeof(encoderDelta));
     } else {
       if(encoderDelta > 0) player->next(); else player->prev();
     }
@@ -470,7 +470,7 @@ void controlsEvent(bool toRight, int8_t volDelta) {
     if (volDelta == 0)
       volume = toRight ? 1 : -1;
     // send event cmd to step the volume
-    EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::playerVolumeStep), &volume, sizeof(volume));
+    EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::audioVolumeStep), &volume, sizeof(volume));
   }
   if (display->mode() == STATIONS) {
     display->resetQueue();

@@ -23,6 +23,11 @@ enum class dac_type_t {
   ES8311
 };
 
+// Audiolib equalizer values
+struct equalizer_tone_t {
+  int8_t low, band, high;
+};
+
 enum plStatus_e : uint8_t{ PLAYING = 1, STOPPED = 2 };
 
 
@@ -39,14 +44,14 @@ class AudioController {
 
     void _stop(bool alreadyStopped = false);
     void _play(uint16_t stationId);
-    // restore volume value from nvram
-    void _loadVol();
 
 protected:
   // audio processing obj
   Audio audio;
   // current raw volume value (unscaled), i.e. one that is supplied from external calls
   int32_t volume;
+  int8_t balance;
+  equalizer_tone_t tone;
 
   /**
    * @brief set DAC volume
@@ -57,6 +62,8 @@ protected:
    */
   virtual void setDACVolume(uint8_t vol, uint8_t curve = 0) = 0;
   virtual uint8_t getDACVolume() = 0;
+  virtual void setDACBalance(int8_t bal = 0){ audio.setBalance(bal); };
+  virtual void setDACTone(int8_t low, int8_t band, int8_t high){ audio.setTone(low, band, high); }
 
   /**
    * @brief adjusts station's volume according to playlist's correction value
@@ -103,9 +110,10 @@ public:
      */
     void stepVolume(int32_t step){ setVolume( volume + step); };
     
-    virtual void setBalance(int8_t bal = 0){ audio.setBalance(bal); };
+    void setBalance(int8_t bal = 0);
     // volume, tembre control - maps to Audio lib methods by default
-    virtual void setTone(int8_t low, int8_t band, int8_t high){ audio.setTone(low, band, high); }
+    void setTone(int8_t low, int8_t band, int8_t high){ setTone({low, band, high}); };
+    void setTone(equalizer_tone_t t);
 
     /**
      * @brief mute DAC/amplifier
@@ -146,39 +154,44 @@ public:
 
 
 private:
-    std::mutex _mtx;
+  std::mutex _mtx;
 
-    /**
-     * @brief play station from a playlist by index
-     * index is resolved via Config instance
-     * 
-     * @param idx 
-     */
-    void _play_station_from_playlist(int idx);
+  // restore volume/balance/tone values from NVS
+  void _loadValues();
 
-    // event function handlers
-    esp_event_handler_instance_t _hdlr_cmd_evt{nullptr};
+  /**
+   * @brief play station from a playlist by index
+   * index is resolved via Config instance
+   * 
+   * @param idx 
+   */
+  void _play_station_from_playlist(int idx);
 
-    /**
-     * @brief subscribe to event mesage bus
-     * 
-     */
-    void _events_subsribe();
+  // event function handlers
+  esp_event_handler_instance_t _hdlr_cmd_evt{nullptr};
 
-    /**
-     * @brief unregister from event loop
-     * 
-     */
-    void _events_unsubsribe();
+  /**
+   * @brief subscribe to event mesage bus
+   * 
+   */
+  void _events_subsribe();
 
-    // command events handler
-    void _events_cmd_hndlr(int32_t id, void* data);
+  /**
+   * @brief unregister from event loop
+   * 
+   */
+  void _events_unsubsribe();
 
-    // EmbUI handlers
-    void _embui_actions_register();
-    void _embui_actions_unregister();
-    // process "player_*" messages from EmbUI
-    void _embui_player_commands(Interface *interf, JsonVariantConst data, const char* action);
+  // command events handler
+  void _events_cmd_hndlr(int32_t id, void* data);
+
+  // EmbUI handlers
+  void _embui_actions_register();
+  void _embui_actions_unregister();
+  // process "player_*" messages from EmbUI
+  void _embui_player_commands(Interface *interf, JsonVariantConst data, const char* action);
+  // publish current vol, balance, EQ values to WebUI
+  void _embui_publish_audio_values(Interface* interf = nullptr);
 };
 
 // generic I2S DAC for ESP32 with software volume control

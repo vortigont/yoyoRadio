@@ -406,27 +406,6 @@ void NetServer::processQueue(){
           //telnet.info();
           break;
       }
-      case EQUALIZER: {
-        JsonArray a = obj[P_payload].to<JsonArray>();
-        JsonObject o = a.add<JsonObject>();
-        o["id"] = "bass";
-        o["value"] = config.store.bass;
-        JsonObject o2 = a.add<JsonObject>();
-        o["id"] = "middle";
-        o["value"] = config.store.middle;
-        JsonObject o3 = a.add<JsonObject>();
-        o["id"] = "trebble";
-        o["value"] = config.store.trebble;
-        break;
-      }
-
-      case BALANCE: {
-        JsonArray a = obj[P_payload].to<JsonArray>();
-        JsonObject o = a.add<JsonObject>();
-        o["id"] = "balance";
-        o["value"] = config.store.balance;
-        break;
-      }
 
       case SDINIT:
         obj["sdinit"] = SDC_CS!=255;
@@ -502,21 +481,6 @@ void NetServer::onWsMessage(void *arg, uint8_t *data, size_t len, uint8_t client
     LOGD("WS MSG: ", println, reinterpret_cast<const char*>(data));
     char comnd[65], val[65];
     if (config.parseWsCommand((const char*)data, comnd, val, 65)) {
-      if (strcmp(comnd, "trebble") == 0) {
-        int8_t valb = atoi(val);
-        config.setTone(config.store.bass, config.store.middle, valb);
-        return;
-      }
-      if (strcmp(comnd, "middle") == 0) {
-        int8_t valb = atoi(val);
-        config.setTone(config.store.bass, valb, config.store.trebble);
-        return;
-      }
-      if (strcmp(comnd, "bass") == 0) {
-        int8_t valb = atoi(val);
-        config.setTone(valb, config.store.middle, config.store.trebble);
-        return;
-      }
       if (strcmp(comnd, "submitplaylistdone") == 0) {
 #ifdef MQTT_ROOT_TOPIC
         mqttplaylistticker.attach(5, mqttplaylistSend);
@@ -843,11 +807,6 @@ void handleIndex(AsyncWebServerRequest * request) {
           { delay(100); ESP.restart(); }
         return;
       }
-    }
-    if (request->hasArg("trebble") && request->hasArg("middle") && request->hasArg("bass")) {
-      config.setTone(request->getParam("bass")->value().toInt(), request->getParam("middle")->value().toInt(), request->getParam("trebble")->value().toInt());
-      request->send(200, asyncsrv::T_text_plain);
-      return;
     }
     if (request->hasArg("sleep")) {
       int sford = request->getParam("sleep")->value().toInt();

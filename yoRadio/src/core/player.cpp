@@ -39,14 +39,12 @@ void AudioController::init() {
   #ifdef MQTT_ROOT_TOPIC
   memset(burl, 0, MQTT_BURL_SIZE);
   #endif
-  setBalance(config.store.balance);
-  setTone(config.store.bass, config.store.middle, config.store.trebble);
   _status = STOPPED;
   #if PLAYER_FORCE_MONO
     forceMono(true);
   #endif
-  _loadVol();  // restore volume value from NVS
   audio.setConnectionTimeout(1700, 3700);
+  _loadValues();  // restore volume/tone value from NVS
   // event bus subscription
   _events_subsribe();
   // EmbUI messages
@@ -248,21 +246,32 @@ uint8_t AudioController::volume_level_adjustment(uint8_t volume) {
   return vol;
 }
 
-void AudioController::_loadVol() {
-  // load volume value from nvs
+void AudioController::_loadValues() {
+  // load volume/tone/balance value from nvs
   esp_err_t err;
   std::unique_ptr<nvs::NVSHandle> handle = nvs::open_nvs_handle(T_Player, NVS_READONLY, &err);
-  if (err == ESP_OK){
-    volume = DEFAULT_VOLUME_VALUE;
-    handle->get_item(T_volume, volume);
-    setDACVolume(volume_level_adjustment(volume));
+  if (err != ESP_OK){
+    LOGW(T_Player, println, "Can't load volume/EQ values");
+    return;
   }
+  // volume
+  volume = DEFAULT_VOLUME_VALUE;
+  handle->get_item(T_volume, volume);
+  setDACVolume(volume_level_adjustment(volume));
+  // balance
+  balance = 0;
+  handle->get_item(T_balance, balance);
+  setDACBalance(balance);
+  // EQ tone
+  equalizer_tone_t tone = {0, 0, 0};
+  handle->get_blob(T_equalizer, &tone, sizeof(tone));
+  setDACTone(tone.low, tone.band, tone.high);
 }
 
 void AudioController::setVolume(int32_t vol) {
   // since Audio lib takes uint8_t for volume, let's clamp it here anyway
   volume = clamp(vol, 0L, 255L);
-  LOGD(T_Player, printf, "setVolume:%d\n", volume);
+  LOGI(T_Player, printf, "setVolume:%d\n", volume);
   setDACVolume(volume_level_adjustment(volume));
   // save volume value to nvs
   esp_err_t err;
@@ -270,6 +279,35 @@ void AudioController::setVolume(int32_t vol) {
   if (err == ESP_OK){
     handle->set_item(T_volume, volume);
   }
+  // publish volume change notification to event bus
+  EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::audioVolume), &volume, sizeof(volume));
+}
+
+void AudioController::setBalance(int8_t bal){
+  LOGI(T_Player, printf, "set Balance:%d\n", volume);
+  setDACBalance(bal);
+  // save volume value to nvs
+  esp_err_t err;
+  std::unique_ptr<nvs::NVSHandle> handle = nvs::open_nvs_handle(T_Player, NVS_READWRITE, &err);
+  if (err == ESP_OK){
+    handle->set_item(T_balance, bal);
+  }
+  // publish balance change notification to event bus
+  EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::audioBalance), &bal, sizeof(bal));
+}
+
+void AudioController::setTone(equalizer_tone_t t){
+  LOGI(T_Player, printf, "set Tone low:%d, mid:%d, high:%d\n", tone.low, tone.band, tone.high);
+  tone = t;
+  setDACTone(tone.low, tone.band, tone.high);
+  // save volume value to nvs
+  esp_err_t err;
+  std::unique_ptr<nvs::NVSHandle> handle = nvs::open_nvs_handle(T_Player, NVS_READWRITE, &err);
+  if (err == ESP_OK){
+    handle->set_blob(T_balance, &tone, sizeof(tone));
+  }
+  // publish tone change notification to event bus
+  EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::audioBalance), &tone, sizeof(tone));
 }
 
 void AudioController::_events_subsribe(){
@@ -310,7 +348,7 @@ void AudioController::_events_cmd_hndlr(int32_t id, void* data){
       next();
       break;
 
-    case evt::yo_event_t::playerVolume :
+    case evt::yo_event_t::audioVolume :
       setVolume(*reinterpret_cast<int32_t*>(data));
       break;
 
@@ -368,6 +406,48 @@ void AudioController::_embui_player_commands(Interface *interf, JsonVariantConst
   if(a.compare(T_balance) == 0) return setBalance(data.as<int8_t>());
 
   if(a.compare(T_equalizer) == 0) return setTone(data[T_bass], data[T_middle], data[T_trebble]);
+  // request for Volume/EQ values
+  if(a.compare(T_getValues) == 0) return _embui_publish_audio_values(interf);
+}
+
+void AudioController::_embui_publish_audio_values(Interface* interf){
+  // here now only WS publish, todo: MQTT
+
+  // this method could be called with or without Interface object
+  // with - when WebUI requests for data from it's side
+  // without - when setting vol/EQ via internal methods and new values needs to be published to web UI
+  // so I'll use double indirect here and temp object could be safely destroyed when going out of scope 
+  std::unique_ptr<Interface> i;
+  if (!interf){
+    if (!embui.ws.count()) return;                  // do not publish anything if there are no active clients
+    i = std::make_unique<Interface>(&embui.ws);     // only websocket publish, or else need to use `embui.feeders()`
+    interf = i.get();
+  }
+
+
+  interf->json_frame_value();
+  // vol
+  std::string s(T_player_);      // common control's prefix, required for webUI's element ID's
+  s.append(T_volume);
+  interf->value(s, volume);
+
+  // balance
+  s = T_player_;
+  s.append(T_balance);
+  interf->value(s, balance);
+
+  // tone
+  s = T_player_;
+  s.append(T_bass);
+  interf->value(s, tone.low);
+  s = T_player_;
+  s.append(T_middle);
+  interf->value(s, tone.band);
+  s = T_player_;
+  s.append(T_trebble);
+  interf->value(s, tone.high);
+  // send the data to WebUI
+  interf->json_frame_flush();
 }
 
 

@@ -57,17 +57,20 @@ enum class yo_event_t:int32_t {
   playerPrev,               // previous track
   playerNext,               // next track
   plsStation,               // play radio station from a playlist, param: int n - index in a playlist entry
-  // Sound control
-  playerVolume = 110,       // player's volume value command/state, param: int n
-  playerVolumeStep,         // player's volume step incr/decr command, param: int n
-  playerMute,
-  playerUnMute,
-  playerMuteToggle,
+  playerMode = 110,         // player mode webradio/sdcard, param int n: 0 - for webradio, 1 - for SDCARD
 
-  playerMode = 120,         // player mode webradio/sdcard, param int n: 0 - for webradio, 1 - for SDCARD
+  // Sound control
+  audioVolume = 120,        // player's volume value command/state, param: int n
+  audioVolumeStep,          // player's volume step incr/decr command, param: int n
+  audioMute,
+  audioUnMute,
+  audioMuteToggle,
+  audioBalance,             // Sound balance, param int8_t
+  audioTone,                // Sound equlizer settings, param: equalizer_tone_t struct
+  audioGetValues,           // request to notify of current audio settings (vol, balance, etc...), used in requests from WebUI, MQTT
 
   // Audio player metadata
-  playerAudioInfo = 130,     // player notifies about current's data/stream meta - bitrate/codec, param audio_into_t
+  playerAudioInfo = 130,    // player notifies about current's data/stream meta - bitrate/codec, param audio_into_t
   playerStationTitle,       // player notifies about new station title, param - const char[] to the station name
   playerTrackTitle,         // player notifies about new track title, param - const char[] to the track name
 
