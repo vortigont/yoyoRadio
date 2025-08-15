@@ -176,7 +176,7 @@ void Config::changeMode(int newmode){
   initPlaylistMode();
   if (pir){
     auto v = getMode()==PM_WEB?store.lastStation:store.lastSdStation;
-    EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &v, sizeof(v));
+    EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::playerStation), &v, sizeof(v));
   }
 
   netserver.resetQueue();
@@ -403,7 +403,7 @@ void Config::setSDpos(uint32_t val){
     sdResumePos = 0;
     if(!player->isRunning()){
       player->setResumeFilePos(val - player->sd_min);
-      EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &config.store.lastSdStation, sizeof(config.store.lastSdStation));
+      EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::playerStation), &config.store.lastSdStation, sizeof(config.store.lastSdStation));
     }else{
       player->setFilePos(val - player->sd_min);
     }

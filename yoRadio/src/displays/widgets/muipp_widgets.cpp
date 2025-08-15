@@ -116,7 +116,7 @@ MuiItem_Bitrate_Widget::MuiItem_Bitrate_Widget(muiItemId id,
 
   // bitrate state change event picker
   esp_event_handler_instance_register_with(evt::get_hndlr(), YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerAudioInfo),
-    [](void* self, esp_event_base_t base, int32_t id, void* data){ static_cast<MuiItem_Bitrate_Widget*>(self)->setInfo(static_cast<evt::audio_into_t*>(data)); },
+    [](void* self, esp_event_base_t base, int32_t id, void* data){ static_cast<MuiItem_Bitrate_Widget*>(self)->setInfo(static_cast<audio_info_t*>(data)); },
     this, &_hdlr_chg_evt
   );
 

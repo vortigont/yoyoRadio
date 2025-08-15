@@ -56,7 +56,7 @@ enum class yo_event_t:int32_t {
   playerToggle,             // toggle Play/Stop state command/state, no param allowed
   playerPrev,               // previous track
   playerNext,               // next track
-  plsStation,               // play radio station from a playlist, param: int n - index in a playlist entry
+  playerStation,            // play radio station from a playlist, param: int n - index in a playlist entry
   playerMode = 110,         // player mode webradio/sdcard, param int n: 0 - for webradio, 1 - for SDCARD
 
   // Sound control
@@ -70,7 +70,7 @@ enum class yo_event_t:int32_t {
   audioGetValues,           // request to notify of current audio settings (vol, balance, etc...), used in requests from WebUI, MQTT
 
   // Audio player metadata
-  playerAudioInfo = 130,    // player notifies about current's data/stream meta - bitrate/codec, param audio_into_t
+  playerAudioInfo = 130,    // player notifies about current's data/stream meta - bitrate/codec, param audio_info_t
   playerStationTitle,       // player notifies about new station title, param - const char[] to the station name
   playerTrackTitle,         // player notifies about new track title, param - const char[] to the track name
 
@@ -124,17 +124,6 @@ enum class yo_state:int32_t {
   idle = 0,
   webstream
 
-};
-
-// structs that could be used as event payload
-
-/**
- * @brief playing stream/data meta
- * 
- */
-struct audio_into_t {
-  uint32_t bitRate;
-  const char *codecName;
 };
 
 

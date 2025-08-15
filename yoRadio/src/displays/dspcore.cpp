@@ -853,7 +853,7 @@ void DisplayGFX::_events_chg_hndlr(int32_t id, void* data){
 
     // process metadata about playing codec
     case evt::yo_event_t::playerAudioInfo : {
-      evt::audio_into_t* i = reinterpret_cast<evt::audio_into_t*>(data);
+      audio_info_t* i = reinterpret_cast<audio_info_t*>(data);
       char buf[20];
       snprintf(buf, 20, bitrateFmt, i->codecName);
       break;

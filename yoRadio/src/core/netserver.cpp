@@ -487,7 +487,7 @@ void NetServer::onWsMessage(void *arg, uint8_t *data, size_t len, uint8_t client
 #endif
         if (player->isRunning()){
           auto v = config.lastStation();
-          EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &v, sizeof(v));
+          EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::playerStation), &v, sizeof(v));
         }
 
         return;
@@ -606,7 +606,7 @@ void NetServer::_events_chg_hndlr(int32_t id, void* data){
 
     // process metadata about playing codec
     case evt::yo_event_t::playerAudioInfo : {
-      evt::audio_into_t* i = reinterpret_cast<evt::audio_into_t*>(data);
+      audio_info_t* i = reinterpret_cast<audio_info_t*>(data);
       JsonArray a = doc[P_payload].to<JsonArray>();
       JsonObject o = a.add<JsonObject>();
         o[P_id] = "bitrate";

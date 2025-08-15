@@ -1,6 +1,7 @@
 #ifndef player_h
 #define player_h
 #include "options.h"
+#include "common.h"
 #include <mutex>
 #include "Audio.h"
 #include "es8311.h"
@@ -21,11 +22,6 @@ enum class dac_type_t {
   generic = 0,
   esp32internal,
   ES8311
-};
-
-// Audiolib equalizer values
-struct equalizer_tone_t {
-  int8_t low, band, high;
 };
 
 enum plStatus_e : uint8_t{ PLAYING = 1, STOPPED = 2 };

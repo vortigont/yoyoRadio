@@ -76,7 +76,7 @@ void AudioController::_stop(bool alreadyStopped){
   setMute(true);
 
   // update stream's meta info
-  evt::audio_into_t info{ 0, audio.getCodecname() };
+  audio_info_t info{ 0, audio.getCodecname() };
   EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerAudioInfo), &info, sizeof(info));
   EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayPStop));
 }
@@ -315,10 +315,11 @@ void AudioController::_events_unsubsribe(){
 }
 
 void AudioController::_events_cmd_hndlr(int32_t id, void* data){
+// process command events received via event loop bus
   switch (static_cast<evt::yo_event_t>(id)){
 
     // Play radio station from a playlist
-    case evt::yo_event_t::plsStation : {
+    case evt::yo_event_t::playerStation : {
       _play_station_from_playlist(*reinterpret_cast<int32_t*>(data));
       break;
     }
@@ -341,6 +342,17 @@ void AudioController::_events_cmd_hndlr(int32_t id, void* data){
 
     case evt::yo_event_t::audioVolume :
       setVolume(*reinterpret_cast<int32_t*>(data));
+      _embui_publish_audio_values();
+      break;
+
+    case evt::yo_event_t::audioBalance :
+      setBalance(*reinterpret_cast<int8_t*>(data));
+      _embui_publish_audio_values();
+      break;
+
+    case evt::yo_event_t::audioTone :
+      setTone(*reinterpret_cast<equalizer_tone_t*>(data));
+      _embui_publish_audio_values();
       break;
 
     default:;
@@ -358,7 +370,7 @@ void AudioController::_play_station_from_playlist(int idx){
 }
 
 void AudioController::pubCodecInfo(){
-  evt::audio_into_t info{ audio.getBitRate() / 1000, audio.getCodecname() };
+  audio_info_t info{ audio.getBitRate() / 1000, audio.getCodecname() };
   EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerAudioInfo), &info, sizeof(info));
 }
 
@@ -592,11 +604,13 @@ void audio_id3data(const char *info){  //id3 metadata
 }
 
 void audio_eof_mp3(const char *info){  //end of file
+  LOGI(T_Player, println, "End of file reached");
   config.sdResumePos = 0;
   player->next();
 }
 
 void audio_eof_stream(const char *info){
+  LOGI(T_Player, println, "End of stream reached");
   if(!player->resumeAfterUrl){
     EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::playerStop));
     return;
@@ -605,8 +619,8 @@ void audio_eof_stream(const char *info){
     player->setResumeFilePos( config.sdResumePos==0?0:config.sdResumePos - player->sd_min);
   }
 
-  auto v = config.lastStation();
-  EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &v, sizeof(v));
+  //auto v = config.lastStation();
+  //EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &v, sizeof(v));
 }
 
 void audio_progress(uint32_t startpos, uint32_t endpos){

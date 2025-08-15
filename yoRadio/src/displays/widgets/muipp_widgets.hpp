@@ -65,7 +65,7 @@ class MuiItem_Bitrate_Widget : public MuiItem_Uncontrollable {
   uint16_t _w, _h;
   AGFX_text_t _tcfg;
   bool _pending;
-  evt::audio_into_t _info{0, nullptr};
+  audio_info_t _info{0, nullptr};
   esp_event_handler_instance_t _hdlr_chg_evt{nullptr};
 
 public:
@@ -87,5 +87,5 @@ public:
   //void setText(const char* text, float speed){ _scroller.begin(text, speed, _tcfg.font); }
   void render(const MuiItem* parent, void* r = nullptr) override;
   bool refresh_req() const override { return _pending; };
-  void setInfo(evt::audio_into_t* i){ _info = *i; _pending = true; }
+  void setInfo(audio_info_t* i){ _info = *i; _pending = true; }
 };

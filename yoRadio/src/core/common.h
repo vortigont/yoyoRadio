@@ -1,5 +1,6 @@
 #ifndef COMMON_H
 #define COMMON_H
+#include <cstdint>
 
 enum displayMode_e { PLAYER, VOL, STATIONS, NUMBERS, LOST, UPDATING, INFO, SETTINGS, TIMEZONE, WIFI, CLEAR, SLEEPING, SDCHANGE, SCREENSAVER, SCREENBLANK };
 //enum class pages_e : uint8_t  { PG_PLAYER=0, PG_DIALOG=1, PG_PLAYLIST=2, PG_SCREENSAVER=3 };
@@ -12,6 +13,24 @@ struct requestParams_t
 };
 
 enum controlEvt_e { EVT_NONE=255, EVT_BTNLEFT=0, EVT_BTNCENTER=1, EVT_BTNRIGHT=2, EVT_ENCBTNB=3, EVT_BTNUP=4, EVT_BTNDOWN=5, EVT_ENC2BTNB=6, EVT_BTNMODE=7 };
+
+
+// structs that could be used as event payload
+
+/**
+ * @brief playing stream/data meta
+ * 
+ */
+struct audio_info_t {
+  uint32_t bitRate;
+  const char *codecName;
+};
+
+// Audiolib equalizer values
+struct equalizer_tone_t {
+  int8_t low, band, high;
+};
+
 
 
 // a simple constrain function

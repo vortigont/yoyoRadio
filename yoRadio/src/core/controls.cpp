@@ -270,7 +270,7 @@ void irLoop() {
                 if (display->mode() == NUMBERS) {
                   int32_t d = PLAYER;
                   EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
-                  EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &display->numOfNextStation, sizeof(display->numOfNextStation));
+                  EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::playerStation), &display->numOfNextStation, sizeof(display->numOfNextStation));
                   display->numOfNextStation = 0;
                   break;
                 }
@@ -516,7 +516,7 @@ void onBtnClick(int id) {
           #ifdef DSP_LCD
             delay(200);
           #endif
-          EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &display->currentPlItem, sizeof(display->currentPlItem));
+          EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::playerStation), &display->currentPlItem, sizeof(display->currentPlItem));
         }
         //if(network.status==SOFT_AP || display->mode()==LOST){
           #ifdef USE_SD
