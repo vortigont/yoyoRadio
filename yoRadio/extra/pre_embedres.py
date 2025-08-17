@@ -26,7 +26,8 @@ in_gz_files = ["webresources/html/index.html",
                "webresources/html/js/embui_style.css",
                "webresources/html/js/ui_yo.json",
                "webresources/html/js/yo.js",
-               "webresources/html/js/yo_style.css"
+               "webresources/html/js/yo_style.css",
+               "webresources/html/js/yo_theme.css"
                ]
 combine_css_files = ["webresources/html/js/yo_theme.css", "webresources/stock_www/style.css"]
 static_gz_files = [
@@ -90,10 +91,10 @@ def embed_resources():
             compress_file(f, f_hdr)
 
         # combine css files
-        cssall = ''.join([open(f, 'r', encoding='utf-8').read() for f in combine_css_files])
-        fpath = outdir + '/yo_style.css.gz'
-        compress_data(cssall, fpath)
-        print_hdr_data(fpath, f_hdr)
+        #cssall = ''.join([open(f, 'r', encoding='utf-8').read() for f in combine_css_files])
+        #fpath = outdir + '/yo_style.css.gz'
+        #compress_data(cssall, fpath)
+        #print_hdr_data(fpath, f_hdr)
 
         # make header data for static files
         for f in static_gz_files:
