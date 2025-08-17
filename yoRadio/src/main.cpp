@@ -76,7 +76,7 @@ void setup() {
   if (config.store.smartstart == 1) {
     LOGI(T_BOOT, println, "Resume last station playback");
     auto v = config.lastStation();
-    EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &v, sizeof(v));
+    EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::playerStation), &v, sizeof(v));
   }
   #endif
   LOGD(T_BOOT, println, "Setup complete");
