@@ -199,7 +199,7 @@ void Config::initSDPlaylist() {
     File index = SDPLFS()->open(INDEX_SD_PATH, "r");
     //store.countStation = index.size() / 4;
     if(doIndex){
-      lastStation(_randomStation());
+      //lastStation(_randomStation());
       sdResumePos = 0;
     }
     index.close();

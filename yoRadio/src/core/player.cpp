@@ -211,10 +211,10 @@ void AudioController::next() {
 }
 
 void AudioController::toggle() {
-  if (_status == PLAYING) {
+  if (audio.isRunning()) {
     _stop();
   } else {
-    _play_station_from_playlist(config.lastStation());
+    _play_station_from_playlist(_curStationIndex);
   }
 }
 
@@ -362,6 +362,7 @@ void AudioController::_play_station_from_playlist(int idx){
   // connect to a station
   if (audio.connecttohost(_pls.getURL())){
     // connection successfull, let's save new playlist position and send notifications
+    _curStationIndex = abs(idx);
     esp_err_t err;
     std::unique_ptr<nvs::NVSHandle> handle = nvs::open_nvs_handle(T_Player, NVS_READONLY, &err);
     if (err == ESP_OK){
@@ -473,9 +474,13 @@ void ESP32_I2S_Generic::setMute(bool mute){
   if (_mute_gpio == -1){
     // soft mute
     // save current DAC volume
-    if (mute)
+    if (mute){
       _soft_mute_volume = getDACVolume();
-    setDACVolume(mute ? 0 : _soft_mute_volume);
+      setDACVolume(0);
+    } else {
+      // this could be 0 when boot-start
+      if (_soft_mute_volume) setDACVolume(_soft_mute_volume);
+    }
     _mute_state = mute;
   } else {
     digitalWrite(_mute_gpio, mute ? _mute_level : !_mute_level);

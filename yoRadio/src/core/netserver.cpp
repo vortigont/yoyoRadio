@@ -359,9 +359,6 @@ void NetServer::processQueue(){
         break;
       }
 */
-      case ITEM:
-        obj["current"] = config.lastStation();
-        break;
       case NRSSI: {
         JsonArray a = obj[P_payload].to<JsonArray>();
         JsonObject o = a.add<JsonObject>();
@@ -473,8 +470,8 @@ void NetServer::onWsMessage(void *arg, uint8_t *data, size_t len, uint8_t client
         mqttplaylistticker.attach(5, mqttplaylistSend);
 #endif
         if (player->isRunning()){
-          auto v = config.lastStation();
-          EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::playerStation), &v, sizeof(v));
+          //auto v = config.lastStation();
+          //EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::playerStation), &v, sizeof(v));
         }
 
         return;

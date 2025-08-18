@@ -228,7 +228,7 @@ class ESP32_I2S_Generic : public AudioController {
   int32_t _mute_gpio;
   bool _mute_level, _mute_state; // soft mute state
   // stashed volume value for software mute (if no mute gpio defined)
-  uint8_t _soft_mute_volume;
+  uint8_t _soft_mute_volume{0};
 
   void setDACVolume(uint8_t vol, uint8_t curve = 0) override { audio.setVolume( vol, curve); }
   uint8_t getDACVolume() override { return audio.getVolume(); }

@@ -12,13 +12,6 @@ CommandHandler cmd;
 
 bool CommandHandler::exec(const char *command, const char *value, uint8_t cid) {
   LOGD("CMD: ", printf, "%s:%s\n", command, value);
-  if (strEquals(command, "start"))    { auto v = config.lastStation(); EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::playerStation), &v, sizeof(v)); return true; }
-  if (strEquals(command, "stop"))     { EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::playerStop)); return true; }
-  if (strEquals(command, "toggle"))   { player->toggle(); return true; }
-  if (strEquals(command, "prev"))     { player->prev(); return true; }
-  if (strEquals(command, "next"))     { player->next(); return true; }
-  if (strEquals(command, "volm"))     { player->stepVolume(false); return true; }
-  if (strEquals(command, "volp"))     { player->stepVolume(true); return true; }
 #ifdef USE_SD
   if (strEquals(command, "mode"))     { config.changeMode(atoi(value)); return true; }
 #endif

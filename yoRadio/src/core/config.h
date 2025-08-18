@@ -189,13 +189,6 @@ class Config {
       void changeMode(int newmode=-1);
     #endif
 
-    uint16_t lastStation(){
-      return getMode()==PM_WEB?store.lastStation:store.lastSdStation;
-    }
-    void lastStation(uint16_t newstation){
-      if(getMode()==PM_WEB) saveValue(&store.lastStation, newstation);
-      else saveValue(&store.lastSdStation, newstation);
-    }
     // disable it for now
     uint8_t fillPlMenu(int from, uint8_t count, bool fromNextion=false){ return 0; };
     char * stationByNum(uint16_t num);
