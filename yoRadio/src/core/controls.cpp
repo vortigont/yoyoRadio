@@ -475,7 +475,9 @@ void controlsEvent(bool toRight, int8_t volDelta) {
   if (display->mode() == STATIONS) {
     display->resetQueue();
     int p = toRight ? display->currentPlItem + 1 : display->currentPlItem - 1;
-    uint16_t cs = config.playlistLength();
+    // some kind of a setting the display to draw playlist elements
+    // TODO: rewrite it, config is no longer carry that value
+    uint16_t cs = 1;// config.playlistLength();
     if (p < 1) p = cs;
     if (p > cs) p = 1;
     display->currentPlItem = p;

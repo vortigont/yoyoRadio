@@ -47,9 +47,6 @@ void setup() {
   create_player(DAC_TYPE);
   player->init();
 
-  LOGI(T_BOOT, println, "Load playlist");
-  config.initPlaylistMode();
-  
   LOGI(T_BOOT, println, "Start WebServer");
   netserver.begin();
   //telnet.begin();
@@ -70,8 +67,9 @@ void setup() {
   #ifdef MQTT_ROOT_TOPIC
     mqttInit();
   #endif
-  if (config.getMode()==PM_SDCARD) player->initHeaders(config.station.url);
 
+  /*
+  // this autoplay is wrong anyway
   #ifndef NO_AUTOPLAY_ONBOOT
   if (config.store.smartstart == 1) {
     LOGI(T_BOOT, println, "Resume last station playback");
@@ -79,6 +77,7 @@ void setup() {
     EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::playerStation), &v, sizeof(v));
   }
   #endif
+*/
   LOGD(T_BOOT, println, "Setup complete");
 }
 

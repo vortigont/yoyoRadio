@@ -153,7 +153,6 @@ void AudioController::_play(uint16_t stationId) {
   }
   // try to connect to remote host
   //if(config.getMode()==PM_WEB)
-  isConnected = audio.connecttohost(config.station.url);
 
   if(isConnected){
   //if (config.store.play_mode==PM_WEB?connecttohost(config.station.url):connecttoFS(SD,config.station.url,config.sdResumePos==0?_resumeFilePos:config.sdResumePos-player.sd_min)) {
@@ -172,7 +171,6 @@ void AudioController::_play(uint16_t stationId) {
     EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::devMode), &d, sizeof(d));
   } else {
     //telnet.printf("##ERROR#:\tError connecting to %s\n", config.station.url);
-    SET_PLAY_ERROR("Error connecting to %s", config.station.url);
     _stop(true);
   };
 }
@@ -203,27 +201,17 @@ void AudioController::browseUrl(){
 #endif
 
 void AudioController::prev() {
-  uint16_t lastStation = config.lastStation();
-  if(config.getMode()==PM_WEB || !config.store.sdsnuffle){;
-    if (lastStation == 1)
-      config.lastStation(config.playlistLength());
-    else
-      config.lastStation(lastStation - 1);
-  }
-  _play_station_from_playlist(config.lastStation());
+  if (_curStationIndex <= 1)
+    return _play_station_from_playlist(_pls.getCount());
+
+  _play_station_from_playlist(_curStationIndex - 1);
 }
 
 void AudioController::next() {
-  uint16_t lastStation = config.lastStation();
-  if(config.getMode()==PM_WEB || !config.store.sdsnuffle){
-    if (lastStation == config.playlistLength())
-      config.lastStation(1);
-    else
-      config.lastStation(lastStation + 1);
-  } else {
-    config.lastStation(random(1, config.playlistLength()));
-  }
-  _play_station_from_playlist(config.lastStation());
+  if (_curStationIndex >= _pls.getCount())
+    return _play_station_from_playlist(1);
+
+  _play_station_from_playlist(_curStationIndex + 1);
 }
 
 void AudioController::toggle() {
@@ -235,11 +223,12 @@ void AudioController::toggle() {
 }
 
 uint8_t AudioController::volume_level_adjustment(uint8_t volume) {
-  // some kind of normalizer ?
-  int vol = map(volume, 0, 254 - config.station.ovol * 3 , 0, 254);
-  if (vol > 254) vol = 254;
-  if (vol < 0) vol = 0;
-  return vol;
+  return volume;
+  // some kind of normalizer, in playlist it is all zero, who fills this values?
+  //int vol = map(volume, 0, 254 - config.station.ovol * 3 , 0, 254);
+  //if (vol > 254) vol = 254;
+  //if (vol < 0) vol = 0;
+  //return vol;
 }
 
 void AudioController::_loadValues() {
@@ -259,9 +248,11 @@ void AudioController::_loadValues() {
   handle->get_item(T_balance, balance);
   setDACBalance(balance);
   // EQ tone
-  equalizer_tone_t tone = {0, 0, 0};
+  tone = {0, 0, 0};
   handle->get_blob(T_equalizer, &tone, sizeof(tone));
   setDACTone(tone.low, tone.band, tone.high);
+  // restore last played station's playlist position
+  handle->get_item(T_station, _curStationIndex);
 }
 
 void AudioController::setVolume(int32_t vol) {
@@ -369,9 +360,16 @@ void AudioController::_play_station_from_playlist(int idx){
     LOGW(T_Player, printf, "Can't switch playlist to station:%d\n", idx);
     return;
   }
-
+  // stop previous playback if any
   audio.stopSong();
+  // connect to a station
   if (audio.connecttohost(_pls.getURL())){
+    // connection successfull, let's save new playlist position and send notifications
+    esp_err_t err;
+    std::unique_ptr<nvs::NVSHandle> handle = nvs::open_nvs_handle(T_Player, NVS_READONLY, &err);
+    if (err == ESP_OK){
+      handle->set_item(T_station, _curStationIndex);
+    }
     int32_t d = e2int(evt::yo_state::webstream);
     EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::devMode), &d, sizeof(d));
     EVT_POST(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerPlay));

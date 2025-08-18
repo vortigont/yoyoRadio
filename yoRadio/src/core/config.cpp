@@ -92,7 +92,6 @@ void Config::init() {
   BOOTLOG("LittleFS mounted");
   emptyFS = _isFSempty();
   if(emptyFS) BOOTLOG("LittleFS is empty!");
-  ssidsCount = 0;
   #ifdef USE_SD
   _SDplaylistFS = getMode()==PM_SDCARD?&sdman:(true?&LittleFS:_SDplaylistFS);
   #else
@@ -175,7 +174,6 @@ void Config::changeMode(int newmode){
     sdman.stop();
   }
   if(!_bootDone) return;
-  initPlaylistMode();
   if (pir){
     auto v = getMode()==PM_WEB?store.lastStation:store.lastSdStation;
     EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::playerStation), &v, sizeof(v));
@@ -217,49 +215,6 @@ bool Config::spiffsCleanup(){
   if(LittleFS.exists(INDEX_SD_PATH)) LittleFS.remove(INDEX_SD_PATH);
   if(LittleFS.exists(INDEX_PATH)) LittleFS.remove(INDEX_PATH);
   return ret;
-}
-
-void Config::initPlaylistMode(){
-  uint16_t _lastStation = 0;
-  uint16_t cs = playlistLength();
-  #ifdef USE_SD
-    if(getMode()==PM_SDCARD){
-      if(!sdman.start()){
-        store.play_mode=PM_WEB;
-        Serial.println("SD Mount Failed");
-        changeMode(PM_WEB);
-        _lastStation = store.lastStation;
-      }else{
-        if(_bootDone) Serial.println("SD Mounted"); else BOOTLOG("SD Mounted");
-          if(_bootDone) Serial.println("Waiting for SD card indexing..."); else BOOTLOG("Waiting for SD card indexing...");
-          initSDPlaylist();
-          if(_bootDone) Serial.println("done"); else BOOTLOG("done");
-          _lastStation = store.lastSdStation;
-          
-          if(_lastStation>cs && cs>0){
-            _lastStation=1;
-          }
-          if(_lastStation==0) {
-            _lastStation = _randomStation();
-          }
-      }
-    }else{
-      Serial.println("done");
-      _lastStation = store.lastStation;
-    }
-  #else //ifdef USE_SD
-    store.play_mode=PM_WEB;
-    _lastStation = store.lastStation;
-  #endif
-  if(getMode()==PM_WEB && !emptyFS) initPlaylist();
-  log_i("%d" ,_lastStation);
-  if (_lastStation == 0 && cs > 0) {
-    _lastStation = getMode()==PM_WEB?1:_randomStation();
-  }
-  lastStation(_lastStation);
-  saveValue(&store.play_mode, store.play_mode, true, true);
-  _bootDone = true;
-  loadStation(_lastStation);
 }
 
 void Config::_initHW(){
@@ -558,107 +513,11 @@ void Config::setSmartStart(uint8_t ss) {
   saveValue(&store.smartstart, ss);
 }
 
-uint8_t Config::setLastStation(uint16_t val) {
-  lastStation(val);
-  return store.lastStation;
-}
-
-uint8_t Config::setCountStation(uint16_t val) {
-  saveValue(&store.countStation, val);
-  return store.countStation;
-}
-
 uint8_t Config::setLastSSID(uint8_t val) {
   saveValue(&store.lastSSID, val);
   return store.lastSSID;
 }
-
-void Config::indexPlaylist() {
-  File playlist = LittleFS.open(PLAYLIST_PATH, "r");
-  if (!playlist) {
-    return;
-  }
-  char sName[BUFLEN], sUrl[BUFLEN];
-  int sOvol;
-  File index = LittleFS.open(INDEX_PATH, "w");
-  while (playlist.available()) {
-    uint32_t pos = playlist.position();
-    if (parseCSV(playlist.readStringUntil('\n').c_str(), sName, sUrl, sOvol)) {
-      index.write((uint8_t *) &pos, 4);
-    }
-  }
-  index.close();
-  playlist.close();
-}
-
-void Config::initPlaylist() {
-  //store.countStation = 0;
-  if (!LittleFS.exists(INDEX_PATH)) indexPlaylist();
-
-  /*if (LittleFS.exists(INDEX_PATH)) {
-    File index = LittleFS.open(INDEX_PATH, "r");
-    store.countStation = index.size() / 4;
-    index.close();
-    saveValue(&store.countStation, store.countStation, true, true);
-  }*/
-}
-uint16_t Config::playlistLength(){
-  uint16_t out = 0;
-  if (SDPLFS()->exists(REAL_INDEX)) {
-    File index = SDPLFS()->open(REAL_INDEX, "r");
-    out = index.size() / 4;
-    index.close();
-  }
-  return out;
-}
-bool Config::loadStation(uint16_t ls) {
-  char sName[BUFLEN], sUrl[BUFLEN];
-  int sOvol;
-  uint16_t cs = playlistLength();
-  if (cs == 0) {
-    memset(station.url, 0, BUFLEN);
-    //memset(station.name, 0, BUFLEN);
-    //strncpy(station.name, "ёRadio", BUFLEN);
-    station.ovol = 0;
-    LOGE(T_Config, println, "Playlist is empty");
-    return false;
-  }
-  if (ls > playlistLength()) {
-    ls = 1;
-  }
-  File playlist = SDPLFS()->open(REAL_PLAYL, "r");
-  File index = SDPLFS()->open(REAL_INDEX, "r");
-  index.seek((ls - 1) * 4, SeekSet);
-  uint32_t pos;
-  index.readBytes((char *) &pos, 4);
-  index.close();
-  playlist.seek(pos, SeekSet);
-  if (parseCSV(playlist.readStringUntil('\n').c_str(), sName, sUrl, sOvol)) {
-    memset(station.url, 0, BUFLEN);
-    //memset(station.name, 0, BUFLEN);
-    //strncpy(station.name, sName, BUFLEN);
-    strncpy(station.url, sUrl, BUFLEN);
-    station.ovol = sOvol;
-    setLastStation(ls);
-  }
-  playlist.close();
-  return true;
-}
-
-char * Config::stationByNum(uint16_t num){
-  File playlist = SDPLFS()->open(REAL_PLAYL, "r");
-  File index = SDPLFS()->open(REAL_INDEX, "r");
-  index.seek((num - 1) * 4, SeekSet);
-  uint32_t pos;
-  memset(_stationBuf, 0, BUFLEN/2);
-  index.readBytes((char *) &pos, 4);
-  index.close();
-  playlist.seek(pos, SeekSet);
-  strncpy(_stationBuf, playlist.readStringUntil('\t').c_str(), BUFLEN/2);
-  playlist.close();
-  return _stationBuf;
-}
-
+/*
 uint8_t Config::fillPlMenu(int from, uint8_t count, bool fromNextion) {
   int     ls      = from;
   uint8_t c       = 0;
@@ -704,7 +563,7 @@ uint8_t Config::fillPlMenu(int from, uint8_t count, bool fromNextion) {
   playlist.close();
   return c;
 }
-
+*/
 void Config::escapeQuotes(const char* input, char* output, size_t maxLen) {
   size_t j = 0;
   for (size_t i = 0; input[i] != '\0' && j < maxLen - 1; ++i) {
@@ -716,26 +575,6 @@ void Config::escapeQuotes(const char* input, char* output, size_t maxLen) {
     }
   }
   output[j] = '\0';
-}
-
-bool Config::parseCSV(const char* line, char* name, char* url, int &ovol) {
-  char *tmpe;
-  const char* cursor = line;
-  char buf[5];
-  tmpe = strstr(cursor, "\t");
-  if (tmpe == NULL) return false;
-  strlcpy(name, cursor, tmpe - cursor + 1);
-  if (strlen(name) == 0) return false;
-  cursor = tmpe + 1;
-  tmpe = strstr(cursor, "\t");
-  if (tmpe == NULL) return false;
-  strlcpy(url, cursor, tmpe - cursor + 1);
-  if (strlen(url) == 0) return false;
-  cursor = tmpe + 1;
-  if (strlen(cursor) == 0) return false;
-  strlcpy(buf, cursor, 4);
-  ovol = atoi(buf);
-  return true;
 }
 
 bool Config::parseJSON(const char* line, char* name, char* url, int &ovol) {
@@ -822,35 +661,6 @@ bool Config::saveWifiFromNextion(const char* post){
     ESP.restart();
     return true;
   }
-}
-
-bool Config::saveWifi() {
-  if (!LittleFS.exists(TMP_PATH)) return false;
-  LittleFS.remove(SSIDS_PATH);
-  LittleFS.rename(TMP_PATH, SSIDS_PATH);
-  DBGVB("WiFi config updated, restarting...\n");
-  delay(1000);
-  ESP.restart();
-  return true;
-}
-
-bool Config::initNetwork() {
-  File file = LittleFS.open(SSIDS_PATH, "r");
-  if (!file || file.isDirectory()) {
-    return false;
-  }
-  char ssidval[30], passval[40];
-  uint8_t c = 0;
-  while (file.available()) {
-    if (parseSsid(file.readStringUntil('\n').c_str(), ssidval, passval)) {
-      strlcpy(ssids[c].ssid, ssidval, 30);
-      strlcpy(ssids[c].password, passval, 40);
-      ssidsCount++;
-      c++;
-    }
-  }
-  file.close();
-  return true;
 }
 
 void Config::setBrightness(bool dosave){

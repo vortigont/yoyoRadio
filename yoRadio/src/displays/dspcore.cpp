@@ -957,7 +957,7 @@ void DisplayNextion::putRequest(displayRequestType_e type, int payload){
 
 void DisplayNextion::_station() {
   //nextion.newNameset(config.station.name);
-  nextion.bitrate(config.station.bitrate);
+  //nextion.bitrate(config.station.bitrate);
   nextion.bitratePic(ICON_NA);
 }
     /*#ifdef USE_NEXTION

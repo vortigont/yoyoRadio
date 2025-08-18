@@ -41,7 +41,8 @@ public:
   const char* getURL() const { return _url.c_str(); }
   // get current track Title
   const char* getTitle() const { return _title.c_str(); }
-
+  // get count of items in a playlist
+  size_t getCount() const { return _index.size(); }
   /**
    * @brief switch playlist's track
    * @note if switch operation fails playlist remains at previous position
@@ -64,6 +65,8 @@ private:
 class AudioController {
   // radio playlist loader/switcher
   RadioPlaylist _pls;
+  // current position in a stations playlist 
+  uint32_t _curStationIndex{1};
     uint32_t    _resumeFilePos;
     plStatus_e  _status;
     char        _plError[PLERR_LN];

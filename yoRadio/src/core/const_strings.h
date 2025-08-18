@@ -4,6 +4,7 @@
 static constexpr const char* T_volume = "volume";
 static constexpr const char* T_balance = "balance";
 static constexpr const char* T_equalizer = "equalizer";
+static constexpr const char* T_station = "station";
 
 
 static constexpr const char* T_ui_page_any = "ui_page_*";

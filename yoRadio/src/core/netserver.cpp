@@ -253,19 +253,6 @@ void NetServer::processQueue(){
     JsonObject obj = doc.to<JsonObject>();
     switch (request.type) {
       case PLAYLIST:        getPlaylist(clientId); break;
-      case PLAYLISTSAVED:   {
-        #ifdef USE_SD
-        if(config.getMode()==PM_SDCARD) {
-        //  config.indexSDPlaylist();
-          config.initSDPlaylist();
-        }
-        #endif
-        if(config.getMode()==PM_WEB){
-          config.indexPlaylist(); 
-          config.initPlaylist(); 
-        }
-        getPlaylist(clientId); break;
-      }
       case GETACTIVE: {
           bool dbgact = false, nxtn=false;
           JsonArray act = obj["act"].to<JsonArray>();
@@ -523,13 +510,18 @@ bool NetServer::importPlaylist() {
   }
   char sName[BUFLEN], sUrl[BUFLEN], linePl[BUFLEN*3];;
   int sOvol;
+  // why two formats??? and why validate it here?
+  // todoL refactor it
+  return false;
   _readPlaylistLine(tempfile, linePl, sizeof(linePl)-1);
+/*
   if (config.parseCSV(linePl, sName, sUrl, sOvol)) {
     tempfile.close();
     LittleFS.rename(TMP_PATH, PLAYLIST_PATH);
     requestOnChange(PLAYLISTSAVED, 0);
     return true;
   }
+*/
   if (config.parseJSON(linePl, sName, sUrl, sOvol)) {
     File playlistfile = LittleFS.open(PLAYLIST_PATH, "w");
     snprintf(linePl, sizeof(linePl)-1, "%s\t%s\t%d", sName, sUrl, 0);
@@ -659,7 +651,8 @@ void handleUpload(AsyncWebServerRequest *request, String filename, size_t index,
     }
     if (final) {
       request->_tempFile.close();
-      if(filename=="playlist.csv") config.indexPlaylist();
+      //if(filename=="playlist.csv") config.indexPlaylist();
+      // todo: send a notify to reload a playlist
     }
   }
 }
