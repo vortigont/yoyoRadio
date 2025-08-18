@@ -45,6 +45,8 @@ void AudioController::init() {
   #endif
   audio.setConnectionTimeout(1700, 3700);
   _loadValues();  // restore volume/tone value from NVS
+  // load playlist index
+  _pls.loadIndex();
   // event bus subscription
   _events_subsribe();
   // EmbUI messages
@@ -126,7 +128,10 @@ void AudioController::_play(uint16_t stationId) {
   }
   setMute(false);
   //config.setTitle(config.getMode()==PM_WEB?const_PlConnect:"");
-  if(!config.loadStation(stationId)) return;
+  if(!config.loadStation(stationId)){
+    LOGW(T_Player, printf, "Can't load station index:%u\n", stationId);
+    return;
+  }
   //config.setTitle(config.getMode() == PM_WEB ? const_PlConnect:"[next track]");
   
   //EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewStation));
@@ -147,8 +152,8 @@ void AudioController::_play(uint16_t stationId) {
     config.saveValue(&config.store.play_mode, static_cast<uint8_t>(PM_WEB));
   }
   // try to connect to remote host
-  if(config.getMode()==PM_WEB)
-    isConnected = audio.connecttohost(config.station.url);
+  //if(config.getMode()==PM_WEB)
+  isConnected = audio.connecttohost(config.station.url);
 
   if(isConnected){
   //if (config.store.play_mode==PM_WEB?connecttohost(config.station.url):connecttoFS(SD,config.station.url,config.sdResumePos==0?_resumeFilePos:config.sdResumePos-player.sd_min)) {
@@ -360,13 +365,19 @@ void AudioController::_events_cmd_hndlr(int32_t id, void* data){
 }
 
 void AudioController::_play_station_from_playlist(int idx){
-  if (idx > 0)
-    config.setLastStation(idx);
+  if ( !_pls.switchTrack(abs(idx))){
+    LOGW(T_Player, printf, "Can't switch playlist to station:%d\n", idx);
+    return;
+  }
 
-  LOGI(T_Player, printf, "Play station:%d\n", idx);
-  _play(abs(idx));
-
-  EVT_POST(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerPlay));
+  audio.stopSong();
+  if (audio.connecttohost(_pls.getURL())){
+    int32_t d = e2int(evt::yo_state::webstream);
+    EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::devMode), &d, sizeof(d));
+    EVT_POST(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerPlay));
+  } else {
+    // todo: handle error
+  }
 }
 
 void AudioController::pubCodecInfo(){
@@ -627,4 +638,47 @@ void audio_progress(uint32_t startpos, uint32_t endpos){
   player->sd_min = startpos;
   player->sd_max = endpos;
   netserver.requestOnChange(SDLEN, 0);
+}
+
+
+// ********* Playlist ***********
+
+void RadioPlaylist::loadIndex(){
+  File playlist = LittleFS.open(PLAYLIST_PATH);
+  if (!playlist) {
+    return;
+  }
+  while (playlist.available()) {
+    _index.push_back(playlist.position());
+    LOGV(T_Player, printf, "pls position %u:%u\n", _index.size(), _index.back());
+    playlist.find('\n');
+  }
+  LOGI(T_Player, printf, "Loaded %u items in playlist index\n", _index.size());
+}
+
+bool RadioPlaylist::switchTrack(size_t t){
+  // o(zero) track is not possible, we count from 1
+  if (!t || t > _index.size())
+    return false;
+
+  File playlist = LittleFS.open(PLAYLIST_PATH);
+
+  playlist.seek(_index.at(t-1), SeekSet);
+
+  String l(playlist.readStringUntil('\n'));   // this readStringUntil is very inefficient
+  std::string_view line(l.c_str());
+  //LOGD(T_Player, printf, "parse pls line:%s\n", line);
+
+  auto lenTitle = line.find_first_of("\t");
+  if (lenTitle == std::string_view::npos) return false;
+  _title = line.substr(0, lenTitle);
+
+  line.remove_prefix(lenTitle+1);
+  auto lenURL = line.find_first_of("\t");
+  if (lenURL == std::string_view::npos) return false;
+
+  _url = line.substr(0, lenURL);
+  _pos = t;
+  LOGI(T_Player, printf, "Swith pls to: %u. %s - %s\n", t, _title.c_str(), _url.c_str());
+  return true;
 }

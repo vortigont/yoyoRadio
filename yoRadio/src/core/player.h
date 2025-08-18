@@ -27,6 +27,34 @@ enum class dac_type_t {
 enum plStatus_e : uint8_t{ PLAYING = 1, STOPPED = 2 };
 
 
+class RadioPlaylist {
+  // current station index (position in playlist)
+  size_t _pos{0};
+  // current station's title/url
+  std::string _title, _url;
+  // vector with file position offsets for each line in a playlist
+  std::vector<size_t> _index;
+public:
+  // load playlist index
+  void loadIndex();
+  // get current track URL
+  const char* getURL() const { return _url.c_str(); }
+  // get current track Title
+  const char* getTitle() const { return _title.c_str(); }
+
+  /**
+   * @brief switch playlist's track
+   * @note if switch operation fails playlist remains at previous position
+   * 
+   * @param t track to switch to
+   * @return true on success if such track is present in playlist
+   * @return false on any error
+   */
+  bool switchTrack(size_t t);
+
+private:
+};
+
 /**
  * @brief generic class to manage Audio lib
  * it connects Audio lib with playlists, manages states, sends / receives control messages via event bus
@@ -34,6 +62,8 @@ enum plStatus_e : uint8_t{ PLAYING = 1, STOPPED = 2 };
  * 
  */
 class AudioController {
+  // radio playlist loader/switcher
+  RadioPlaylist _pls;
     uint32_t    _resumeFilePos;
     plStatus_e  _status;
     char        _plError[PLERR_LN];

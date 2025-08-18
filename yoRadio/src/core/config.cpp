@@ -10,6 +10,8 @@
 #endif
 #include <cstddef>
 #include "evtloop.h"
+#include "log.h"
+
 
 Config config;
 
@@ -618,6 +620,7 @@ bool Config::loadStation(uint16_t ls) {
     //memset(station.name, 0, BUFLEN);
     //strncpy(station.name, "ёRadio", BUFLEN);
     station.ovol = 0;
+    LOGE(T_Config, println, "Playlist is empty");
     return false;
   }
   if (ls > playlistLength()) {
