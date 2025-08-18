@@ -24,3 +24,5 @@ static constexpr const char* T_playstation= "playstation";
 static constexpr const char* T_trebble = "trebble";             // EQ
 static constexpr const char* T_middle = "middle";               // EQ 
 static constexpr const char* T_bass = "bass";                   // EQ
+
+static constexpr const char* T_n_a = "n/a";                     // not available

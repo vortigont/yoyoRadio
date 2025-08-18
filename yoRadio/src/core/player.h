@@ -71,7 +71,7 @@ class AudioController {
     plStatus_e  _status;
     char        _plError[PLERR_LN];
 
-    void _stop(bool alreadyStopped = false);
+    void _stop();
     void _play(uint16_t stationId);
 
 protected:

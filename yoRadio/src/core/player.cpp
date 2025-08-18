@@ -66,19 +66,15 @@ void AudioController::setError(const char *e){
   //}
 }
 
-void AudioController::_stop(bool alreadyStopped){
+void AudioController::_stop(){
   log_i("%s called", __func__);
   std::lock_guard<std::mutex> lock(_mtx);
-/*
-  if(config.getMode()==PM_SDCARD && !alreadyStopped)
-    config.sdResumePos = player->getFilePos();  // getFilePos() is obsolete
-*/
   _status = STOPPED;
   audio.stopSong();
   setMute(true);
 
   // update stream's meta info
-  audio_info_t info{ 0, audio.getCodecname() };
+  audio_info_t info{ 0, T_n_a };
   EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerAudioInfo), &info, sizeof(info));
   EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayPStop));
 }
@@ -362,6 +358,7 @@ void AudioController::_play_station_from_playlist(int idx){
   }
   // stop previous playback if any
   audio.stopSong();
+  setMute(false);
   // connect to a station
   if (audio.connecttohost(_pls.getURL())){
     // connection successfull, let's save new playlist position and send notifications
