@@ -97,7 +97,7 @@ void AudioController::initHeaders(const char *file) {
 void AudioController::loop() {
   audio.loop();
   if(!audio.isRunning() && _status==PLAYING)    // todo: remove this and rely on internal logical state instead. It may lead to problems with async events
-    _stop(true);
+    _stop();
 
 #ifdef MQTT_ROOT_TOPIC
   if(strlen(burl)>0){
@@ -167,7 +167,7 @@ void AudioController::_play(uint16_t stationId) {
     EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::devMode), &d, sizeof(d));
   } else {
     //telnet.printf("##ERROR#:\tError connecting to %s\n", config.station.url);
-    _stop(true);
+    _stop();
   };
 }
 
