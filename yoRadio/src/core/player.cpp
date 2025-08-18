@@ -373,6 +373,8 @@ void AudioController::_play_station_from_playlist(int idx){
     int32_t d = e2int(evt::yo_state::webstream);
     EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::devMode), &d, sizeof(d));
     EVT_POST(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerPlay));
+    // notify with a new playlist index
+    EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerStation), &_curStationIndex, sizeof(_curStationIndex));    
   } else {
     // todo: handle error
   }
