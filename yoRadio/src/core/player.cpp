@@ -51,6 +51,10 @@ void AudioController::init() {
   _events_subsribe();
   // EmbUI messages
   _embui_actions_register();
+  // Audio callbacks
+  audio.setLiteralCallback([this](const char* msg, audiolib::callback_type_t type){ _audio_cb_generic(msg, type); });
+  // Enable all type of literal callbacks (most verbose one)
+  audio.enableCallbackType(audiolib::callback_type_t::all, true);
 }
 
 void AudioController::stopInfo() {
@@ -378,11 +382,6 @@ void AudioController::_play_station_from_playlist(int idx){
   }
 }
 
-void AudioController::pubCodecInfo(){
-  audio_info_t info{ audio.getBitRate() / 1000, audio.getCodecname() };
-  EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerAudioInfo), &info, sizeof(info));
-}
-
 void AudioController::_embui_actions_register(){
   // process "player_*" messages from EmbUI
   embui.action.add(T_player__all, [this](Interface *interf, JsonVariantConst data, const char* action){ _embui_player_commands(interf, data, action); } );
@@ -459,6 +458,70 @@ void AudioController::_embui_publish_audio_values(Interface* interf){
   interf->json_frame_flush();
 }
 
+void AudioController::_audio_cb_generic(const char* msg, audiolib::callback_type_t type){
+  switch (type){
+    case audiolib::callback_type_t::id3data :
+      LOGI(T_Player, print, "id3data: ");
+      LOG(println, msg);
+      break;
+
+    // track title
+    case audiolib::callback_type_t::streamtitle : {
+      LOGI(T_Player, print, "Stream title: ");
+      LOG(println, msg);
+      // copy by value including null terminator
+      // todo: check if it is safe to pass by pointer
+      EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerTrackTitle), msg, strlen(msg)+1);
+    } break;
+
+    // station title
+    case audiolib::callback_type_t::station : {
+      LOGI(T_Player, print, "Station title: ");
+      LOG(println, msg);
+      // copy by value including null terminator
+      // todo: check if it is safe to pass by pointer
+      EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerStationTitle), msg, strlen(msg)+1);
+    } break;
+
+    case audiolib::callback_type_t::bitrate : {
+        LOGI(T_Player, print, "BitRate: ");
+        LOG(println, msg);
+        audio_info_t info{ audio.getBitRate() / 1000, audio.getCodecname() };
+        EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerAudioInfo), &info, sizeof(info));
+    } break;
+/*
+    case audiolib::callback_type_t::id3lyrics :
+      break;
+    case audiolib::callback_type_t::commercial :
+      break;
+    case audiolib::callback_type_t::icyurl :
+      break;
+    case audiolib::callback_type_t::icylogo :
+      break;
+    case audiolib::callback_type_t::icydescr :
+      break;
+    case audiolib::callback_type_t::lasthost :
+      // passes connection URL
+      break;
+*/
+    case audiolib::callback_type_t::eof :
+      LOGI(T_Player, println, "End of file reached");
+      break;
+
+    default: {
+      // default is just print the message
+      LOGI(T_Player, printf, "Audio %u:", static_cast<size_t>(type));
+      LOG(println, msg);
+      #ifdef USE_NEXTION
+        //nextion.audioinfo(info);    // nextion print debug messages???
+      #endif
+    }
+
+  }
+
+}
+
+
 
 //  **************************
 //  *** ESP32 DAC ***
@@ -516,130 +579,6 @@ void ES8311Audio::init(){
 void ES8311Audio::setMute(bool mute){
   digitalWrite(_mute_gpio, mute ? LOW : HIGH);    // NS4150's mute level is LOW
   _mute_state = mute;
-}
-
-
-//=============================================//
-//              Audio handlers                 //
-//=============================================//
-
-void audio_info(const char *info) {
-  LOGI(T_Player, printf, "Audio info:\t%s\n", info);
-  //if(config.store.audioinfo) telnet.printf("##AUDIO.INFO#: %s\n", info);
-  #ifdef USE_NEXTION
-    nextion.audioinfo(info);
-  #endif
-
-  /*
-    'BitsPerSample' string is a part of Audio::showCodecParams(), it is called when all playback params are already known
-    so we can use it as a generic trigget to update metadata
-  */
-  if (strstr(info, "BitsPerSample")  != NULL){
-    // a hackish call
-    player->pubCodecInfo();
-  }
-
-  if (strstr(info, "Account already in use") != NULL || strstr(info, "HTTP/1.0 401") != NULL) {
-    player->setError(info);
-  }
-/*
-  if (strstr(info, "format is aac")  != NULL) { config.setBitrateFormat(BF_AAC); EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayDrawBitRatte)); }
-  if (strstr(info, "format is flac") != NULL) { config.setBitrateFormat(BF_FLAC); EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayDrawBitRatte)); }
-  if (strstr(info, "format is mp3")  != NULL) { config.setBitrateFormat(BF_MP3); EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayDrawBitRatte)); }
-  if (strstr(info, "format is wav")  != NULL) { config.setBitrateFormat(BF_WAV); EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayDrawBitRatte)); }
-  char* ici; char b[20]={0};
-  if ((ici = strstr(info, "BitRate: ")) != NULL) {
-    strlcpy(b, ici + 9, 50);
-    audio_bitrate(b);
-  }
-*/
-}
-/*
-void audio_bitrate(const char *info)
-{
-  if(config.store.audioinfo) telnet.printf("%s %s\n", "##AUDIO.BITRATE#:", info);
-  int bitrate = atoi(info) / 1000;
-  EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerBitRatte), &bitrate, sizeof(bitrate));
-}
-*/
-bool printable(const char *info) {
-  if(L10N_LANGUAGE!=RU) return true;
-  bool p = true;
-  for (int c = 0; c < strlen(info); c++)
-  {
-    if ((uint8_t)info[c] > 0x7e || (uint8_t)info[c] < 0x20) p = false;
-  }
-  if (!p) p = (uint8_t)info[0] >= 0xC2 && (uint8_t)info[1] >= 0x80 && (uint8_t)info[1] <= 0xBF;
-  return p;
-}
-
-void audio_showstation(const char *info) {
-  LOGI(T_Player, printf, "Station title: %s\n", info);
-  // copy by value including null terminator
-  EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerStationTitle), info, strlen(info)+1);
-}
-
-void audio_showstreamtitle(const char *info) {
-  LOGI(T_Player, printf, "Stream title: %s\n", info);
-  EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerTrackTitle), info, strlen(info)+1);
-}
-
-void audio_error(const char *info) {
-  //config.setTitle(info);
-  player->setError(info);
-  LOGE(T_Player, println, info);
-  //telnet.printf("##ERROR#:\t%s\n", info);
-}
-
-void audio_id3artist(const char *info){
-  LOGI(T_Player, printf, "id3artist: %s\n", info);
-  //if(printable(info)) config.setStation(info);
-  //display->putRequest(NEWSTATION);
-  //netserver.requestOnChange(STATION, 0);
-}
-
-void audio_id3album(const char *info){
-  LOGI(T_Player, printf, "id3album: %s\n", info);
-}
-
-void audio_id3title(const char *info){
-  LOGI(T_Player, printf, "id3title: %s\n", info);
-  //audio_id3album(info);
-}
-
-void audio_beginSDread(){
-  //config.setTitle("n/a");
-}
-
-void audio_id3data(const char *info){  //id3 metadata
-  LOGI(T_Player, printf, "id3data: %s\n", info);
-  //telnet.printf("##AUDIO.ID3#: %s\n", info);
-}
-
-void audio_eof_mp3(const char *info){  //end of file
-  LOGI(T_Player, println, "End of file reached");
-  config.sdResumePos = 0;
-  player->next();
-}
-
-void audio_eof_stream(const char *info){
-  LOGI(T_Player, println, "End of stream reached");
-  if(!player->resumeAfterUrl){
-    EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::playerStop));
-    return;
-  }
-  if (config.getMode()!=PM_WEB){
-    player->setResumeFilePos( config.sdResumePos==0?0:config.sdResumePos - player->sd_min);
-  }
-
-  //auto v = config.lastStation();
-  //EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &v, sizeof(v));
-}
-
-void audio_progress(uint32_t startpos, uint32_t endpos){
-  player->sd_min = startpos;
-  player->sd_max = endpos;
-  netserver.requestOnChange(SDLEN, 0);
 }
 
 
