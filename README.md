@@ -1,7 +1,21 @@
-# ёRadio
+# ёёRadio
 <img src="images/yologo.png" width="190" height="142">
 
-##### Web-radio based on [ESP32-audioI2S](https://github.com/schreibfaul1/ESP32-audioI2S) or/and [ESP32-vs1053_ext](https://github.com/schreibfaul1/ESP32-vs1053_ext) library
+##### Web-radio based on [ESP32-audioI2S](https://github.com/schreibfaul1/ESP32-audioI2S) library
+
+> [!NOTE]
+> Этот проект форк от замечательного во всех отношениях проекта [ёRadio](https://github.com/e2002/yoradio). Все плюшки, права на лого/название, а также большое уважение и почёт за вложенные усилия уходят автору оригинального ёРадио.
+
+> [!NOTE]
+> Этот проект академически-экспериментальный, здесь отрабатываются новые подходы к построению веб-радио, модульной и более гибкой архитектуре ядра, использованию альтернативных графических библиотек. В основном проект нацеленн на использова свежих версий среды esp32, аудио библиотеки и современных платформ-бутербродов esp32-s3 / esp32-p4. Если вы ищете стабильный проект радио с поддержкой большого количества экранов - вам нужен [оригинал ёРадио](https://github.com/e2002/yoradio), здесь вы не найдёти ничего кроме проблем. Если вы разработчик и желаете принять участие в построение нового радио - добро пожаловать!
+
+> [!NOTE]
+> This is a fork of a great [ёRadio](https://github.com/e2002/yoradio) project. All kudo's and great respect to the author for the enormous efforts he is putting into that project. All rights to the logo image and naming belong to the original project.
+
+> [!NOTE]
+> This is a highly experimental project aimed to target modern esp32 platforms and all-in-one modules. If you are looking for a stable yoRadio, pls use [original](https://github.com/e2002/yoradio) project, you won't find here nothing but bugs and issues. If you a developer and want to contribute - you are more than welcome! 
+
+
 ---
 - [Hardware](#hardware)
 - [Connection tables](#connection-tables)
