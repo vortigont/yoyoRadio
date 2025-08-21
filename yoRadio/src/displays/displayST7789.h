@@ -1,8 +1,9 @@
 #ifndef displayST7789_h
 #define displayST7789_h
-#include "../core/options.h"
+
 
 #include "Arduino.h"
+//#include <Arduino_GFX_Library.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_ST7789.h>
 
@@ -11,12 +12,13 @@
 #else
   #include "fonts/DS_DIGI42pt7b.h"
 #endif
-#include "tools/l10n.h"
+#include "locale/l10n.h"
 
 #define CHARWIDTH   6
 #define CHARHEIGHT  8
 
 typedef GFXcanvas16 Canvas;
+//typedef Arduino_Canvas Canvas;
 #include "widgets/widgets.h"
 #include "widgets/pages.h"
 
@@ -34,10 +36,48 @@ typedef GFXcanvas16 Canvas;
 #define BOOT_TXT_COLOR    0xFFFF
 #define PINK              0xF97F
 
-class DspCore: public Adafruit_ST7789 {
-#include "tools/commongfx.h"
+//class DspCore: public Adafruit_ST7789 {
+class DspCore: public  Arduino_ST7789 {
+  public:
+  //DspCore(Arduino_DataBus *b);
+  #include "tools/commongfx.h"
 };
 
-extern DspCore dsp;
+//static Arduino_DataBus *bus{nullptr};
+static DspCore* dsp{nullptr};
+
+static bool create_display_dev(){
+  if (dsp == nullptr ){
+    dsp = new DspCore();
+  }
+  return dsp != nullptr;
+}
+
+#ifdef DISABLED_CODE
+static bool create_display_dev(){
+  if (bus == nullptr){
+
+    #if DSP_HSPI
+      bus = new Arduino_ESP32SPI(TFT_DC /* DC */, TFT_CS /* CS */, TFT_SCK /* SCK */, TFT_MOSI /* MOSI */, GFX_NOT_DEFINED /* MISO */, HSPI /* spi_num */);
+    #else
+      #ifdef TFT_CUSTOM_PINS
+        bus = new Arduino_ESP32SPI(TFT_DC /* DC */, TFT_CS /* CS */, TFT_SCK /* SCK */, TFT_MOSI /* MOSI */, GFX_NOT_DEFINED /* MISO */);
+      #else
+        bus = new Arduino_ESP32SPI(TFT_DC /* DC */, TFT_CS /* CS */, SCK /* SCK */, MOSI /* MOSI */, GFX_NOT_DEFINED /* MISO */);
+      #endif  // TFT_CUSTOM_PINS
+    #endif
+  }
+
+  if (bus == nullptr){
+    Serial.println("Can't create bus!");
+    return false;
+  }
+
+  if (dsp == nullptr ){
+    dsp = new DspCore(bus);
+  }
+  return dsp != nullptr;
+}
+#endif  //DISABLED_CODE
 
 #endif

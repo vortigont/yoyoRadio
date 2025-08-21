@@ -2,7 +2,7 @@
 #define NEXTION_H
 
 #include <HardwareSerial.h>
-#include "../core/display.h"
+#include "dspcore.h"
 
 #define TXBUFLEN  255
 #define RXBUFLEN  50
@@ -34,7 +34,9 @@ class Nextion {
     displayMode_e mode;
     bool dt;
   public:
-    Nextion();
+    Nextion() = default;
+    ~Nextion();
+
     void  begin(bool dummy=false);
     void  start();
     void  apScreen();
@@ -63,6 +65,28 @@ class Nextion {
     void  putRequest(requestParams_t request);
     void  sleep();
     void  wake();
+private:
+    // event function handlers
+    esp_event_handler_instance_t _hdlr_cmd_evt{nullptr};
+    esp_event_handler_instance_t _hdlr_chg_evt{nullptr};
+
+    /**
+     * @brief subscribe to event mesage bus
+     * 
+     */
+    void _events_subsribe();
+
+    /**
+     * @brief unregister from event loop
+     * 
+     */
+    void _events_unsubsribe();
+
+    // command events handler
+    void _events_cmd_hndlr(int32_t id, void* data);
+
+    // state change events handler
+    void _events_chg_hndlr(int32_t id, void* data);
 };
 
 extern Nextion nextion;

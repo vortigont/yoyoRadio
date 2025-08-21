@@ -4,7 +4,6 @@
     uint16_t plItemHeight, plTtemsCount, plCurrentPos;
     int plYStart;
   public:
-    DspCore();
     //char plMenu[PLMITEMS][PLMITEMLENGHT];
     void initDisplay();
     void drawLogo(uint16_t top);
@@ -24,7 +23,7 @@
         virtual void startWrite(void);
         virtual void endWrite(void);
       #endif
-      void setTextSize(uint8_t s);
+      //void setTextSize(uint8_t s);
     #else
       uint16_t width();
       uint16_t height();

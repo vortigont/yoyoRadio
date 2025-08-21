@@ -5,11 +5,8 @@
 #include <SPI.h>
 #include <LittleFS.h>
 #include <EEPROM.h>
-//#include "SD.h"
 #include "options.h"
-#include "telnet.h"
 #include "rtcsupport.h"
-#include "../pluginsManager/pluginsManager.h"
 
 #define EEPROM_SIZE       768
 #define EEPROM_START      500
@@ -33,7 +30,8 @@
 #define DBGVB( ... )
 #define DBGH()
 #endif
-#define BOOTLOG( ... ) { char buf[120]; sprintf( buf, __VA_ARGS__ ) ; telnet.print("##[BOOT]#\t"); telnet.printf("%s\n",buf); }
+#define BOOTLOG( ... ) { char buf[120]; sprintf( buf, __VA_ARGS__ ) ; }
+//#define BOOTLOG( ... ) { char buf[120]; sprintf( buf, __VA_ARGS__ ) ; telnet.print("##[BOOT]#\t"); telnet.printf("%s\n",buf); }
 #define EVERY_MS(x)  static uint32_t tmr; bool flag = millis() - tmr >= (x); if (flag) tmr += (x); if (flag)
 #define REAL_PLAYL   getMode()==PM_WEB?PLAYLIST_PATH:PLAYLIST_SD_PATH
 #define REAL_INDEX   getMode()==PM_WEB?INDEX_PATH:INDEX_SD_PATH
@@ -50,7 +48,7 @@
 #define CONFIG_VERSION  4
 
 enum playMode_e      : uint8_t  { PM_WEB=0, PM_SDCARD=1 };
-enum BitrateFormat { BF_UNCNOWN, BF_MP3, BF_AAC, BF_FLAC, BF_OGG, BF_WAV };
+//enum BitrateFormat { BF_UNCNOWN, BF_MP3, BF_AAC, BF_FLAC, BF_OGG, BF_WAV };
 
 void u8fix(char *src);
 
@@ -89,19 +87,11 @@ struct config_t
 {
   uint16_t  config_set; //must be 4262
   uint16_t  version;
-  uint8_t   volume;
-  int8_t    balance;
-  int8_t    trebble;
-  int8_t    middle;
-  int8_t    bass;
   uint16_t  lastStation;
   uint16_t  countStation;
   uint8_t   lastSSID;
   bool      audioinfo;
   uint8_t   smartstart;
-  int8_t    tzHour;
-  int8_t    tzMin;
-  uint16_t  timezoneOffset;
   bool      vumeter;
   uint8_t   softapdelay;
   bool      flipscreen;
@@ -112,8 +102,6 @@ struct config_t
   bool      dspon;
   uint8_t   brightness;
   uint8_t   contrast;
-  char      sntp1[35];
-  char      sntp2[35];
   bool      showweather;
   char      weatherlat[10];
   char      weatherlon[10];
@@ -154,15 +142,6 @@ struct ircodes_t
 };
 #endif
 
-struct station_t
-{
-  char name[BUFLEN];
-  char url[BUFLEN];
-  char title[BUFLEN];
-  uint16_t bitrate;
-  int  ovol;
-};
-
 struct neworkItem
 {
   char ssid[30];
@@ -172,16 +151,13 @@ struct neworkItem
 class Config {
   public:
     config_t store;
-    station_t station;
     theme_t   theme;
 #if IR_PIN!=255
     int irindex;
     uint8_t irchck;
     ircodes_t ircodes;
 #endif
-    BitrateFormat configFmt = BF_UNCNOWN;
-    neworkItem ssids[5];
-    uint8_t ssidsCount;
+    //BitrateFormat configFmt = BF_UNCNOWN;
     uint16_t sleepfor;
     uint32_t sdResumePos;
     bool     emptyFS;
@@ -192,50 +168,31 @@ class Config {
     int      newConfigMode;
   public:
     Config() {};
+    ~Config();
+
 #if IR_PIN!=255
     void saveIR();
 #endif
     void init();
     void loadTheme();
-    uint8_t setVolume(uint8_t val);
-    void saveVolume();
-    void setTone(int8_t bass, int8_t middle, int8_t trebble);
-    void setBalance(int8_t balance);
-    uint8_t setLastStation(uint16_t val);
-    uint8_t setCountStation(uint16_t val);
     uint8_t setLastSSID(uint8_t val);
-    void setTitle(const char* title);
-    void setStation(const char* station);
     void escapeQuotes(const char* input, char* output, size_t maxLen);
-    bool parseCSV(const char* line, char* name, char* url, int &ovol);
     bool parseJSON(const char* line, char* name, char* url, int &ovol);
     bool parseWsCommand(const char* line, char* cmd, char* val, uint8_t cSize);
     bool parseSsid(const char* line, char* ssid, char* pass);
     bool loadStation(uint16_t station);
-    bool initNetwork();
-    bool saveWifi();
     bool saveWifiFromNextion(const char* post);
     void setSmartStart(uint8_t ss);
-    void setBitrateFormat(BitrateFormat fmt) { configFmt = fmt; }
-    void initPlaylist();
-    void indexPlaylist();
+
     #ifdef USE_SD
       void initSDPlaylist();
       void changeMode(int newmode=-1);
     #endif
-    uint16_t playlistLength();
-    uint16_t lastStation(){
-      return getMode()==PM_WEB?store.lastStation:store.lastSdStation;
-    }
-    void lastStation(uint16_t newstation){
-      if(getMode()==PM_WEB) saveValue(&store.lastStation, newstation);
-      else saveValue(&store.lastSdStation, newstation);
-    }
-    uint8_t fillPlMenu(int from, uint8_t count, bool fromNextion=false);
+
+    // disable it for now
+    uint8_t fillPlMenu(int from, uint8_t count, bool fromNextion=false){ return 0; };
     char * stationByNum(uint16_t num);
-    void setTimezone(int8_t tzh, int8_t tzm);
-    void setTimezoneOffset(uint16_t tzo);
-    uint16_t getTimezoneOffset();
+
     void setBrightness(bool dosave=false);
     void setDspOn(bool dspon, bool saveval = true);
     void sleepForAfter(uint16_t sleepfor, uint16_t sleepafter=0);
@@ -243,7 +200,6 @@ class Config {
     void doSleepW();
     void setSnuffle(bool sn);
     uint8_t getMode() { return store.play_mode/* & 0b11*/; }
-    void initPlaylistMode();
     void reset();
     void enableScreensaver(bool val);
     void setScreensaverTimeout(uint16_t val);
@@ -315,11 +271,29 @@ class Config {
       return station;
     }
     char _stationBuf[BUFLEN/2];
+
+    // event function handlers
+    esp_event_handler_instance_t _hdlr_cmd_evt{nullptr};
+
+    /**
+     * @brief subscribe to event mesage bus
+     * 
+     */
+    void _events_subsribe();
+
+    /**
+     * @brief unregister from event loop
+     * 
+     */
+    void _events_unsubsribe();
+
+    // command events handler
+    void _events_cmd_hndlr(int32_t id, void* data);
 };
 
 extern Config config;
 #if DSP_HSPI || TS_HSPI || VS_HSPI
-extern SPIClass  SPI2;
+//extern SPIClass  SPI2;
 #endif
 
 #endif

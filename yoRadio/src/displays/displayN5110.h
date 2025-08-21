@@ -13,7 +13,7 @@
 #else
   #include "fonts/DS_DIGI15pt7b.h"
 #endif
-#include "tools/l10n.h"
+#include "locale/l10n.h"
 
 #define CHARWIDTH   6
 #define CHARHEIGHT  8
@@ -33,6 +33,12 @@ typedef GFXcanvas1 Canvas;
 class DspCore: public Adafruit_PCD8544 {
 #include "tools/commongfx.h"
 };
+
+/*
+  // moved from dspcore.h
+  virtual void command(uint8_t c);
+  virtual void data(uint8_t c);
+*/
 
 extern DspCore dsp;
 

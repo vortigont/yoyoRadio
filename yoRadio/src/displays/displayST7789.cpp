@@ -23,25 +23,31 @@ DspCore::DspCore(): Adafruit_ST7789(TFT_CS, TFT_DC, TFT_RST, SCK ) {}
 
 #include "tools/utf8RusGFX.h"
 
-void DspCore::initDisplay() {
+#ifdef DISABLED_CODE
 #if defined(TFT_WIDTH) && defined(TFT_HEIGHT)
-  init(TFT_WIDTH, TFT_HEIGHT);
+  DspCore::DspCore(Arduino_DataBus *b): Arduino_ST7789(b, TFT_RST, 0 /* rotation */, true/* IPS */, TFT_WIDTH, TFT_HEIGHT, 52 /* col offset 1 */, 40 /* row offset 1 */, 53 /* col offset 2 */, 40 /* row offset 2 */) {}
 #else
-  init(240,(DSP_MODEL==DSP_ST7789)?320:240);
+  DspCore::DspCore(Arduino_DataBus *b): Arduino_ST7789(b, TFT_RST, 0 /* rotation */, false/* IPS */, 240, (DSP_MODEL==DSP_ST7789)?320:240, 52 /* col offset 1 */, 40 /* row offset 1 */, 53 /* col offset 2 */, 40 /* row offset 2 */) {}
 #endif  // defined(TFT_WIDTH) && defined(TFT_HEIGHT)
+#endif  //DISABLED_CODE
+
+void DspCore::initDisplay() {
+  begin();
+  //init();
 
 #ifdef TFT_BACKLIGHT
   pinMode(TFT_BACKLIGHT, OUTPUT);
   digitalWrite(TFT_BACKLIGHT, HIGH);
 #endif  // TFT_BACKLIGHT
 
-  if(DEF_SPI_FREQ > 0) setSPISpeed(DEF_SPI_FREQ);
+  //if(DEF_SPI_FREQ > 0) setSPISpeed(DEF_SPI_FREQ);
   invert();
-  cp437(true);
+  //cp437(true);
   flip();
   setTextWrap(false);
   setTextSize(1);
-  fillScreen(0x0000);
+  //fillScreen(0x0000);
+  fillScreen(63492);
   
   plItemHeight = playlistConf.widget.textsize*(CHARHEIGHT-1)+playlistConf.widget.textsize*4;
   plTtemsCount = round((float)height()/plItemHeight);
@@ -51,7 +57,7 @@ void DspCore::initDisplay() {
   
 }
 
-void DspCore::drawLogo(uint16_t top) { drawRGBBitmap((width() - 99) / 2, top, bootlogo2, 99, 64); }
+void DspCore::drawLogo(uint16_t top) { draw16bitRGBBitmap((width() - 99) / 2, top, bootlogo2, 99, 64); }
 
 void DspCore::printPLitem(uint8_t pos, const char* item, ScrollWidget& current){
   setTextSize(playlistConf.widget.textsize);
@@ -73,12 +79,12 @@ void DspCore::drawPlaylist(uint16_t currentItem) {
   }
 }
 
-void DspCore::clearDsp(bool black) { fillScreen(black?0:config.theme.background); }
-
+void DspCore::clearDsp(bool black) { fillScreen( black ? 0 : config.theme.background); }
+/*
 GFXglyph *pgm_read_glyph_ptr(const GFXfont *gfxFont, uint8_t c) {
   return gfxFont->glyph + c;
 }
-
+*/
 uint8_t DspCore::_charWidth(unsigned char c){
   GFXglyph *glyph = pgm_read_glyph_ptr(&DS_DIGI42pt7b, c - 0x20);
   return pgm_read_byte(&glyph->xAdvance);
@@ -88,13 +94,6 @@ uint16_t DspCore::textWidth(const char *txt){
   uint16_t w = 0, l=strlen(txt);
   for(uint16_t c=0;c<l;c++) w+=_charWidth(txt[c]);
   return w;
-}
-
-void DspCore::_getTimeBounds() {
-  _timewidth = textWidth(_timeBuf);
-  char buf[4];
-  strftime(buf, 4, "%H", &network.timeinfo);
-  _dotsLeft=textWidth(buf);
 }
 
 void DspCore::_clockSeconds(){
@@ -113,7 +112,7 @@ void DspCore::_clockSeconds(){
 
 void DspCore::_clockDate(){
   if(_olddateleft>0)
-    dsp.fillRect(_olddateleft,  clockTop+10, _olddatewidth, CHARHEIGHT, config.theme.background);
+    fillRect(_olddateleft,  clockTop+10, _olddatewidth, CHARHEIGHT, config.theme.background);
   setTextColor(config.theme.date, config.theme.background);
   setCursor(_dateleft, clockTop+10);
   if(!config.isScreensaver) print(_dateBuf);                                            /* print date */
@@ -127,7 +126,7 @@ void DspCore::_clockDate(){
 }
 
 void DspCore::_clockTime(){
-  if(_oldtimeleft>0 && !CLOCKFONT_MONO) dsp.fillRect(_oldtimeleft, clockTop-clockTimeHeight+1, _oldtimewidth, clockTimeHeight, config.theme.background);
+  if(_oldtimeleft>0 && !CLOCKFONT_MONO) fillRect(_oldtimeleft, clockTop-clockTimeHeight+1, _oldtimewidth, clockTimeHeight, config.theme.background);
   _timeleft = width()-clockRightSpace-CHARWIDTH*3*2-24-_timewidth;
   setTextSize(1);
   setFont(&DS_DIGI42pt7b);
@@ -167,15 +166,15 @@ void DspCore::printClock(uint16_t top, uint16_t rightspace, uint16_t timeheight,
 }
 
 void DspCore::clearClock(){
-  dsp.fillRect(_timeleft,  clockTop-clockTimeHeight, _timewidth+CHARWIDTH*3*2+24, clockTimeHeight+10+CHARHEIGHT, config.theme.background);
+  fillRect(_timeleft,  clockTop-clockTimeHeight, _timewidth+CHARWIDTH*3*2+24, clockTimeHeight+10+CHARHEIGHT, config.theme.background);
 }
 
 void DspCore::startWrite(void) {
-  Adafruit_ST7789::startWrite();
+  Arduino_ST7789::startWrite();
 }
 
 void DspCore::endWrite(void) {
-  Adafruit_ST7789::endWrite();
+  Arduino_ST7789::endWrite();
 }
 
 void DspCore::loop(bool force) {
@@ -186,11 +185,11 @@ void DspCore::charSize(uint8_t textsize, uint8_t& width, uint16_t& height){
   width = textsize * CHARWIDTH;
   height = textsize * CHARHEIGHT;
 }
-
+/*
 void DspCore::setTextSize(uint8_t s){
   Adafruit_GFX::setTextSize(s);
 }
-
+*/
 void DspCore::flip(){
 #if DSP_MODEL==DSP_ST7789
   setRotation(config.store.flipscreen?3:1);
@@ -209,10 +208,13 @@ void DspCore::invert(){
 }
 
 void DspCore::sleep(void) { 
-  enableSleep(true); delay(150); enableDisplay(false); delay(150);
+  //enableSleep(true); delay(150); enableDisplay(false); delay(150);
+  displayOff();
 }
+
 void DspCore::wake(void) { 
-  enableDisplay(true); delay(150); enableSleep(false); delay(150);
+  //enableDisplay(true); delay(150); enableSleep(false); delay(150);
+  displayOn();
 }
 
 
@@ -220,14 +222,14 @@ void DspCore::writePixel(int16_t x, int16_t y, uint16_t color) {
   if(_clipping){
     if ((x < _cliparea.left) || (x > _cliparea.left+_cliparea.width) || (y < _cliparea.top) || (y > _cliparea.top + _cliparea.height)) return;
   }
-  Adafruit_ST7789::writePixel(x, y, color);
+  Arduino_ST7789::writePixel(x, y, color);
 }
 
 void DspCore::writeFillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
   if(_clipping){
     if ((x < _cliparea.left) || (x >= _cliparea.left+_cliparea.width) || (y < _cliparea.top) || (y > _cliparea.top + _cliparea.height))  return;
   }
-  Adafruit_ST7789::writeFillRect(x, y, w, h, color);
+  Arduino_ST7789::writeFillRect(x, y, w, h, color);
 }
 
 void DspCore::setClipping(clipArea ca){
@@ -243,4 +245,6 @@ void DspCore::setNumFont(){
   setFont(&DS_DIGI42pt7b);
   setTextSize(1);
 }
+
+
 #endif

@@ -1,21 +1,22 @@
 #ifndef widgets_h
 #define widgets_h
 
-#include "Arduino.h"
+#include <ctime>
 #include "../../core/config.h"
+#include "../gfx_lib.h"
+
 enum WidgetAlign { WA_LEFT, WA_CENTER, WA_RIGHT };
 
-
 typedef struct clipArea {
-  uint16_t left; 
-  uint16_t top; 
-  uint16_t width;  
+  uint16_t left;
+  uint16_t top;
+  uint16_t width;
   uint16_t height;
 } clipArea;
 
 struct WidgetConfig {
-  uint16_t left; 
-  uint16_t top; 
+  uint16_t left;
+  uint16_t top;
   uint16_t textsize;
   WidgetAlign align;
 };
@@ -65,9 +66,21 @@ struct BitrateConfig {
 
 class Widget{
   public:
-    Widget(){ _active   = false; }
+    Widget() = default;
     virtual ~Widget(){}
     virtual void loop(){}
+
+    /**
+     * @brief run the widget
+     * let it work and draw something on a screen if requred
+     * @note call should only be executed from a display's thread
+     * 
+     * @param force - force widget to (re)draw it's content on a screen
+     * @return true - if widget has drawn anything and screen might need a refresh
+     * @return false - if it was just a dry run and no update was done
+     */
+    virtual bool run(bool force = false){ return false; };
+
     virtual void init(WidgetConfig conf, uint16_t fgcolor, uint16_t bgcolor){
       _config = conf;
       _fgcolor  = fgcolor;
@@ -75,12 +88,13 @@ class Widget{
       _width = _backMove.width = 0;
       _backMove.x = _config.left;
       _backMove.y = _config.top;
-      _moved = _locked = false;
     }
+
     void setAlign(WidgetAlign align){
       _config.align = align;
     }
-    void setActive(bool act, bool clr=false) { _active = act; if(_active && !_locked) _draw(); if(clr && !_locked) _clear(); }
+
+    virtual void setActive(bool act, bool clr=false) { _active = act; if(_active && !_locked) _draw(); if(clr && !_locked) _clear(); }
     void lock(bool lck=true) { _locked = lck; if(_locked) _reset(); if(_locked && _active) _clear();  }
     void unlock() { _locked = false; }
     bool locked() { return _locked; }
@@ -104,8 +118,9 @@ class Widget{
       _reset();
       _draw();
     }
-  protected:
-    bool _active, _moved, _locked;
+
+protected:
+    bool _active{false}, _moved{false}, _locked{false};
     uint16_t _fgcolor, _bgcolor, _width;
     WidgetConfig _config;
     MoveConfig   _backMove;
@@ -116,23 +131,25 @@ class Widget{
 
 class TextWidget: public Widget {
   public:
-    TextWidget() {}
+    TextWidget() = default;
     TextWidget(WidgetConfig wconf, uint16_t buffsize, bool uppercase, uint16_t fgcolor, uint16_t bgcolor) { init(wconf, buffsize, uppercase, fgcolor, bgcolor); }
-    ~TextWidget();
+    //~TextWidget();
     void init(WidgetConfig wconf, uint16_t buffsize, bool uppercase, uint16_t fgcolor, uint16_t bgcolor);
     void setText(const char* txt);
     void setText(int val, const char *format);
     void setText(const char* txt, const char *format);
     bool uppercase() { return _uppercase; }
-  protected:
-    char *_text;
-    char *_oldtext;
+
+protected:
+    std::string text;
+    std::string oldtext;
     bool _uppercase;
-    uint16_t  _buffsize, _textwidth, _oldtextwidth, _oldleft, _textheight;
-    uint8_t _charWidth;
-  protected:
-    void _draw();
-    uint16_t _realLeft();
+    uint16_t  textwidth, oldtextwidth, oldleft, charWidth, textheight;
+#if DSP_MODEL!=DSP_DUMMY
+    GFXfont *font{nullptr};
+#endif
+    void draw();
+    uint16_t realLeft();
 };
 
 class FillWidget: public Widget {
@@ -148,24 +165,24 @@ class FillWidget: public Widget {
 
 class ScrollWidget: public TextWidget {
   public:
-    ScrollWidget(){}
+    ScrollWidget() = default;
     ScrollWidget(const char* separator, ScrollConfig conf, uint16_t fgcolor, uint16_t bgcolor);
-    ~ScrollWidget();
+    //~ScrollWidget();
     void init(const char* separator, ScrollConfig conf, uint16_t fgcolor, uint16_t bgcolor);
     void loop();
     void setText(const char* txt);
     void setText(const char* txt, const char *format);
+
   private:
-    char *_sep;
-    char *_window;
+    std::string _sep;
+    std::string _window;
     int16_t _x;
     bool _doscroll;
     uint8_t _scrolldelta;
     uint16_t _scrolltime;
     uint32_t _scrolldelay;
     uint16_t _sepwidth, _startscrolldelay;
-    uint8_t _charWidth;
-  private:
+
     void _setTextParams();
     void _calcX();
     void _drawFrame();
@@ -202,7 +219,7 @@ class VuWidget: public Widget {
     void init(WidgetConfig wconf, VUBandsConfig bands, uint16_t vumaxcolor, uint16_t vumincolor, uint16_t bgcolor);
     void loop();
   protected:
-    #if !defined(DSP_LCD) && !defined(DSP_OLED)
+    #if !defined(DSP_LCD) && !defined(DSP_OLED) && DSP_MODEL!=DSP_DUMMY
       Canvas *_canvas;
     #endif
     VUBandsConfig _bands;
@@ -241,27 +258,19 @@ class ProgressWidget: public TextWidget {
     bool _checkDelay(int m, uint32_t &tstamp);
 };
 
-class ClockWidget: public Widget {
-  public:
-    void draw();
-  protected:
-    void _draw();
-    void _clear();
-};
-
 class BitrateWidget: public Widget {
   public:
     BitrateWidget() {}
     BitrateWidget(BitrateConfig bconf, uint16_t fgcolor, uint16_t bgcolor) { init(bconf, fgcolor, bgcolor); }
     ~BitrateWidget(){}
     void init(BitrateConfig bconf, uint16_t fgcolor, uint16_t bgcolor);
-    void setBitrate(uint16_t bitrate);
-    void setFormat(BitrateFormat format);
+    void setBitrate(uint32_t bitrate);
+    void setFormat(const char* format);
   protected:
-    BitrateFormat _format;
+    const char * _format;
     char _buf[6];
-    uint8_t _charWidth;
-    uint16_t _dimension, _bitrate, _textheight;
+    uint16_t _charWidth, _textheight;
+    uint32_t _dimension, _bitrate;
     void _draw();
     void _clear();
 };

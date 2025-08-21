@@ -8,6 +8,8 @@
 #include "../core/controls.h"
 #include "../core/netserver.h"
 #include "../core/network.h"
+#include "locale/l10n.h"
+#include "../core/evtloop.h"
 
 #ifndef CORE_STACK_SIZE
   #define CORE_STACK_SIZE  1024*3
@@ -15,8 +17,9 @@
 
 HardwareSerial hSerial(1); // use UART1
 
-Nextion::Nextion() {
 
+Nextion::~Nextion(){
+  _events_unsubsribe();
 }
 
 void nextionCore0( void * pvParameters ){
@@ -69,6 +72,7 @@ void Nextion::start(){
   putRequest({NEWSTATION, 0});
   putRequest({NEWTITLE, 0});
   putRequest({DRAWVOL, 0});
+  _events_subsribe();
   Serial.println("done");
 }
 
@@ -159,14 +163,21 @@ void Nextion::loop() {
         rxbuf[rx_pos] = '\0';
         rx_pos = 0;
         if (sscanf(rxbuf, "page=%s", scanBuf) == 1){
-          if(strcmp(scanBuf, "player") == 0) display.putRequest(NEWMODE, PLAYER);
-          if(strcmp(scanBuf, "playlist") == 0) display.putRequest(NEWMODE, STATIONS);
+          if(strcmp(scanBuf, "player") == 0){
+            int32_t d = PLAYER;
+            EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
+          }
+          if(strcmp(scanBuf, "playlist") == 0){
+            int32_t d = STATIONS;
+            EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
+          }
           if(strcmp(scanBuf, "info") == 0) {
             putcmd("yoversion.txt", YOVERSION);
             putcmd("espcore.txt", _espcoreversion);
             putcmd("ipaddr.txt", WiFi.localIP().toString().c_str());
             putcmd("ssid.txt", WiFi.SSID().c_str());
-            display.putRequest(NEWMODE, INFO);
+            int32_t d = INFO;
+            EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
           }
           if(strcmp(scanBuf, "eq") == 0) {
             putcmd("t4.txt", config.store.balance, true);
@@ -177,7 +188,8 @@ void Nextion::loop() {
             putcmd("h2.val", config.store.middle+16);
             putcmd("t7.txt", config.store.bass, true);
             putcmd("h3.val", config.store.bass+16);
-            display.putRequest(NEWMODE, SETTINGS);
+            int32_t d = SETTINGS;
+            EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
           }
           if(strcmp(scanBuf, "wifi") == 0) {
             if(mode != WIFI){
@@ -189,7 +201,8 @@ void Nextion::loop() {
                 snprintf(cell, sizeof(cell) - 1, "t%d.txt", i*2+1);
                 putcmd(cell, config.ssids[i].password);
               }
-              display.putRequest(NEWMODE, WIFI);
+              int32_t d = WIFI;
+              EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
             }
           }
           if(strcmp(scanBuf, "time") == 0) {
@@ -197,12 +210,14 @@ void Nextion::loop() {
             putcmd("tzHour.val", config.store.tzHour);
             putcmdf("tzMinText.txt=\"%02d\"", config.store.tzMin);
             putcmd("tzMin.val", config.store.tzMin);
-            display.putRequest(NEWMODE, TIMEZONE);
+            int32_t d = TIMEZONE;
+            EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
           }
           if(strcmp(scanBuf, "sys") == 0) {
             putcmd("smartstart.val", config.store.smartstart==2?0:1);
             putcmd("audioinfo.val", config.store.audioinfo);
-            display.putRequest(NEWMODE, SETTINGS);
+            int32_t d = SETTINGS;
+            EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
           }
         }
         if (sscanf(rxbuf, "ctrls=%s", scanBuf) == 1){
@@ -211,26 +226,28 @@ void Nextion::loop() {
             int p = display.currentPlItem - 1;
             if (p < 1) p = config.playlistLength();
             display.currentPlItem = p;
-            display.putRequest(DRAWPLAYLIST, p);
+            EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayDrawPlaylist), &p, sizeof(p));
           }
           if(strcmp(scanBuf, "dn") == 0) {
             display.resetQueue();
             int p = display.currentPlItem + 1;
             if (p > config.playlistLength()) p = 1;
             display.currentPlItem = p;
-            display.putRequest(DRAWPLAYLIST, p);
+            EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayDrawPlaylist), &p, sizeof(p));
           }
           if(strcmp(scanBuf, "go") == 0) {
-            display.putRequest(NEWMODE, PLAYER);
-            player.sendCommand({PR_PLAY, display.currentPlItem});
+            int32_t d = PLAYER;
+            EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
+            // todo: this is so weird to send a msg to consumer with the data from that same consumer 8-0
+            EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::plsStation), &display.currentPlItem, sizeof(display.currentPlItem));
           }
           if(strcmp(scanBuf, "toggle") == 0) {
-            player.toggle();
+            player->toggle();
           }
         }
         if (sscanf(rxbuf, "vol=%d", &scanDigit) == 1){
           _volInside = true;
-          player.sendCommand({PR_VOL, scanDigit});
+          EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::playerVolume), &scanDigit, sizeof(scanDigit));
         }
         if (sscanf(rxbuf, "balance=%d", &scanDigit) == 1){
           config.setBalance((int8_t)scanDigit);
@@ -286,16 +303,17 @@ void Nextion::drawVU(){
   //if(mode!=PLAYER) return;
   if(mode!=PLAYER && mode!=VOL) return;
   static uint8_t measL, measR;
-  //player.getVUlevel();
+  //player->getVUlevel();
   
-  uint16_t vulevel = player.get_VUlevel((uint16_t)100);
+  //uint16_t vulevel = player->get_VUlevel((uint16_t)100);
+  uint16_t vulevel = player->getVUlevel();
   
   uint8_t L = (vulevel >> 8) & 0xFF;
   uint8_t R = vulevel & 0xFF;
   
-  //uint8_t L = map(player.vuLeft, 0, 255, 0, 100);
-  //uint8_t R = map(player.vuRight, 0, 255, 0, 100);
-  if(player.isRunning()){
+  //uint8_t L = map(player->vuLeft, 0, 255, 0, 100);
+  //uint8_t R = map(player->vuRight, 0, 255, 0, 100);
+  if(player->isRunning()){
     measL=(L<=measL)?measL-5:L;
     measR=(R<=measR)?measR-5:R;
   }else{
@@ -337,9 +355,9 @@ void Nextion::putcmdf(const char* fmt, int val, uint16_t dl) {
 
 void Nextion::bitrate(int bpm){
   if(bpm>0){
-    putcmd("player.bitrate.txt", bpm, true);
+    putcmd("player->bitrate.txt", bpm, true);
   }else{
-    putcmd("player.bitrate.txt=\" \"");
+    putcmd("player->bitrate.txt=\" \"");
   }
 }
 
@@ -359,7 +377,7 @@ void Nextion::weatherVisible(uint8_t vis){
 }
 
 void Nextion::bitratePic(uint8_t pic){
-  putcmd("player.bitrate.pic", pic);
+  putcmd("player->bitrate.pic", pic);
 }
 
 void Nextion::audioinfo(const char* info){
@@ -378,20 +396,20 @@ void Nextion::bootString(const char* bs) {
 void Nextion::newNameset(const char* meta){
   char newnameset[59] = { 0 };
   strlcpy(newnameset, meta, 59);
-  putcmd("player.meta.txt", utf8Rus(newnameset, true));
+  putcmd("player->meta.txt", utf8Rus(newnameset, true));
 }
 
 void Nextion::setVol(uint8_t vol, bool dialog){
   if(dialog){
     putcmd("dialog.text.txt", vol, true);
   }
-  putcmd("player.volText.txt", vol, true);
-  putcmd("player.volumeSlider.val", vol);
+  putcmd("player->volText.txt", vol, true);
+  putcmd("player->volumeSlider.val", vol);
 }
 
 void Nextion::fillVU(uint8_t LC, uint8_t RC){
-  putcmd("player.vul.val", LC);
-  putcmd("player.vur.val", RC);
+  putcmd("player->vul.val", LC);
+  putcmd("player->vur.val", RC);
 }
 
 void Nextion::newTitle(const char* title){
@@ -406,17 +424,17 @@ void Nextion::newTitle(const char* title){
       strlcpy(ttl, title, 50);
       sng[0] = '\0';
     }
-    putcmd("player.title1.txt", utf8Rus(ttl, true));
-    putcmd("player.title2.txt", utf8Rus(sng, true));
+    putcmd("player->title1.txt", utf8Rus(ttl, true));
+    putcmd("player->title2.txt", utf8Rus(sng, true));
   }
 }
 
 void Nextion::printClock(struct tm timeinfo){
   char timeStringBuff[100] = { 0 };
-  strftime(timeStringBuff, sizeof(timeStringBuff), "player.clock.txt=\"%H:%M\"", &timeinfo);
+  strftime(timeStringBuff, sizeof(timeStringBuff), "player->clock.txt=\"%H:%M\"", &timeinfo);
   putcmd(timeStringBuff);
-  putcmdf("player.secText.txt=\"%02d\"", timeinfo.tm_sec);
-  snprintf(timeStringBuff, sizeof(timeStringBuff), "player.dateText.txt=\"%s, %d %s %d\"", dowf[timeinfo.tm_wday], timeinfo.tm_mday, mnths[timeinfo.tm_mon], timeinfo.tm_year+1900);
+  putcmdf("player->secText.txt=\"%02d\"", timeinfo.tm_sec);
+  snprintf(timeStringBuff, sizeof(timeStringBuff), "player->dateText.txt=\"%s, %d %s %d\"", dowf[timeinfo.tm_wday], timeinfo.tm_mday, mnths[timeinfo.tm_mon], timeinfo.tm_year+1900);
   putcmd(utf8Rus(timeStringBuff, false));
   if(mode==TIMEZONE) localTime(network.timeinfo);
   if(mode==INFO)     rssi();
@@ -570,6 +588,112 @@ char* Nextion::utf8Rus(char* str, bool uppercase) {
   }
   out[strlen(out)+1]=0;
   return out;
+}
+
+void Nextion::_events_subsribe(){
+  // command events
+  esp_event_handler_instance_register_with(evt::get_hndlr(), YO_CMD_EVENTS, ESP_EVENT_ANY_ID,
+    [](void* self, esp_event_base_t base, int32_t id, void* data){ static_cast<Nextion*>(self)->_events_cmd_hndlr(id, data); },
+    this, &_hdlr_cmd_evt
+  );
+
+  // state change events
+  esp_event_handler_instance_register_with(evt::get_hndlr(), YO_CHG_STATE_EVENTS, ESP_EVENT_ANY_ID,
+    [](void* self, esp_event_base_t base, int32_t id, void* data){ static_cast<Nextion*>(self)->_events_chg_hndlr(id, data); },
+    this, &_hdlr_chg_evt
+  );
+}
+
+void Nextion::_events_unsubsribe(){
+  esp_event_handler_instance_unregister_with(evt::get_hndlr(), YO_CMD_EVENTS, ESP_EVENT_ANY_ID, _hdlr_cmd_evt);
+  esp_event_handler_instance_unregister_with(evt::get_hndlr(), YO_CHG_STATE_EVENTS, ESP_EVENT_ANY_ID, _hdlr_chg_evt);
+}
+
+void Nextion::_events_cmd_hndlr(int32_t id, void* data){
+  switch (static_cast<evt::yo_event_t>(id)){
+
+    // Play radio station from a playlist
+    case evt::yo_event_t::displayNewMode :
+      swichMode(*reinterpret_cast<displayMode_e*>(data));
+      break;
+
+    case evt::yo_event_t::displayClock :
+      printClock(network.timeinfo);
+      break;
+
+    case evt::yo_event_t::displayShowRSSI :
+      rssi();
+      break;
+
+    case evt::yo_event_t::displayNewTitle :
+      newTitle(config.station.title);
+      break;
+
+    case evt::yo_event_t::displayBootstring : {
+      auto idx = *reinterpret_cast<int32_t*>(data);
+      if (idx >= sizeof(config.ssids)/sizeof(neworkItem) || idx < 0)
+        return;
+      char buf[50];
+      snprintf(buf, 50, bootstrFmt, config.ssids[idx].ssid);
+      bootString(buf);
+      break;
+    }
+
+    case evt::yo_event_t::displayNewStation :
+      newNameset(config.station.name);
+      bitrate(config.station.bitrate);
+      bitratePic(ICON_NA);
+      break;
+
+    case evt::yo_event_t::displayShowWeather :
+      weatherVisible(strlen(config.store.weatherkey)>0 && config.store.showweather);
+      break;
+
+    case evt::yo_event_t::displayNextStation :
+      drawNextStationNum(*reinterpret_cast<int32_t*>(data));
+      break;
+
+    case evt::yo_event_t::displayDrawPlaylist :
+      drawPlaylist(*reinterpret_cast<int32_t*>(data));
+      break;
+
+    case evt::yo_event_t::displayDrawVol : {
+      if(!_volInside){
+        setVol(config.store.volume, mode == VOL);
+      }
+      _volInside=false;
+      break;
+    }
+
+    default:;
+  }
+
+  #ifdef DUMMYDISPLAY
+  if(mode==VOL || mode==STATIONS || mode==NUMBERS ){
+    if (millis() - _volDelay > (mode==VOL?3000:30000)) {
+      _volDelay = millis();
+      swichMode(PLAYER);
+    }
+  }
+#endif
+}
+
+void Nextion::_events_chg_hndlr(int32_t id, void* data){
+  LOGV(T_Display, printf, "chg event rcv:%d\n", id);
+
+  switch (static_cast<evt::yo_event_t>(id)){
+
+    // process metadata about playing codec
+    case evt::yo_event_t::playerAudioInfo : {
+      evt::audio_into_t* i = reinterpret_cast<evt::audio_into_t*>(data);
+      bitrate(i->bitRate);
+      break;
+    }
+
+
+    default:;
+  }
+
 }
 
 #endif //NEXTION_RX!=255 && NEXTION_TX!=255

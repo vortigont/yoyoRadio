@@ -5,7 +5,7 @@
 #include "Arduino.h"
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1305.h>
-#include "tools/l10n.h"
+#include "locale/l10n.h"
 
 #define CHARWIDTH   6
 #define CHARHEIGHT  8

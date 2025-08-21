@@ -2,7 +2,8 @@
 
 #define USE_SD
 #include "sdmanager.h"
-#include "display.h"
+#include "config.h"
+#include "../displays/dspcore.h"
 #include "player.h"
 
 #if defined(SD_SPIPINS) || SD_HSPI
@@ -19,6 +20,7 @@ SPIClass  SDSPI(HOOPSENb);
 SDManager sdman(FSImplPtr(new VFSImpl()));
 
 bool SDManager::start(){
+  return false; // disable for now, it slows netstream on endless reads
   ready = begin(SDC_CS, SDREALSPI, SDSPISPEED);
   vTaskDelay(10);
   if(!ready) ready = begin(SDC_CS, SDREALSPI, SDSPISPEED);
@@ -76,7 +78,7 @@ void SDManager::listSD(File &plSDfile, File &plSDindex, const char* dirname, uin
     char* filePath;
     while (true) {
         vTaskDelay(2);
-        player.loop();
+        player->loop();
         bool isDir;
         String fileName = root.getNextFileName(&isDir);
         if (fileName.isEmpty()) break;
@@ -98,7 +100,7 @@ void SDManager::listSD(File &plSDfile, File &plSDindex, const char* dirname, uin
                 plSDfile.printf("%s\t%s\t0\n", fn, filePath);
                 plSDindex.write((uint8_t*)&pos, 4);
                 Serial.print(".");
-                if(display.mode()==SDCHANGE) display.putRequest(SDFILEINDEX, _sdFCount+1);
+                if(display->mode()==SDCHANGE) display->putRequest(SDFILEINDEX, _sdFCount+1);
                 _sdFCount++;
                 if (_sdFCount % 64 == 0) Serial.println();
             }

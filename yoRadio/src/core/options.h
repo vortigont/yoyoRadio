@@ -50,11 +50,24 @@ The connection tables are located here https://github.com/e2002/yoradio#connecti
 #define DSP_ILI9486     22    // (Testing mode) 480x320  3.5'  https://aliexpress.com/item/1005001999296476.html?sku_id=12000018365356568
 #define DSP_SSD1322     23    // 256x64   2.8'  https://aliexpress.com/item/1005003480981568.html
 #define DSP_ST7920      24    // 128x64   2.6'  https://aliexpress.com/item/32699482638.html
+#define DSP_JC3248W535  30    // 480x320  3.5'  Guition JC3248W535 https://aliexpress.com/item/1005007593889279.html
+#define DSP_JC1060P470  31    // 1024x600 7'    Guition JC1060P470
+#define DSP_NEXTION     32    // Nextion display interface
 #define DSP_CUSTOM      101   // your display
 
 #ifndef DSP_MODEL
   #define DSP_MODEL  DSP_DUMMY
 #endif
+
+// включаем файлы с определениями для "бутербродов" - комбо-плат с всевозможным обвесом
+#if DSP_MODEL == DSP_JC3248W535
+#include "JC3248W535_pincfg.h"
+#endif  // DSP_MODEL == DSP_JC3248W535
+
+#if DSP_MODEL == DSP_JC1060P470
+#include "JC1060P470CIW_pincfg.h"
+#endif  // DSP_MODEL == DSP_JC1060P470
+
 #ifndef DSP_HSPI
   #define DSP_HSPI   false      // use HSPI for displays (miso=12, mosi=13, clk=14) instead of VSPI (by default)
 #endif
@@ -80,6 +93,9 @@ The connection tables are located here https://github.com/e2002/yoradio#connecti
 #ifndef NEXTION_TX
   #define NEXTION_TX    255
 #endif
+#if NEXTION_RX!=255 && NEXTION_TX!=255
+  #define DSP_MODEL     DSP_NEXTION
+#endif
 
 /*        OLED I2C DISPLAY        */
 #ifndef I2C_SDA
@@ -92,24 +108,10 @@ The connection tables are located here https://github.com/e2002/yoradio#connecti
   #define I2C_RST -1
 #endif
 
-/*        VS1053                  */
-#ifndef VS1053_CS
-  #define VS1053_CS     255 // 27
-#endif
-#ifndef VS1053_DCS
-  #define VS1053_DCS    25
-#endif
-#ifndef VS1053_DREQ
-  #define VS1053_DREQ   26
-#endif
-#ifndef VS1053_RST
-  #define VS1053_RST    -1    // set to -1 if connected to Esp EN pin
-#endif
-#ifndef VS_HSPI
-  #define VS_HSPI   false      // use HSPI for VS1053 (miso=12, mosi=13, clk=14) instead of VSPI (by default)
-#endif
-
 /*        I2S DAC                 */
+#ifndef DAC_TYPE
+  #define DAC_TYPE      dac_type_t::generic  // type if used DAC, must a member of dac_type_t
+#endif
 #ifndef I2S_DOUT
   #define I2S_DOUT      27  // DIN connection
 #endif
@@ -118,6 +120,9 @@ The connection tables are located here https://github.com/e2002/yoradio#connecti
 #endif
 #ifndef I2S_LRC
   #define I2S_LRC       25  // WSEL Left Right Clock
+#endif
+#ifndef I2S_MCLK
+  #define I2S_MCLK      -1
 #endif
 
 /*        SDCARD                  */
@@ -276,14 +281,16 @@ The connection tables are located here https://github.com/e2002/yoradio#connecti
       #define REAL_LEDBUILTIN LED_BUILTIN_S3
     #endif
 #else
-    #ifndef LED_BUILTIN
-      #define LED_BUILTIN   255
-    #endif
-    #define REAL_LEDBUILTIN LED_BUILTIN
+    // LED_BUILTIN could conflict with board's definitions like "static const uint8_t LED_BUILTIN = 2"
+    //#ifndef LED_BUILTIN
+    //  #define LED_BUILTIN   255
+    //#endif
+    // have no idea what to do with this ugly define - it can't be universal for various boards, so just disable if for now
+    #define REAL_LEDBUILTIN 255
 #endif
 /*        Other settings. You can overwrite them in the myoptions.h file        */
 #ifndef MUTE_PIN
-  #define MUTE_PIN      255   // MUTE Pin
+  #define MUTE_PIN      -1   // MUTE Pin
 #endif
 #ifndef MUTE_VAL
   #define MUTE_VAL      HIGH  // Write this to MUTE_PIN when player is stopped
@@ -296,9 +303,6 @@ The connection tables are located here https://github.com/e2002/yoradio#connecti
 #endif
 #ifndef PLAYER_FORCE_MONO
   #define PLAYER_FORCE_MONO      false  // mono option - false stereo, true mono
-#endif
-#ifndef I2S_INTERNAL
-  #define I2S_INTERNAL      false  // If true - use esp32 internal DAC
 #endif
 #ifndef ROTATE_90
   #define ROTATE_90         false  // Optional 90 degree rotation for square displays

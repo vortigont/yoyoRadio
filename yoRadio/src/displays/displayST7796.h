@@ -11,7 +11,7 @@
 #else
   #include "fonts/DS_DIGI56pt7b.h"
 #endif
-#include "tools/l10n.h"
+#include "locale/l10n.h"
 
 #define CHARWIDTH   6
 #define CHARHEIGHT  8

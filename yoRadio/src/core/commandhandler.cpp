@@ -1,40 +1,21 @@
 #include "commandhandler.h"
 #include "player.h"
-#include "display.h"
+#include "../displays/dspcore.h"
 #include "netserver.h"
 #include "config.h"
 #include "controls.h"
 #include "options.h"
+#include "evtloop.h"
+#include "log.h"
 
 CommandHandler cmd;
 
 bool CommandHandler::exec(const char *command, const char *value, uint8_t cid) {
-  if (strEquals(command, "start"))    { player.sendCommand({PR_PLAY, config.lastStation()}); return true; }
-  if (strEquals(command, "stop"))     { player.sendCommand({PR_STOP, 0}); return true; }
-  if (strEquals(command, "toggle"))   { player.toggle(); return true; }
-  if (strEquals(command, "prev"))     { player.prev(); return true; }
-  if (strEquals(command, "next"))     { player.next(); return true; }
-  if (strEquals(command, "volm"))     { player.stepVol(false); return true; }
-  if (strEquals(command, "volp"))     { player.stepVol(true); return true; }
+  LOGD("CMD: ", printf, "%s:%s\n", command, value);
 #ifdef USE_SD
   if (strEquals(command, "mode"))     { config.changeMode(atoi(value)); return true; }
 #endif
   if (strEquals(command, "reset") && cid==0)    { config.reset(); return true; }
-  if (strEquals(command, "ballance")) { config.setBalance(atoi(value)); return true; }
-  if (strEquals(command, "playstation") || strEquals(command, "play")){ 
-    int id = atoi(value);
-    if (id < 1) id = 1;
-    uint16_t cs = config.playlistLength();
-    if (id > cs) id = cs;
-    player.sendCommand({PR_PLAY, id});
-    return true;
-  }
-  if (strEquals(command, "vol")){
-    int v = atoi(value);
-    config.store.volume = v < 0 ? 0 : (v > 254 ? 254 : v);
-    player.setVol(v);
-    return true;
-  }
   if (strEquals(command, "dspon"))     { config.setDspOn(atoi(value)!=0); return true; }
   if (strEquals(command, "dim"))       { int d=atoi(value); config.store.brightness = (uint8_t)(d < 0 ? 0 : (d > 100 ? 100 : d)); config.setBrightness(true); return true; }
   if (strEquals(command, "clearspiffs")){ config.spiffsCleanup(); config.saveValue(&config.store.play_mode, static_cast<uint8_t>(PM_WEB)); return true; }
@@ -51,25 +32,36 @@ bool CommandHandler::exec(const char *command, const char *value, uint8_t cid) {
   if (strEquals(command, "getactive"))  { netserver.requestOnChange(GETACTIVE, cid); return true; }
   if (strEquals(command, "newmode"))    { config.newConfigMode = atoi(value); netserver.requestOnChange(CHANGEMODE, cid); return true; }
   
-  if (strEquals(command, "invertdisplay")){ config.saveValue(&config.store.invertdisplay, static_cast<bool>(atoi(value))); display.invert(); return true; }
-  if (strEquals(command, "numplaylist"))  { config.saveValue(&config.store.numplaylist, static_cast<bool>(atoi(value))); display.putRequest(NEWMODE, CLEAR); display.putRequest(NEWMODE, PLAYER); return true; }
+  if (strEquals(command, "invertdisplay")){ config.saveValue(&config.store.invertdisplay, static_cast<bool>(atoi(value))); display->invert(); return true; }
+  if (strEquals(command, "numplaylist")){
+    config.saveValue(&config.store.numplaylist, static_cast<bool>(atoi(value)));
+    int32_t d = CLEAR;
+    EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
+    d = PLAYER;
+    EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
+    return true;
+  }
   if (strEquals(command, "fliptouch"))    { config.saveValue(&config.store.fliptouch, static_cast<bool>(atoi(value))); flipTS(); return true; }
   if (strEquals(command, "dbgtouch"))     { config.saveValue(&config.store.dbgtouch, static_cast<bool>(atoi(value))); return true; }
-  if (strEquals(command, "flipscreen"))   { config.saveValue(&config.store.flipscreen, static_cast<bool>(atoi(value))); display.flip(); display.putRequest(NEWMODE, CLEAR); display.putRequest(NEWMODE, PLAYER); return true; }
+  if (strEquals(command, "flipscreen")){
+    config.saveValue(&config.store.flipscreen, static_cast<bool>(atoi(value)));
+    // todo: no event for display flip, why?
+    display->flip();
+    int32_t d = CLEAR;
+    EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
+    d = PLAYER;
+    EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
+    return true;
+  }
   if (strEquals(command, "brightness"))   { if (!config.store.dspon) netserver.requestOnChange(DSPON, 0); config.store.brightness = static_cast<uint8_t>(atoi(value)); config.setBrightness(true); return true; }
   if (strEquals(command, "screenon"))     { config.setDspOn(static_cast<bool>(atoi(value))); return true; }
-  if (strEquals(command, "contrast"))     { config.saveValue(&config.store.contrast, static_cast<uint8_t>(atoi(value))); display.setContrast(); return true; }
+  if (strEquals(command, "contrast"))     { config.saveValue(&config.store.contrast, static_cast<uint8_t>(atoi(value))); display->setContrast(); return true; }
   if (strEquals(command, "screensaverenabled")){ config.enableScreensaver(static_cast<bool>(atoi(value))); return true; }
   if (strEquals(command, "screensavertimeout")){ config.setScreensaverTimeout(static_cast<uint16_t>(atoi(value))); return true; }
   if (strEquals(command, "screensaverblank"))  { config.setScreensaverBlank(static_cast<bool>(atoi(value))); return true; }
   if (strEquals(command, "screensaverplayingenabled")){ config.setScreensaverPlayingEnabled(static_cast<bool>(atoi(value))); return true; }
   if (strEquals(command, "screensaverplayingtimeout")){ config.setScreensaverPlayingTimeout(static_cast<uint16_t>(atoi(value))); return true; }
   if (strEquals(command, "screensaverplayingblank"))  { config.setScreensaverPlayingBlank(static_cast<bool>(atoi(value))); return true; }
-  
-  if (strEquals(command, "tzh"))    { config.saveValue(&config.store.tzHour, static_cast<int8_t>(atoi(value))); return true; }
-  if (strEquals(command, "tzm"))    { config.saveValue(&config.store.tzMin, static_cast<int8_t>(atoi(value))); return true; }
-  if (strEquals(command, "sntp2"))  { config.saveValue(config.store.sntp2, value, 35, false); return true; }
-  if (strEquals(command, "sntp1"))  {  config.setSntpOne(value); return true; }
   
   if (strEquals(command, "volsteps"))         { config.saveValue(&config.store.volsteps, static_cast<uint8_t>(atoi(value))); return true; }
   if (strEquals(command, "encacc"))  { setEncAcceleration(static_cast<uint16_t>(atoi(value))); return true; }
@@ -80,10 +72,9 @@ bool CommandHandler::exec(const char *command, const char *value, uint8_t cid) {
   if (strEquals(command, "lon"))              { config.saveValue(config.store.weatherlon, value, 10, false); return true; }
   if (strEquals(command, "key"))              { config.setWeatherKey(value); return true; }
   //<-----TODO
-  if (strEquals(command, "volume"))  { player.setVol(static_cast<uint8_t>(atoi(value))); return true; }
+  if (strEquals(command, "volume"))  { player->setVolume(static_cast<uint8_t>(atoi(value))); return true; }
   if (strEquals(command, "sdpos"))   { config.setSDpos(static_cast<uint32_t>(atoi(value))); return true; }
   if (strEquals(command, "snuffle")) { config.setSnuffle(strcmp(value, "true") == 0); return true; }
-  if (strEquals(command, "balance")) { config.setBalance(static_cast<uint8_t>(atoi(value))); return true; }
   if (strEquals(command, "reboot"))  { ESP.restart(); return true; }
   if (strEquals(command, "format"))  { LittleFS.format(); ESP.restart(); return true; }
   if (strEquals(command, "submitplaylist"))  { return true; }
@@ -95,9 +86,14 @@ bool CommandHandler::exec(const char *command, const char *value, uint8_t cid) {
 #endif
   if (strEquals(command, "reset"))  { config.resetSystem(value, cid); return true; }
   
-  if (strEquals(command, "smartstart")){ uint8_t ss = atoi(value) == 1 ? 1 : 2; if (!player.isRunning() && ss == 1) ss = 0; config.setSmartStart(ss); return true; }
-  if (strEquals(command, "audioinfo")) { config.saveValue(&config.store.audioinfo, static_cast<bool>(atoi(value))); display.putRequest(AUDIOINFO); return true; }
-  if (strEquals(command, "vumeter"))   { config.saveValue(&config.store.vumeter, static_cast<bool>(atoi(value))); display.putRequest(SHOWVUMETER); return true; }
+  if (strEquals(command, "smartstart")){ uint8_t ss = atoi(value) == 1 ? 1 : 2; if (!player->isRunning() && ss == 1) ss = 0; config.setSmartStart(ss); return true; }
+
+  if (strEquals(command, "vumeter")){
+    config.saveValue(&config.store.vumeter, static_cast<bool>(atoi(value)));
+    EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayShowVUMeter));
+    return true;
+  }
+
   if (strEquals(command, "softap"))    { config.saveValue(&config.store.softapdelay, static_cast<uint8_t>(atoi(value))); return true; }
   if (strEquals(command, "mdnsname"))  { config.saveValue(config.store.mdnsname, value, MDNS_LENGTH); return true; }
   if (strEquals(command, "rebootmdns")){
