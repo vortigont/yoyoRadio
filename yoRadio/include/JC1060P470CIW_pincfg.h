@@ -1,5 +1,7 @@
 #pragma once
 
+// defines for 1024x600 7'    Guition JC1060P470 ESP32-P4
+
 // Display driver JD9165BA-DS
 #define LCD_H_RES   1024
 #define LCD_V_RES   600

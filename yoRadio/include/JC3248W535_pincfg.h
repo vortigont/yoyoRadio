@@ -1,5 +1,6 @@
 #pragma once
 
+// defines for  480x320  3.5'  Guition JC3248W535 https://aliexpress.com/item/1005007593889279.html ESP32-S3
 // AXS15231B TFT LCD
 // https://dl.espressif.com/AE/esp_iot_solution/AXS15231B_Datasheet_V0.5_20230306.pdf
 #define TFT_WIDTH   320

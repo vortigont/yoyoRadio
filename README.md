@@ -16,6 +16,10 @@
 > This is a highly experimental project aimed to target modern esp32 platforms and all-in-one modules. If you are looking for a stable yoRadio, pls use [original](https://github.com/e2002/yoradio) project, you won't find here nothing but bugs and issues. If you a developer and want to contribute - you are more than welcome! 
 
 
+Currently this project is developed for two combo modules Guition `JC1060P470` (ESP32-P4) and Guition `JC3248W535` (ESP32-S3).
+Audio core control and WebUI part is functional, the rest of the features would come later. Stay in touch!
+
+
 ---
 - [Hardware](#hardware)
 - [Connection tables](#connection-tables)
