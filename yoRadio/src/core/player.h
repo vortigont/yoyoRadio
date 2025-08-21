@@ -134,7 +134,7 @@ public:
 
     /**
      * @brief step adjust volume up or down
-     * 
+     * @note Audio lib controls the volume in 'steps', default is `21`, for more gained control it need scaling or step change for software vol control
      * @param step value to increment/decrement volume
      */
     void stepVolume(int32_t step){ setVolume( volume + step); };
