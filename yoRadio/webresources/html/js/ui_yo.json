@@ -36,8 +36,8 @@
             "type": "range",
             "class": "yoinput",
             "min": 0,
-            "max": 21,
-            "step": 1,
+            "max": 100,
+            "step": 5,
             "label": "📢 Громкость",
             "onChange": true
           },
