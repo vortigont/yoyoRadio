@@ -43,6 +43,7 @@ void AudioController::init() {
   #if PLAYER_FORCE_MONO
     forceMono(true);
   #endif
+  audio.setVolumeSteps(100);                  // set volume steps to 100 to have some common groud for different DACs or so...
   audio.setConnectionTimeout(1700, 3700);
   _loadValues();  // restore volume/tone value from NVS
   // load playlist index
@@ -403,9 +404,9 @@ void AudioController::_embui_player_commands(Interface *interf, JsonVariantConst
 
   if(a.compare(T_toggle) == 0) return toggle();
 
-  if(a.compare(T_volUp) == 0) return stepVolume(10);        // for now set the step to 10, todo: make con configurable
+  if(a.compare(T_volUp) == 0) return stepVolume(5);        // for now set the step to 5, todo: make con configurable
 
-  if(a.compare(T_volDown) == 0) return stepVolume(-10);     // for now set the step to 10, todo: make con configurable
+  if(a.compare(T_volDown) == 0) return stepVolume(-5);     // for now set the step to -5, todo: make con configurable
 
   if(a.compare(T_volume) == 0) return setVolume(data.as<int32_t>());     // volume slider
 
@@ -568,12 +569,12 @@ void ES8311Audio::init(){
   if(!_es.begin(I2C_SDA, I2C_SCL, 400000)){
     log_e("ES8311 begin failed");
     return;
-  }    
+  }
   _es.setBitsPerSample(16);
   // set program vol to max
-  audio.setVolume(255);
   pinMode(_mute_gpio, OUTPUT);
   AudioController::init();
+  audio.setVolume(100);     // 100 is adjusted scale
 }
 
 void ES8311Audio::setMute(bool mute){
