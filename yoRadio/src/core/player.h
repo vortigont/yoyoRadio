@@ -170,8 +170,6 @@ public:
     void stopInfo();
     void setResumeFilePos(uint32_t pos) { _resumeFilePos = pos; }
 
-    // publishing methods (a hack due to missing callbacks in Audio lib)
-    void pubCodecInfo();
     // needed in Config::changeMode for some reason
     bool isRunning(){ return audio.isRunning(); }
     bool setFilePos(uint32_t pos){ return audio.setFilePos(pos); };
@@ -221,6 +219,11 @@ private:
   void _embui_player_commands(Interface *interf, JsonVariantConst data, const char* action);
   // publish current vol, balance, EQ values to WebUI
   void _embui_publish_audio_values(Interface* interf = nullptr);
+
+
+  // Audio lib callbacks
+
+  void _audio_cb_generic(const char* msg, audiolib::callback_type_t type);
 };
 
 // generic I2S DAC for ESP32 with software volume control
@@ -265,11 +268,6 @@ public:
 
 // ******************
 extern AudioController* player;
-
-extern __attribute__((weak)) void player_on_start_play();
-extern __attribute__((weak)) void player_on_stop_play();
-extern __attribute__((weak)) void player_on_track_change();
-extern __attribute__((weak)) void player_on_station_change();
 
 void create_player(dac_type_t dac);
 
