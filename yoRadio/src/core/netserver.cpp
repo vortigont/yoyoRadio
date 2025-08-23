@@ -40,9 +40,6 @@ enum class page_t : uint16_t {
 
 NetServer netserver;
 
-AsyncWebServer webserver(80);
-AsyncWebSocket websocket("/ws");
-
 void handleUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final);
 void handleHTTPArgs(AsyncWebServerRequest * request);
 // send playlist from LittleFS or from SD
@@ -126,7 +123,6 @@ void embui_actions_register(){
 
 void handleIndex(AsyncWebServerRequest * request);
 void handleNotFound(AsyncWebServerRequest * request);
-void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
 
 bool  shouldReboot  = false;
 #ifdef MQTT_ROOT_TOPIC
@@ -149,38 +145,31 @@ bool NetServer::begin(bool quiet) {
   importRequest = IMDONE;
   irRecordEnable = false;
 
-  // playlist serve
-  embui.server.on(PLAYLIST_PATH, HTTP_GET, send_playlist);
-  
-  //webserver.serveStatic("/settings", LittleFS, "/www/settings.html", asyncsrv::T_no_cache);
-  //webserver.serveStatic("/ir", LittleFS, "/www/ir.html", asyncsrv::T_no_cache);
-
   nsQueue = xQueueCreate( 20, sizeof( nsRequestParams_t ) );
 
-  // server index
-  webserver.on("/", HTTP_ANY, handleIndex);
-  // playlist serve
-  webserver.on(PLAYLIST_PATH, HTTP_GET, send_playlist);
-  webserver.onNotFound(handleNotFound);
-  webserver.onFileUpload(handleUpload);
-  
-
+  // static content for WebUI
   set_static_http_handlers();
-  embui.server.serveStatic("/data", LittleFS, "/data/")
-    .setCacheControl(asyncsrv::T_no_cache);     // revalidate based on etag/IMS headers
-
-
+  // playlist serve ( no SD for now, so can skip)
+  //embui.server.on(PLAYLIST_PATH, HTTP_GET, send_playlist);
+  
+  //embui.server.serveStatic("/data", LittleFS, "/data/")
+  //  .setCacheControl(asyncsrv::T_no_cache);     // revalidate based on etag/IMS headers
+    
+  embui.server.onFileUpload(handleUpload);
+    
 #ifdef CORS_DEBUG
   DefaultHeaders::Instance().addHeader(F("Access-Control-Allow-Origin"), F("*"));
   DefaultHeaders::Instance().addHeader(F("Access-Control-Allow-Headers"), F("content-type"));
 #endif
 
+  // set EmbUI action handlers
   embui_actions_register();
 
   embui.begin();
   // change periodic WebUI publish interval
   embui.setPubInterval(30);
 
+  // event bus subscriptions
   _events_subsribe();
   return true;
 }
@@ -558,14 +547,14 @@ void NetServer::_send_ws_message(JsonVariantConst v, int32_t clientId){
   if (v.isNull()) return;
 
   size_t length = measureJson(v);
-  auto buffer = websocket.makeBuffer(length);
+  auto buffer = embui.ws.makeBuffer(length);
   if (buffer){
     serializeJson(v, (char*)buffer->get(), length);
   }
   if (clientId == 0)
-    { websocket.textAll(buffer); }
+    { embui.ws.textAll(buffer); }
   else
-    { websocket.text(clientId, buffer); }
+    { embui.ws.text(clientId, buffer); }
 }
 
 void NetServer::_events_subsribe(){
@@ -654,21 +643,6 @@ void handleUpload(AsyncWebServerRequest *request, String filename, size_t index,
   }
 }
 
-namespace yoradio {
-
-void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len) {
-  switch (type) {
-    case WS_EVT_CONNECT: /*netserver.requestOnChange(STARTUP, client->id()); */if (config.store.audioinfo) Serial.printf("[WEBSOCKET] client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str()); break;
-    case WS_EVT_DISCONNECT: if (config.store.audioinfo) Serial.printf("[WEBSOCKET] client #%u disconnected\n", client->id()); break;
-    case WS_EVT_DATA: netserver.onWsMessage(arg, data, len, client->id()); break;
-    case WS_EVT_PONG:
-    case WS_EVT_ERROR:
-      break;
-  }
-}
-
-} // namespace yoradio
-
 void send_playlist(AsyncWebServerRequest * request){
 #ifdef MQTT_ROOT_TOPIC    // very ugly check
   // if MQTT something is in progress, ask client to return later
@@ -678,8 +652,9 @@ void send_playlist(AsyncWebServerRequest * request){
     return request->send(response);
   }
 #endif
-  if (config.getMode()==PM_SDCARD)    // redirect to SDCARD's path
-    return request->redirect(PLAYLIST_SD_PATH);
+  // no sdcard for now
+  //if (config.getMode()==PM_SDCARD)    // redirect to SDCARD's path
+  //  return request->redirect(PLAYLIST_SD_PATH);
 
   // last resort - send playlist from LittleFS
   request->send(LittleFS, request->url().c_str(), asyncsrv::T_text_plain);
