@@ -128,7 +128,6 @@ class NetServer {
     void processQueue();
     int _readPlaylistLine(File &file, char * line, size_t size);
 
-    // serialize and send an object via websocket
     void _send_ws_message(JsonVariantConst v, int32_t clientId = 0 );
 
     // event function handlers
@@ -155,6 +154,6 @@ class NetServer {
 };
 
 extern NetServer netserver;
-extern AsyncWebSocket websocket;
+//extern AsyncWebSocket websocket;
 
 #endif

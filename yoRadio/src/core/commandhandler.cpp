@@ -100,7 +100,7 @@ bool CommandHandler::exec(const char *command, const char *value, uint8_t cid) {
     char buf[MDNS_LENGTH*2];
     if(strlen(config.store.mdnsname)>0) snprintf(buf, MDNS_LENGTH*2, "{\"redirect\": \"http://%s.local\"}", config.store.mdnsname);
     else snprintf(buf, MDNS_LENGTH*2, "{\"redirect\": \"http://%s/\"}", WiFi.localIP().toString().c_str());
-    websocket.text(cid, buf); delay(500); ESP.restart();
+    //websocket.text(cid, buf); delay(500); ESP.restart();
     return true;
   }
   
