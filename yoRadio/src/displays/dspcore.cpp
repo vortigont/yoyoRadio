@@ -1,26 +1,10 @@
 #include "dspcore.h"
 #include "gfx_engine.h"
 #include "locale/l10n.h"
-#include "../core/config.h"
-#include "../core/network.h"
-#include "../core/player.h"
-#include "../core/evtloop.h"
-#include "../core/log.h"
+#include "core/config.h"
+#include "core/evtloop.h"
+#include "core/log.h"
 
-// **************
-Display* display{nullptr};
-
-bool create_display(){
-#if DSP_MODEL == DUMMYDISPLAY
-  display = new DisplayDummy();
-  return true;
-#elif DSP_MODEL == DSP_NEXTION
-  display = new DisplayNextion();
-#else
-  display = new DisplayGFX(create_display_dev());
-#endif
-  return create_display_dev();
-}
 
 #ifdef NOT_NEEDED
 
@@ -257,6 +241,8 @@ void DisplayGFX::init() {
     CONFIG_ARDUINO_RUNNING_CORE);
 
   _events_subsribe();
+  // load main page
+  putRequest(DSP_START);
 }
 
 void DisplayGFX::_bootScreen(){
@@ -407,8 +393,7 @@ void DisplayGFX::_start() {
   _build_main_screen();
   _mode = PLAYER;
   _state = state_t::normal;
-  return;
-  LOGV(T_Display, println, "DisplayGFX::_start() end");
+  LOGD(T_Display, println, "DisplayGFX::_started");
 }
 
 void DisplayGFX::_showDialog(const char *title){
@@ -601,14 +586,7 @@ void DisplayGFX::_loopDspTask() {
           case PSTART: _layoutChange(true);   break;
           case PSTOP:  _layoutChange(false);  break;
           case DSP_START: _start();  break;
-/*
-          case NEWIP: {
-            #ifndef HIDE_IP
-              if(_volip) _volip->setText(WiFi.localIP().toString().c_str(), iptxtFmt);
-            #endif
-            break;
-          }
-*/
+
           default: break;
         }
 
@@ -617,7 +595,7 @@ void DisplayGFX::_loopDspTask() {
       if (uxQueueMessagesWaiting(_displayQueue))
         continue;
     }
-    //Serial.print(".");
+
     // refresh screen items if needed
     if (_mpp.refresh(_gfx))
       _gfx->flush();

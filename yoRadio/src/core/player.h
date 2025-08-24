@@ -266,9 +266,4 @@ public:
   bool getMute() const override { return _mute_state; };
 };
 
-// ******************
-extern AudioController* player;
-
-void create_player(dac_type_t dac);
-
 #endif

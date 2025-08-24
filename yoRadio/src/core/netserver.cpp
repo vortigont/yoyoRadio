@@ -1,16 +1,11 @@
+#include "nvs_handle.hpp"
 #include "netserver.h"
-
-#include "AsyncUDP.h"
 #include "EmbUI.h"
 #include "basicui.h"
 #include "const_strings.h"
 #include "config.h"
-#include "player.h"
 #include "../displays/dspcore.h"
 #include "options.h"
-#include "network.h"
-#include "controls.h"
-#include "commandhandler.h"
 #include "evtloop.h"
 #include "log.h"
 
@@ -34,8 +29,8 @@ static constexpr const char* P_payload = "payload";
  * it MUST not overlap with basicui::page index
  */
 enum class page_t : uint16_t {
-  radio = 50,         // radio playback (front page)
-
+  radio = 50,                 // radio playback (front page)
+  devprofile = 51             // page with device profile setup
 };
 
 NetServer netserver;
@@ -51,6 +46,8 @@ void send_playlist(AsyncWebServerRequest * request);
 void ui_page_selector(Interface *interf, JsonVariantConst data, const char* action);
 void ui_page_main(Interface *interf, JsonVariantConst data, const char* action);
 void ui_page_radio(Interface *interf, JsonVariantConst data, const char* action);
+// buld additional section under "Settings" page
+void ui_block_usersettings(Interface *interf, JsonVariantConst data, const char* action);
 
 
 // **************
@@ -81,6 +78,73 @@ void ui_page_main(Interface *interf, JsonVariantConst data, const char* action){
 }
 
 
+
+// build page with radio (default page that opens on new conects)
+void ui_page_radio(Interface *interf, JsonVariantConst data, const char* action){
+  interf->json_frame_interface();
+  interf->json_section_uidata();
+    interf->uidata_pick( "yo.pages.radio" );
+  interf->json_frame_flush();
+}
+
+// buld additional section under "Settings" page
+void ui_block_usersettings(Interface *interf, JsonVariantConst data, const char* action){
+  interf->json_section_uidata();
+    interf->uidata_pick( "yo.blocks.settings" );
+
+  // no need to flush this
+}
+
+// Buld a page to setup device profile
+void ui_page_device_profile(Interface *interf, JsonVariantConst data, const char* action){
+  interf->json_frame_interface();
+  interf->json_section_uidata();
+    interf->uidata_pick( "yo.pages.dev_profile" );
+  interf->json_frame_flush();
+
+  // send current value to UI
+  esp_err_t err;
+  std::unique_ptr<nvs::NVSHandle> handle = nvs::open_nvs_handle(T_devcfg, NVS_READONLY, &err);
+  if (err != ESP_OK) return;  // no NVS - no profiles
+
+  size_t len{0};
+  handle->get_item_size(nvs::ItemType::ANY, T_profile, len);
+  if (!len) return;
+
+  char profile[len];
+  handle->get_string(T_profile, profile, len);
+  interf->json_frame_value();
+    interf->value(T_profile, profile);
+  interf->json_frame_flush();
+}
+
+// process device profile setup form submission
+void ui_set_device_profile(Interface *interf, JsonVariantConst data, const char* action){
+  esp_err_t err;
+  std::unique_ptr<nvs::NVSHandle> handle = nvs::open_nvs_handle(T_devcfg, NVS_READWRITE, &err);
+  if (err != ESP_OK || !data[T_profile].is<const char*>()) return;
+  const char* profile = data[T_profile];
+  handle->set_string(T_profile, profile);
+  LOGI(T_WebUI, printf, "Apply device profile: %s\n", profile);
+  // reboot device
+  Task *t = new Task(TASK_SECOND * 3, TASK_ONCE, nullptr, &ts, false, nullptr, [](){ ESP.restart(); });
+  t->enableDelayed();
+}
+
+
+// register web action handlers
+void embui_actions_register(){
+  embui.action.set_mainpage_cb(ui_page_main);                             // index page callback
+  embui.action.add(T_ui_page_radio, ui_page_radio);                       // build page "radio" (via left page menu)
+  embui.action.add(T_ui_page_any, ui_page_selector);                      // ui page switcher
+  embui.action.set_settings_cb(ui_block_usersettings);                    // "settings" page, user block
+  // setup device profile
+  embui.action.add(A_dev_profile, ui_set_device_profile);
+
+  // ***************
+  // simple handlers
+}
+
 /**
  * @brief when action is called to display a specific page
  * this selector picks and calls correspoding method
@@ -92,34 +156,19 @@ void ui_page_selector(Interface *interf, JsonVariantConst data, const char* acti
   int idx = data;
 
   switch (static_cast<page_t>(idx)){
-      case page_t::radio :        // страница воспроизведения радио
+      case page_t::radio :              // страница воспроизведения радио
         return ui_page_radio(interf, {}, NULL);
+      case page_t::devprofile :         // страница настройки профилей устройства
+        return ui_page_device_profile(interf, {}, NULL);
 
       default:;                   // by default do nothing
   }
 }
 
 
-// build page with radio (default page that opens on new conects)
-void ui_page_radio(Interface *interf, JsonVariantConst data, const char* action){
-  interf->json_frame_interface();
-  interf->json_section_uidata();
-    interf->uidata_pick( "yo.pages.radio" );
-  interf->json_frame_flush();
-}
-
-
-// register web action handlers
-void embui_actions_register(){
-  embui.action.set_mainpage_cb(ui_page_main);                             // index page callback
-  embui.action.add(T_ui_page_any, ui_page_selector);                      // ui page switcher
-  embui.action.add(T_ui_page_radio, ui_page_radio);                       // build page "radio"
-  //embui.action.set_settings_cb(block_user_settings);                    // "settings" page options callback
-
-  // ***************
-  // simple handlers
-
-}
+// ***********************************************************
+//  NetServer method
+// ***********************************************************
 
 void handleIndex(AsyncWebServerRequest * request);
 void handleNotFound(AsyncWebServerRequest * request);
@@ -355,30 +404,21 @@ void NetServer::processQueue(){
         o["value"] = rssi;
         break;
       }
+/*
       case SDPOS:
         //obj["sdpos"] = player->getFilePos();    >getFilePos() is obsolete
         obj["sdend"] = player->getFileSize();
         obj["sdtpos"] = player->getAudioCurrentTime();
         obj["sdtend"] = player->getAudioFileDuration();
         break;
-/*
       case SDLEN: // not sure what is this
         obj["sdmin"] = player->sd_min;
         obj["sdmax"] = player->sd_max;
         break;
-*/
-      case SDSNUFFLE:
+        case SDSNUFFLE:
         obj["snuffle"] = config.store.sdsnuffle;
         break;
-
-      case MODE: {
-        JsonArray a = obj[P_payload].to<JsonArray>();
-        JsonObject o = a.add<JsonObject>();
-          o["id"] = "playerwrap";
-          o["value"] = player->status() == PLAYING ? "playing" : "stopped";
-          //telnet.info();
-          break;
-      }
+*/
 
       case SDINIT:
         obj["sdinit"] = SDC_CS!=255;
@@ -445,33 +485,6 @@ void NetServer::irValsToWs() {
   embui.ws.textAll(buf);
 }
 #endif
-
-void NetServer::onWsMessage(void *arg, uint8_t *data, size_t len, uint8_t clientId) {
-  AwsFrameInfo *info = (AwsFrameInfo*)arg;
-  if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT) {
-    data[len] = 0;
-    // pring received message in debug mode
-    LOGD("WS MSG: ", println, reinterpret_cast<const char*>(data));
-    char comnd[65], val[65];
-    if (config.parseWsCommand((const char*)data, comnd, val, 65)) {
-      if (strcmp(comnd, "submitplaylistdone") == 0) {
-#ifdef MQTT_ROOT_TOPIC
-        mqttplaylistticker.attach(5, mqttplaylistSend);
-#endif
-        if (player->isRunning()){
-          //auto v = config.lastStation();
-          //EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::playerStation), &v, sizeof(v));
-        }
-
-        return;
-      }
-      
-      if(cmd.exec(comnd, val, clientId)){
-        return;
-      }
-    }
-  }
-}
 
 void NetServer::getPlaylist(uint8_t clientId) {
   char buf[160] = {0};
@@ -746,43 +759,7 @@ void handleIndex(AsyncWebServerRequest * request) {
     request->send(404, "text/plain", "Not found");
     return;
   } // end if(config.emptyFS)
-#if defined(HTTP_USER) && defined(HTTP_PASS)
-  if(network.status == CONNECTED)
-    if (!request->authenticate(HTTP_USER, HTTP_PASS)) {
-      return request->requestAuthentication();
-    }
-#endif
-/*
-  // obsolete due to EmbUI
-  if (strcmp(request->url().c_str(), "/") == 0 && request->params() == 0) {
-    if(network.status == CONNECTED) request->send(200, asyncsrv::T_text_html, index_html); else request->redirect("/settings.html");
-    return;
-  }
-*/
-  //if(network.status == CONNECTED){
-    int paramsNr = request->params();
-    if(paramsNr==1){
-      const AsyncWebParameter* p = request->getParam(0);
-      if(cmd.exec(p->name().c_str(),p->value().c_str())) {
-        if(p->name()=="reset" || p->name()=="clearLittleFS")
-          return request->redirect("/");
-        
-      request->send(200, asyncsrv::T_text_plain);
-        if(p->name()=="clearLittleFS")
-          { delay(100); ESP.restart(); }
-        return;
-      }
-    }
-    if (request->hasArg("sleep")) {
-      int sford = request->getParam("sleep")->value().toInt();
-      int safterd = request->hasArg("after")?request->getParam("after")->value().toInt():0;
-      if(sford > 0 && safterd >= 0){
-        request->send(200, asyncsrv::T_text_plain);
-        config.sleepForAfter(sford, safterd);
-        return;
-      }
-    }
-  //}
+
 
   request->send(404, asyncsrv::T_text_plain, "Not found");  
 }

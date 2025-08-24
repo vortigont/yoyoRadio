@@ -10,6 +10,10 @@
         "value": "ui_page_radio"
       },
       {
+        "label": "🏗 Модули",
+        "value": "ui_page_modules"
+      },
+      {
         "label": "Настройки",
         "value": "sys_page_settings"
       }
@@ -118,6 +122,62 @@
           {"action": "player_getValues"}
         ]
       }
-    ]
+    ],
+    "dev_profile":{
+      "section":"dev_profile",
+      "main":true,
+      "block":[
+        {
+          "html":"comment",
+          "label":"Настройка профиля устройства"
+        },
+        {
+          "html":"spacer"
+        },
+        {
+          "id":"profile",
+          "html":"select",
+          "label":"Модель модуля/платы",
+          "section":"options",
+          "block":[
+            { "value":"custom", "label":"Пользовательский (dev_profile.json)" },
+            { "value":"JC3248W535", "label":"Guition JC3248W535 ESP32-S3 480x320" },
+            { "value":"JC1060P470", "label":"Guition JC1060P470 ESP32-P4 1024x600" }
+          ]
+        },
+        {
+          "id":"dev_profile_btn",
+          "html":"button",
+          "type":"submit",
+          "form": "dev_profile",
+          "label":"🖫 Сохранить"
+        },
+        {
+          "html":"comment",
+          "label":"при изменении профиля контроллер будет перезагружен"
+        }
+      ]
+    }
+  },
+  "blocks":{
+    "settings":{
+      "cmt":"доп. набор кнопок на странице настроек",
+      "section":"user_setup",
+      "block":[
+        { "html":"spacer" },
+        {
+          "html":"comment",
+          "label":"Настройки радио"
+        },
+        {
+          "id":"ui_page_devprofile",
+          "html":"button",
+          "type":"generic",
+          "label":"Профиль устройства",
+          "value":51
+        }
+      ]
+
+    }
   }
 }

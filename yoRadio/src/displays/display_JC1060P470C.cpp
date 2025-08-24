@@ -1,16 +1,20 @@
-#include "../core/options.h"
-#if DSP_MODEL==DSP_JC1060P470
+// Arduino_ESP32DSIPanel is available only on ESP32-P4
 #include "display_JC1060P470C.h"
+
+#if defined(ESP32) && (CONFIG_IDF_TARGET_ESP32P4)
+
 #include "display/Arduino_DSI_Display.h"
-#include "fonts/bootlogo.h"
 #include "../core/config.h"
 #include "../core/log.h"
 
-static Arduino_ESP32DSIPanel *dsipanel{nullptr};
-static Arduino_DSI_Display *gfx{nullptr};
-static Dsp_JC1060P470* dsp_dev{nullptr};
+namespace JC1060P470 {
+  
 
-Arduino_GFX* create_display_dev(){
+Arduino_ESP32DSIPanel *dsipanel{nullptr};
+Arduino_DSI_Display *gfx{nullptr};
+Dsp_JC1060P470* dsp_dev{nullptr};
+
+Arduino_GFX* create_display_dev(const JC1060P470::display_t &cfg){
   if (!dsipanel){
     dsipanel = new Arduino_ESP32DSIPanel(
       40 /* hsync_pulse_width */,
@@ -29,32 +33,40 @@ Arduino_GFX* create_display_dev(){
 
   // device specific controller
   if (!dsp_dev)
-    dsp_dev = new Dsp_JC1060P470();
+    dsp_dev = new Dsp_JC1060P470(cfg.backlight);
 
   gfx = new Arduino_DSI_Display(
-    DSP_WIDTH /* width */, DSP_HEIGHT /* height */, dsipanel, 0 /* rotation */, false /* auto_flush */,
-    LCD_RST /* RST */, jd9165_init_operations, sizeof(jd9165_init_operations) / sizeof(lcd_init_cmd_t));
+    cfg.w /* width */, cfg.h /* height */, dsipanel, 0 /* rotation */, false /* auto_flush */,
+    cfg.rst /* RST */, jd9165_init_operations, sizeof(jd9165_init_operations) / sizeof(lcd_init_cmd_t));
 
   return gfx;
 }
 
 
-Dsp_JC1060P470::Dsp_JC1060P470() {
-  ledcAttach(TFT_BLK, 1000, 8);
-  //ledcOutputInvert(TFT_BLK, true);
-  ledcWrite(TFT_BLK, 200);
+Dsp_JC1060P470::Dsp_JC1060P470(int32_t backlight_gpio) : _backlight_gpio(backlight_gpio) {
+  if (_backlight_gpio > -1){
+    ledcAttach(backlight_gpio, 1000, 8);
+    //ledcOutputInvert(TFT_BLK, true);
+    ledcWrite(_backlight_gpio, 200);
+  }
 }
 
 void Dsp_JC1060P470::sleep(void) { 
-  Serial.println("DspCore::sleep");
+  //Serial.println("DspCore::sleep");
   gfx->displayOff();
-  ledcWrite(TFT_BLK, 0); // Выключаем подсветку через PWM
+  ledcWrite(_backlight_gpio, 0); // Выключаем подсветку через PWM
 }
 
 void Dsp_JC1060P470::wake(void) {
-  Serial.println("DspCore::wake");
+  //Serial.println("DspCore::wake");
   gfx->displayOn();
-  ledcWrite(TFT_BLK, map(config.store.brightness, 0, 100, 0, 255)); // Устанавливаем яркость через PWM
+  ledcWrite(_backlight_gpio, map(config.store.brightness, 0, 100, 0, 255)); // Устанавливаем яркость через PWM
 }
 
-#endif  // DSP_MODEL==DSP_JC1060P470
+};  //  namespace JC1060P470
+
+#else   //#if defined(ESP32) && (CONFIG_IDF_TARGET_ESP32P4)
+namespace JC1060P470 {
+Arduino_GFX* create_display_dev(const JC1060P470::display_t &cfg){ return nullptr; }
+}
+#endif  //#if defined(ESP32) && (CONFIG_IDF_TARGET_ESP32P4)
