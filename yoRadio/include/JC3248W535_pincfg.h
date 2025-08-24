@@ -54,7 +54,7 @@ namespace JC3248W535 {
   struct display_t {
     uint16_t w, h;
     // gpios
-    int32_t sda0, sda1, sda2, sda, sck, cs, rst, te, backlight, backlight_level;
+    int32_t sda0, sda1, sda2, sda3, sck, cs, rst, te, backlight, backlight_level;
   };
   static constexpr display_t display{
     JC3248W535_TFT_WIDTH, JC3248W535_TFT_HEIGHT,

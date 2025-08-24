@@ -1,15 +1,11 @@
+#include "nvs_handle.hpp"
 #include "netserver.h"
-
-#include "AsyncUDP.h"
 #include "EmbUI.h"
 #include "basicui.h"
 #include "const_strings.h"
 #include "config.h"
-#include "player.h"
 #include "../displays/dspcore.h"
 #include "options.h"
-#include "network.h"
-#include "controls.h"
 #include "evtloop.h"
 #include "log.h"
 
@@ -33,8 +29,8 @@ static constexpr const char* P_payload = "payload";
  * it MUST not overlap with basicui::page index
  */
 enum class page_t : uint16_t {
-  radio = 50,         // radio playback (front page)
-
+  radio = 50,                 // radio playback (front page)
+  devprofile = 51             // page with device profile setup
 };
 
 NetServer netserver;
@@ -50,6 +46,8 @@ void send_playlist(AsyncWebServerRequest * request);
 void ui_page_selector(Interface *interf, JsonVariantConst data, const char* action);
 void ui_page_main(Interface *interf, JsonVariantConst data, const char* action);
 void ui_page_radio(Interface *interf, JsonVariantConst data, const char* action);
+// buld additional section under "Settings" page
+void ui_block_usersettings(Interface *interf, JsonVariantConst data, const char* action);
 
 
 // **************
@@ -80,6 +78,73 @@ void ui_page_main(Interface *interf, JsonVariantConst data, const char* action){
 }
 
 
+
+// build page with radio (default page that opens on new conects)
+void ui_page_radio(Interface *interf, JsonVariantConst data, const char* action){
+  interf->json_frame_interface();
+  interf->json_section_uidata();
+    interf->uidata_pick( "yo.pages.radio" );
+  interf->json_frame_flush();
+}
+
+// buld additional section under "Settings" page
+void ui_block_usersettings(Interface *interf, JsonVariantConst data, const char* action){
+  interf->json_section_uidata();
+    interf->uidata_pick( "yo.blocks.settings" );
+
+  // no need to flush this
+}
+
+// Buld a page to setup device profile
+void ui_page_device_profile(Interface *interf, JsonVariantConst data, const char* action){
+  interf->json_frame_interface();
+  interf->json_section_uidata();
+    interf->uidata_pick( "yo.pages.dev_profile" );
+  interf->json_frame_flush();
+
+  // send current value to UI
+  esp_err_t err;
+  std::unique_ptr<nvs::NVSHandle> handle = nvs::open_nvs_handle(T_devcfg, NVS_READONLY, &err);
+  if (err != ESP_OK) return;  // no NVS - no profiles
+
+  size_t len{0};
+  handle->get_item_size(nvs::ItemType::ANY, T_profile, len);
+  if (!len) return;
+
+  char profile[len];
+  handle->get_string(T_profile, profile, len);
+  interf->json_frame_value();
+    interf->value(T_profile, profile);
+  interf->json_frame_flush();
+}
+
+// process device profile setup form submission
+void ui_set_device_profile(Interface *interf, JsonVariantConst data, const char* action){
+  esp_err_t err;
+  std::unique_ptr<nvs::NVSHandle> handle = nvs::open_nvs_handle(T_devcfg, NVS_READWRITE, &err);
+  if (err != ESP_OK || !data[T_profile].is<const char*>()) return;
+  const char* profile = data[T_profile];
+  handle->set_string(T_profile, profile);
+  LOGI(T_WebUI, printf, "Apply device profile: %s\n", profile);
+  // reboot device
+  Task *t = new Task(TASK_SECOND * 3, TASK_ONCE, nullptr, &ts, false, nullptr, [](){ ESP.restart(); });
+  t->enableDelayed();
+}
+
+
+// register web action handlers
+void embui_actions_register(){
+  embui.action.set_mainpage_cb(ui_page_main);                             // index page callback
+  embui.action.add(T_ui_page_radio, ui_page_radio);                       // build page "radio" (via left page menu)
+  embui.action.add(T_ui_page_any, ui_page_selector);                      // ui page switcher
+  embui.action.set_settings_cb(ui_block_usersettings);                    // "settings" page, user block
+  // setup device profile
+  embui.action.add(A_dev_profile, ui_set_device_profile);
+
+  // ***************
+  // simple handlers
+}
+
 /**
  * @brief when action is called to display a specific page
  * this selector picks and calls correspoding method
@@ -91,34 +156,19 @@ void ui_page_selector(Interface *interf, JsonVariantConst data, const char* acti
   int idx = data;
 
   switch (static_cast<page_t>(idx)){
-      case page_t::radio :        // страница воспроизведения радио
+      case page_t::radio :              // страница воспроизведения радио
         return ui_page_radio(interf, {}, NULL);
+      case page_t::devprofile :         // страница настройки профилей устройства
+        return ui_page_device_profile(interf, {}, NULL);
 
       default:;                   // by default do nothing
   }
 }
 
 
-// build page with radio (default page that opens on new conects)
-void ui_page_radio(Interface *interf, JsonVariantConst data, const char* action){
-  interf->json_frame_interface();
-  interf->json_section_uidata();
-    interf->uidata_pick( "yo.pages.radio" );
-  interf->json_frame_flush();
-}
-
-
-// register web action handlers
-void embui_actions_register(){
-  embui.action.set_mainpage_cb(ui_page_main);                             // index page callback
-  embui.action.add(T_ui_page_any, ui_page_selector);                      // ui page switcher
-  embui.action.add(T_ui_page_radio, ui_page_radio);                       // build page "radio"
-  //embui.action.set_settings_cb(block_user_settings);                    // "settings" page options callback
-
-  // ***************
-  // simple handlers
-
-}
+// ***********************************************************
+//  NetServer method
+// ***********************************************************
 
 void handleIndex(AsyncWebServerRequest * request);
 void handleNotFound(AsyncWebServerRequest * request);

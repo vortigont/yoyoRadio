@@ -1,9 +1,10 @@
 #pragma once
 
 // NVS labels
-static constexpr const char* T_volume = "volume";
 static constexpr const char* T_balance = "balance";
+static constexpr const char* T_devcfg = "devcfg";
 static constexpr const char* T_equalizer = "equalizer";
+static constexpr const char* T_volume = "volume";
 static constexpr const char* T_station = "station";
 
 
@@ -30,7 +31,7 @@ static constexpr const char* T_n_a = "n/a";                     // not available
 
 // имена ключей конфигурации / акшены
 static constexpr const char* A_ui_page_modules = "ui_page_modules";             // modules page
-
+static constexpr const char* A_dev_profile = "dev_profile";                     // device profile setup
 
 
 // Modules

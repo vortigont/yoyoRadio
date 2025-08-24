@@ -33,7 +33,7 @@ Arduino_GFX* create_display_dev(const JC1060P470::display_t &cfg){
 
   // device specific controller
   if (!dsp_dev)
-    dsp_dev = new Dsp_JC1060P470();
+    dsp_dev = new Dsp_JC1060P470(cfg.backlight);
 
   gfx = new Arduino_DSI_Display(
     cfg.w /* width */, cfg.h /* height */, dsipanel, 0 /* rotation */, false /* auto_flush */,
@@ -44,7 +44,7 @@ Arduino_GFX* create_display_dev(const JC1060P470::display_t &cfg){
 
 
 Dsp_JC1060P470::Dsp_JC1060P470(int32_t backlight_gpio) : _backlight_gpio(backlight_gpio) {
-  if (backlight_gpio > -1){
+  if (_backlight_gpio > -1){
     ledcAttach(backlight_gpio, 1000, 8);
     //ledcOutputInvert(TFT_BLK, true);
     ledcWrite(_backlight_gpio, 200);

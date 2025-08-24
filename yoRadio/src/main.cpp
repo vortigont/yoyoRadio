@@ -49,14 +49,15 @@ void setup() {
   LOGI(T_BOOT, println, "Start WebServer");
   netserver.begin();
   //telnet.begin();
-
+/*
   if(SDC_CS!=255) {
     LOGI(T_BOOT, println, "Wait for SDCARD");
     display->putRequest(WAITFORSD, 0);
   }
+*/
 
-  LOGI(T_BOOT, println, "Init Controls");
-  initControls();
+  //LOGI(T_BOOT, println, "Init Controls");
+  //initControls();
 
 //  LOGI(T_BOOT, println, "Start Display");
 //  display->putRequest(DSP_START);
@@ -74,8 +75,9 @@ void setup() {
 
 void loop() {
   //telnet.loop();
-  player->loop();
-  loopControls();
+  if (player)
+    player->loop();
+  //loopControls();
   netserver.loop();
   vTaskDelay(1);
 }

@@ -241,6 +241,8 @@ void DisplayGFX::init() {
     CONFIG_ARDUINO_RUNNING_CORE);
 
   _events_subsribe();
+  // load main page
+  putRequest(DSP_START);
 }
 
 void DisplayGFX::_bootScreen(){
@@ -391,8 +393,7 @@ void DisplayGFX::_start() {
   _build_main_screen();
   _mode = PLAYER;
   _state = state_t::normal;
-  return;
-  LOGV(T_Display, println, "DisplayGFX::_start() end");
+  LOGD(T_Display, println, "DisplayGFX::_started");
 }
 
 void DisplayGFX::_showDialog(const char *title){
@@ -585,14 +586,7 @@ void DisplayGFX::_loopDspTask() {
           case PSTART: _layoutChange(true);   break;
           case PSTOP:  _layoutChange(false);  break;
           case DSP_START: _start();  break;
-/*
-          case NEWIP: {
-            #ifndef HIDE_IP
-              if(_volip) _volip->setText(WiFi.localIP().toString().c_str(), iptxtFmt);
-            #endif
-            break;
-          }
-*/
+
           default: break;
         }
 
@@ -601,7 +595,7 @@ void DisplayGFX::_loopDspTask() {
       if (uxQueueMessagesWaiting(_displayQueue))
         continue;
     }
-    //Serial.print(".");
+
     // refresh screen items if needed
     if (_mpp.refresh(_gfx))
       _gfx->flush();

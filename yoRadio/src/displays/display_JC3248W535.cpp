@@ -14,7 +14,7 @@ Dsp_JC3248W535 *dsp_dev{nullptr};
 
 Arduino_GFX* create_display_dev(const JC3248W535::display_t &cfg){
   if (bus == nullptr){
-    bus = new Arduino_ESP32QSPI(cfg.cs, cfg.sck, cfg.sda0, cfg.sda0, cfg.sda0, cfg.sda0);
+    bus = new Arduino_ESP32QSPI(cfg.cs, cfg.sck, cfg.sda0, cfg.sda1, cfg.sda2, cfg.sda3);
   }
 
   if (bus == nullptr){
@@ -26,7 +26,7 @@ Arduino_GFX* create_display_dev(const JC3248W535::display_t &cfg){
 
   // device specific controller
   if (!dsp_dev)
-    dsp_dev = new Dsp_JC3248W535();
+    dsp_dev = new Dsp_JC3248W535(cfg.backlight);
 
   // gfx object
   gfx = new Arduino_Canvas(cfg.w, cfg.h, drv);
@@ -34,11 +34,11 @@ Arduino_GFX* create_display_dev(const JC3248W535::display_t &cfg){
 }
 
 Dsp_JC3248W535::Dsp_JC3248W535(int32_t backlight_gpio) : _backlight_gpio(backlight_gpio) {
-  if (backlight_gpio > -1){
+  if (_backlight_gpio > -1){
     // backlight
-    ledcAttach(backlight_gpio, 1000, 8);
+    ledcAttach(_backlight_gpio, 1000, 8);
     //ledcOutputInvert(TFT_BLK, true);
-    ledcWrite(backlight_gpio, 200);    // default brightness
+    ledcWrite(_backlight_gpio, 200);    // default brightness
   }
 }
 
@@ -53,7 +53,8 @@ void Dsp_JC3248W535::sleep(){
 void Dsp_JC3248W535::wake(){
   //Serial.println("DspCore::wake");
   drv->displayOn();
-  ledcWrite(_backlight_gpio, map(config.store.brightness, 0, 100, 0, 255)); // Устанавливаем яркость через PWM
+  ledcWrite(_backlight_gpio, map(75, 0, 100, 0, 255)); // Set brightness to 75%
+  //ledcWrite(_backlight_gpio, map(config.store.brightness, 0, 100, 0, 255)); // Устанавливаем яркость через PWM
 }
 
 };  //  namespace JC3248W535 {
