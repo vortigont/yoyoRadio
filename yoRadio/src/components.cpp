@@ -2,9 +2,8 @@
 #include "components.hpp"
 #include "displays/dspcore.h"
 // device defines
-#include "JC3248W535_pincfg.h"
 #include "displays/display_JC3248W535.h"
-#include "JC1060P470CIW_pincfg.h"
+#include "displays/display_JC1060P470C.h"
 //
 #include "core/log.h"
 
@@ -62,4 +61,8 @@ void load_device_JC1060P470(){
   // JC1060P470 uses ES8311 DAC chip
   player = new ES8311Audio(JC1060P470::i2s.bclk, JC1060P470::i2s.lrclk, JC1060P470::i2s.dout, JC1060P470::i2s.mclk, JC1060P470::i2s.mute);
   player->init();
+
+  // Display
+  display = new DisplayGFX(JC1060P470::create_display_dev(JC1060P470::display));
+  display->init();
 }

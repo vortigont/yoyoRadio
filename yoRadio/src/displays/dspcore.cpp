@@ -1,25 +1,10 @@
 #include "dspcore.h"
 #include "gfx_engine.h"
 #include "locale/l10n.h"
-#include "../core/config.h"
-#include "../core/network.h"
-#include "../core/player.h"
-#include "../core/evtloop.h"
-#include "../core/log.h"
+#include "core/config.h"
+#include "core/evtloop.h"
+#include "core/log.h"
 
-/*
-bool create_display(){
-#if DSP_MODEL == DUMMYDISPLAY
-  display = new DisplayDummy();
-  return true;
-#elif DSP_MODEL == DSP_NEXTION
-  display = new DisplayNextion();
-#else
-  display = new DisplayGFX(create_display_dev());
-#endif
-  return create_display_dev();
-}
-*/
 
 #ifdef NOT_NEEDED
 

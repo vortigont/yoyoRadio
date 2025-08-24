@@ -1,6 +1,6 @@
 #include "config.h"
 
-#include "../displays/dspcore.h"
+//#include "../displays/dspcore.h"
 #include "player.h"
 #include "network.h"
 #include "netserver.h"
@@ -394,14 +394,13 @@ void Config::resetSystem(const char *val, uint8_t clientId){
   }
   if (strcmp(val, "screen") == 0) {
     saveValue(&store.flipscreen, false, false);
-    display->flip();
     saveValue(&store.invertdisplay, false, false);
-    display->invert();
+    //display->invert();
     saveValue(&store.dspon, true, false);
     store.brightness = 100;
     setBrightness(false);
     saveValue(&store.contrast, (uint8_t)55, false);
-    display->setContrast();
+    //display->setContrast();
     saveValue(&store.numplaylist, false);
     saveValue(&store.screensaverEnabled, false);
     saveValue(&store.screensaverTimeout, (uint16_t)20);
@@ -697,9 +696,9 @@ void Config::setDspOn(bool dspon, bool saveval){
 #if BRIGHTNESS_PIN!=255
   analogWrite(BRIGHTNESS_PIN, 0);
 #endif
-    display->deepsleep();
+    //display->deepsleep();
   }else{
-    display->wakeup();
+    //display->wakeup();
 #if BRIGHTNESS_PIN!=255
   analogWrite(BRIGHTNESS_PIN, map(store.brightness, 0, 100, 0, 255));
 #endif
@@ -708,7 +707,7 @@ void Config::setDspOn(bool dspon, bool saveval){
 
 void Config::doSleep(){
   if(BRIGHTNESS_PIN!=255) analogWrite(BRIGHTNESS_PIN, 0);
-  display->deepsleep();
+  //display->deepsleep();
 #ifdef USE_NEXTION
   nextion.sleep();
 #endif
@@ -725,7 +724,7 @@ void Config::doSleep(){
 
 void Config::doSleepW(){
   if(BRIGHTNESS_PIN!=255) analogWrite(BRIGHTNESS_PIN, 0);
-  display->deepsleep();
+  //display->deepsleep();
 #ifdef USE_NEXTION
   nextion.sleep();
 #endif

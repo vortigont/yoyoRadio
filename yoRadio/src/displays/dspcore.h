@@ -4,8 +4,11 @@
 #include "gfx_lib.h"
 #include "Ticker.h"
 #include "nextion.h"
-#ifdef _ARDUINO_GFX_H_
+
+#if __has_include("Arduino_GFX.h")
+#include "Arduino_GFX.h"
 #include "widgets/muipp_widgets.hpp"
+
 #endif
 
 #ifdef NOT_NEEDED

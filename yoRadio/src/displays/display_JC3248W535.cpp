@@ -1,5 +1,3 @@
-//#include "../core/options.h"
-//#if DSP_MODEL==DSP_JC3248W535
 #include "canvas/Arduino_Canvas.h"
 #include "display/Arduino_AXS15231B.h"  // ArduinoGFX driver
 #include "databus/Arduino_ESP32QSPI.h"

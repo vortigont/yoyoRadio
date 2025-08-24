@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 
 // defines for 1024x600 7'    Guition JC1060P470 ESP32-P4
 
@@ -65,7 +66,7 @@ namespace JC1060P470 {
         JC1060P470_ES7210_LRCK,
         JC1060P470_ES7210_MCLK,
         JC1060P470_PA_ENABLE,
-        LOW
+        0x0     // LOW
     };
   
     // Display
@@ -77,7 +78,7 @@ namespace JC1060P470 {
     static constexpr display_t display{
       JC1060P470_LCD_H_RES, JC1060P470_LCD_V_RES,
       JC1060P470_LCD_RST,
-      JC1060P470_LCD_LED, HIGH
+      JC1060P470_LCD_LED, 0x1   // HIGH
     };
   };
   
