@@ -1,5 +1,4 @@
-#ifndef dspcore_h
-#define dspcore_h
+#pragma once
 #include "../core/options.h"
 #include "../core/common.h"
 #include "gfx_lib.h"
@@ -349,10 +348,3 @@ private:
 };
 
 extern Display* display;
-
-// function that creates display interface controller class
-// and respective device-specific object (DspCore* dsp), should be defined in one (and only one!) of the respective displayXXXX.cpp files
-bool create_display();
-
-
-#endif    // dspcore_h

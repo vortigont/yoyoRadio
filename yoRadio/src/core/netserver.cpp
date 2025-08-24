@@ -10,7 +10,6 @@
 #include "options.h"
 #include "network.h"
 #include "controls.h"
-#include "commandhandler.h"
 #include "evtloop.h"
 #include "log.h"
 
@@ -355,30 +354,21 @@ void NetServer::processQueue(){
         o["value"] = rssi;
         break;
       }
+/*
       case SDPOS:
         //obj["sdpos"] = player->getFilePos();    >getFilePos() is obsolete
         obj["sdend"] = player->getFileSize();
         obj["sdtpos"] = player->getAudioCurrentTime();
         obj["sdtend"] = player->getAudioFileDuration();
         break;
-/*
       case SDLEN: // not sure what is this
         obj["sdmin"] = player->sd_min;
         obj["sdmax"] = player->sd_max;
         break;
-*/
-      case SDSNUFFLE:
+        case SDSNUFFLE:
         obj["snuffle"] = config.store.sdsnuffle;
         break;
-
-      case MODE: {
-        JsonArray a = obj[P_payload].to<JsonArray>();
-        JsonObject o = a.add<JsonObject>();
-          o["id"] = "playerwrap";
-          o["value"] = player->status() == PLAYING ? "playing" : "stopped";
-          //telnet.info();
-          break;
-      }
+*/
 
       case SDINIT:
         obj["sdinit"] = SDC_CS!=255;
@@ -445,33 +435,6 @@ void NetServer::irValsToWs() {
   embui.ws.textAll(buf);
 }
 #endif
-
-void NetServer::onWsMessage(void *arg, uint8_t *data, size_t len, uint8_t clientId) {
-  AwsFrameInfo *info = (AwsFrameInfo*)arg;
-  if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT) {
-    data[len] = 0;
-    // pring received message in debug mode
-    LOGD("WS MSG: ", println, reinterpret_cast<const char*>(data));
-    char comnd[65], val[65];
-    if (config.parseWsCommand((const char*)data, comnd, val, 65)) {
-      if (strcmp(comnd, "submitplaylistdone") == 0) {
-#ifdef MQTT_ROOT_TOPIC
-        mqttplaylistticker.attach(5, mqttplaylistSend);
-#endif
-        if (player->isRunning()){
-          //auto v = config.lastStation();
-          //EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::playerStation), &v, sizeof(v));
-        }
-
-        return;
-      }
-      
-      if(cmd.exec(comnd, val, clientId)){
-        return;
-      }
-    }
-  }
-}
 
 void NetServer::getPlaylist(uint8_t clientId) {
   char buf[160] = {0};
@@ -746,43 +709,7 @@ void handleIndex(AsyncWebServerRequest * request) {
     request->send(404, "text/plain", "Not found");
     return;
   } // end if(config.emptyFS)
-#if defined(HTTP_USER) && defined(HTTP_PASS)
-  if(network.status == CONNECTED)
-    if (!request->authenticate(HTTP_USER, HTTP_PASS)) {
-      return request->requestAuthentication();
-    }
-#endif
-/*
-  // obsolete due to EmbUI
-  if (strcmp(request->url().c_str(), "/") == 0 && request->params() == 0) {
-    if(network.status == CONNECTED) request->send(200, asyncsrv::T_text_html, index_html); else request->redirect("/settings.html");
-    return;
-  }
-*/
-  //if(network.status == CONNECTED){
-    int paramsNr = request->params();
-    if(paramsNr==1){
-      const AsyncWebParameter* p = request->getParam(0);
-      if(cmd.exec(p->name().c_str(),p->value().c_str())) {
-        if(p->name()=="reset" || p->name()=="clearLittleFS")
-          return request->redirect("/");
-        
-      request->send(200, asyncsrv::T_text_plain);
-        if(p->name()=="clearLittleFS")
-          { delay(100); ESP.restart(); }
-        return;
-      }
-    }
-    if (request->hasArg("sleep")) {
-      int sford = request->getParam("sleep")->value().toInt();
-      int safterd = request->hasArg("after")?request->getParam("after")->value().toInt():0;
-      if(sford > 0 && safterd >= 0){
-        request->send(200, asyncsrv::T_text_plain);
-        config.sleepForAfter(sford, safterd);
-        return;
-      }
-    }
-  //}
+
 
   request->send(404, asyncsrv::T_text_plain, "Not found");  
 }

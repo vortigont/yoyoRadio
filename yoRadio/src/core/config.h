@@ -108,7 +108,6 @@ struct config_t
   char      weatherkey[WEATHERKEY_LENGTH];
   uint16_t  _reserved;
   uint16_t  lastSdStation;
-  bool      sdsnuffle;
   uint8_t   volsteps;
   uint16_t  encacc;
   uint8_t   play_mode;  //0 WEB, 1 SD
@@ -198,7 +197,6 @@ class Config {
     void sleepForAfter(uint16_t sleepfor, uint16_t sleepafter=0);
     void bootInfo();
     void doSleepW();
-    void setSnuffle(bool sn);
     uint8_t getMode() { return store.play_mode/* & 0b11*/; }
     void reset();
     void enableScreensaver(bool val);

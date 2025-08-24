@@ -10,6 +10,10 @@
         "value": "ui_page_radio"
       },
       {
+        "label": "🏗 Модули",
+        "value": "ui_page_modules"
+      },
+      {
         "label": "Настройки",
         "value": "sys_page_settings"
       }

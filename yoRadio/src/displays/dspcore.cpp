@@ -7,9 +7,7 @@
 #include "../core/evtloop.h"
 #include "../core/log.h"
 
-// **************
-Display* display{nullptr};
-
+/*
 bool create_display(){
 #if DSP_MODEL == DUMMYDISPLAY
   display = new DisplayDummy();
@@ -21,6 +19,7 @@ bool create_display(){
 #endif
   return create_display_dev();
 }
+*/
 
 #ifdef NOT_NEEDED
 

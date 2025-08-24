@@ -356,6 +356,7 @@ void Config::setWeatherKey(const char *val){
   EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
 }
 void Config::setSDpos(uint32_t val){
+/*
   if (getMode()==PM_SDCARD){
     sdResumePos = 0;
     if(!player->isRunning()){
@@ -365,6 +366,7 @@ void Config::setSDpos(uint32_t val){
       player->setFilePos(val - player->sd_min);
     }
   }
+*/
 }
 #if IR_PIN!=255
 void Config::setIrBtn(int val){
@@ -471,7 +473,6 @@ void Config::setDefaults() {
   strlcpy(store.weatherkey,"", WEATHERKEY_LENGTH);
   store._reserved = 0;
   store.lastSdStation = 0;
-  store.sdsnuffle = false;
   store.volsteps = 1;
   store.encacc = 200;
   store.play_mode = 0;
@@ -496,11 +497,6 @@ void Config::setDefaults() {
   store.screensaverPlayingTimeout = 5;
   store.screensaverPlayingBlank = false;
   eepromWrite(EEPROM_START, store);
-}
-
-void Config::setSnuffle(bool sn){
-  saveValue(&store.sdsnuffle, sn);
-  if(store.sdsnuffle) player->next();
 }
 
 #if IR_PIN!=255

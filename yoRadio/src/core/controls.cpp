@@ -503,7 +503,7 @@ void onBtnClick(int id) {
           EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
         }
         if (display->mode() == PLAYER) {
-          player->toggle();
+          //  player->toggle(); // todo: rewrite it
         }
         if (display->mode() == SCREENSAVER || display->mode() == SCREENBLANK) {
           int32_t d = PLAYER;
@@ -535,17 +535,17 @@ void onBtnClick(int id) {
     case EVT_BTNDOWN: {
         if (DSP_MODEL == DSP_DUMMY) {
           if (id == EVT_BTNUP) {
-            player->next();
+            //  player->next();   // todo: rewrite it
           } else {
-            player->prev();
+            //  player->prev();   // todo: rewrite it
           }
         } else {
           if (display->mode() == PLAYER) {
             if(config.store.skipPlaylistUpDown || ENC2_BTNL!=255){
               if (id == EVT_BTNUP) {
-                player->prev();
+                //player->prev();   // todo: rewrite it
               } else {
-                player->next();
+                //player->next();   // todo: rewrite it
               }
             }else{
               int32_t d = STATIONS;
@@ -578,7 +578,7 @@ void onBtnDoubleClick(int id) {
     case EVT_BTNLEFT: {
         if (display->mode() != PLAYER) return;
         //if (network.status != CONNECTED && network.status!=SDREADY) return;
-        player->prev();
+        //  player->prev();   // todo: rewrite it
         break;
       }
     case EVT_BTNCENTER:
@@ -590,7 +590,7 @@ void onBtnDoubleClick(int id) {
     case EVT_BTNRIGHT: {
         if (display->mode() != PLAYER) return;
         //if (network.status != CONNECTED && network.status!=SDREADY) return;
-        player->next();
+        //  player->next();   // todo: rewrite it
         break;
       }
     default:

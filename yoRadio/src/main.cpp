@@ -9,6 +9,7 @@
 #include "core/mqtt.h"
 #include "core/optionschecker.h"
 #include "core/evtloop.h"
+#include "components.hpp"
 #include "core/log.h"
 
 #if DSP_HSPI || TS_HSPI || VS_HSPI
@@ -28,14 +29,12 @@ void setup() {
   // Start event loop task
   evt::start();
 
-  if(REAL_LEDBUILTIN!=255)
-    pinMode(REAL_LEDBUILTIN, OUTPUT);
-  if (yoradio_on_setup)
-    yoradio_on_setup();
-
   LOGI(T_BOOT, println, "Init Config");
   config.init();
-  LOGI(T_BOOT, println, "Init Display");
+
+  LOGI(T_BOOT, println, "Creating hw configuration");
+  load_hwcomponets_configuration();
+/*
   if (!create_display()){
     LOGE(T_BOOT, println, "Can't create display interface! Boot failed!");
     return;
@@ -46,7 +45,7 @@ void setup() {
   LOGI(T_BOOT, println, "Init Player");
   create_player(DAC_TYPE);
   player->init();
-
+*/
   LOGI(T_BOOT, println, "Start WebServer");
   netserver.begin();
   //telnet.begin();
@@ -59,25 +58,17 @@ void setup() {
   LOGI(T_BOOT, println, "Init Controls");
   initControls();
 
-  LOGI(T_BOOT, println, "Start Display");
-  display->putRequest(DSP_START);
-  LOGI(T_BOOT, println, "Wait for Display");
-  //while(!display->ready()) delay(10);
+//  LOGI(T_BOOT, println, "Start Display");
+//  display->putRequest(DSP_START);
 
   #ifdef MQTT_ROOT_TOPIC
     mqttInit();
   #endif
 
-  /*
-  // this autoplay is wrong anyway
-  #ifndef NO_AUTOPLAY_ONBOOT
-  if (config.store.smartstart == 1) {
-    LOGI(T_BOOT, println, "Resume last station playback");
-    auto v = config.lastStation();
-    EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::playerStation), &v, sizeof(v));
-  }
-  #endif
-*/
+  // spawn Modules instances from saved configurations, this must be done AFTER display initialization
+  zookeeper.start();
+  zookeeper.setHandlers();
+
   LOGD(T_BOOT, println, "Setup complete");
 }
 

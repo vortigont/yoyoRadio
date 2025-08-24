@@ -4,6 +4,10 @@
 
 // this file contains static structs for widget's configs related to display layout
 
+#ifndef TFT_WIDTH
+#define TFT_WIDTH 320
+#endif
+
 // Clock
 static const clock_time_cfg_t clock_cfg{
   0, 100,   // clock print position

@@ -108,7 +108,6 @@ class NetServer {
     void setRSSI(int val) { rssi = val; };
     int  getRSSI()        { return rssi; };
     void chunkedHtmlPage(const String& contentType, AsyncWebServerRequest *request, const char * path);
-    void onWsMessage(void *arg, uint8_t *data, size_t len, uint8_t clientId);
     bool irRecordEnable;
 #if IR_PIN!=255
     void irToWs(const char* protocol, uint64_t irvalue);

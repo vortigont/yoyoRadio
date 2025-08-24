@@ -9,28 +9,10 @@
 #include "evtloop.h"
 #include "log.h"
 
-#define DEFAULT_VOLUME_VALUE 50
-
-AudioController* player{nullptr};
-
 AudioController::~AudioController(){
   _events_unsubsribe();
   _embui_actions_unregister();
 }
-
-void create_player(dac_type_t dac){
-  switch (dac){
-    case   dac_type_t::esp32internal :
-      player = new ESP32_I2S_Generic(MUTE_PIN, MUTE_VAL);
-      break;
-    case   dac_type_t::ES8311 :
-      player = new ES8311Audio(I2S_BCLK, I2S_LRC, I2S_DOUT, I2S_MCLK, MUTE_PIN);
-      break;
-    default:
-      player = new ESP32_I2S_Generic(I2S_BCLK, I2S_LRC, I2S_DOUT, I2S_MCLK, MUTE_PIN, MUTE_VAL);
-  }
-}
-
 
 void AudioController::init() {
   Serial.print("##[BOOT]#\tplayer.init\t");
@@ -241,9 +223,11 @@ void AudioController::_loadValues() {
     return;
   }
   // volume
-  volume = DEFAULT_VOLUME_VALUE;
+  volume = -1;
   handle->get_item(T_volume, volume);
-  setDACVolume(volume_level_adjustment(volume));
+  // restore volume if any  pos value was set
+  if (volume > -1)
+    setDACVolume(volume_level_adjustment(volume));
   // balance
   balance = 0;
   handle->get_item(T_balance, balance);
