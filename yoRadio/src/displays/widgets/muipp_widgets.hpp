@@ -4,33 +4,75 @@
 #include "core/evtloop.h"
 #include <ctime>
 
-// struct that defines clock position
-struct clock_time_cfg_t {
-  int16_t x, y;   // clock print position
-#ifdef CLOCK_USE_U8G2_FONT
-  const uint8_t* font_hours, font_seconds;
-#elif defined CLOCK_USE_AGFX_FONT
-  const GFXfont* font_hours;
-  const GFXfont* font_seconds;
-#endif
-  uint16_t color, bgcolor;
-  int font_hours_size, font_seconds_size;
-  int16_t sec_offset_x, sec_offset_y;   // offset for seconds print after minite's position
-  bool print_seconds, print_date;
+
+/**
+ * @brief Text-alike widget configuration
+ * defines placement and text style config
+ * 
+ */
+struct text_wdgt_t {
+  muipp::item_position_t place;
+  AGFX_text_t style;
 };
 
+
+/**
+ * @brief defines configuration for scroller widgets
+ * 
+ */
+struct scroller_cfg_t {
+  muipp::grid_box box;
+  AGFX_text_t style;
+  uint32_t scroll_speed;
+};
+
+/**
+ * @brief config for bitrate widget box
+ * 
+ */
+struct bitrate_box_cfg_t {
+  // widget box on a grid
+  muipp::grid_box box;
+  uint32_t radius;
+  AGFX_text_t style;
+  const char* bitrateFmt;
+};
+
+
+/**
+ * @brief struct that defines clock position, fonts, etc...
+ * use either u8g2 or agfx fonts for BOTH hours and secs!
+ * The other must be set to NULL
+ * @note it is here only because I like DirectiveFour font for clocks :)
+ */
+struct clock_time_cfg_t {
+  muipp::item_position_t place;                         // widget's position
+  const uint8_t *font_hours, *font_seconds;             // U8G2 font (NULL if not used)
+  const GFXfont *font_gfx_hours, *font_gfx_seconds;     // Adafruit font (NULL if not used)
+  uint16_t color, bgcolor;                              // font color, background fill
+  int font_hours_size, font_seconds_size;               // font size multiplicator
+  int16_t sec_offset_x, sec_offset_y;                   // pixel offset for seconds printing right after minute's cursor position
+  bool print_seconds;                                   // print seconds or not
+};
+
+/**
+ * @brief struct that defines clock's date position, fonts, etc...
+ * 
+ */
 struct clock_date_cfg_t {
-  int16_t x, y;     // date print position
-#ifdef CLOCK_DATE_USE_U8G2_FONT
+  muipp::item_position_t place;                         // widget's position
   const uint8_t* font;
-#elif defined CLOCK_USE_AGFX_FONT
-  const GFXfont* font;
-#endif
   uint16_t color, bgcolor;
   int font_date_size;
   bool print_date, dow_short, month_short;
 };
 
+
+/**
+ * @brief Widget prints clock on a screen
+ * optional date string printing
+ * 
+ */
 class ClockWidget: public MuiItem_Uncontrollable {
   std::time_t _last{0}, _last_date{0};
   // vars to save time block bounds, needed to clear time blocks on next run

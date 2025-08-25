@@ -37,33 +37,58 @@ void ClockWidget::_drawTime(tm* t, Arduino_GFX* dsp){
   std::strftime(std::data(buff), std::size(buff), "%R", t);    // "%R" equivalent to "%H:%M", t->tm_sec % 2 ? "%R" : "%H %M" would blink semicolon
   LOGV(T_Clock, println, buff );
   // recalculate area for clock and save it to be cleared later
-  dsp->setFont(cfg.font_hours);
+  if (cfg.font_hours)
+    dsp->setFont(cfg.font_hours);
+  else if (cfg.font_gfx_hours)
+    dsp->setFont(cfg.font_gfx_hours);
+
   dsp->setTextSize(cfg.font_hours_size);
   dsp->getTextBounds(buff, cfg.x, cfg.y, &_time_block_x, &_time_block_y, &_time_block_w, &_time_block_h);
 
   if (t->tm_sec % 2){   // draw ':'
-    gfxDrawText(dsp, cfg.x, cfg.y, buff, cfg.color, cfg.font_hours, cfg.font_hours_size);
+    if (cfg.font_hours)
+      gfxDrawText(dsp, cfg.x, cfg.y, buff, cfg.color, cfg.font_gfx_hours, cfg.font_hours_size);
+    else if (cfg.font_gfx_hours)
+      gfxDrawText(dsp, cfg.x, cfg.y, buff, cfg.color, cfg.font_hours, cfg.font_hours_size);
   } else {
     // let's draw time in parts so that ':' is drawn with background color maintaining same area dimensions
     std::strftime(std::data(buff), std::size(buff), "%H", t);
-    gfxDrawText(dsp, cfg.x, cfg.y, buff, cfg.color, cfg.font_hours, cfg.font_hours_size);
+    if (cfg.font_hours)
+      gfxDrawText(dsp, cfg.x, cfg.y, buff, cfg.color, cfg.font_hours, cfg.font_hours_size);
+    else if (cfg.font_gfx_hours)
+      gfxDrawText(dsp, cfg.x, cfg.y, buff, cfg.color, cfg.font_gfx_hours, cfg.font_hours_size);
+
     // write semicolon
-    gfxDrawText(dsp, dsp->getCursorX(), dsp->getCursorY(), ":", cfg.bgcolor, cfg.font_hours, cfg.font_hours_size);
+    if (cfg.font_hours)
+      gfxDrawText(dsp, dsp->getCursorX(), dsp->getCursorY(), ":", cfg.bgcolor, cfg.font_hours, cfg.font_hours_size);
+    else if (cfg.font_gfx_hours)
+      gfxDrawText(dsp, dsp->getCursorX(), dsp->getCursorY(), ":", cfg.bgcolor, cfg.font_gfx_hours, cfg.font_hours_size);
     //    dsp->drawChar(dsp->getCursorX(), dsp->getCursorY(), 0x3a /* ':' */, RGB565_RED, RGB565_RED);
+    // write minutes
     std::strftime(std::data(buff), std::size(buff), "%M", t);
-    gfxDrawText(dsp, dsp->getCursorX(), dsp->getCursorY(), buff, cfg.color, cfg.font_hours, cfg.font_hours_size);
+    if (cfg.font_hours)
+      gfxDrawText(dsp, dsp->getCursorX(), dsp->getCursorY(), buff, cfg.color, cfg.font_hours, cfg.font_hours_size);
+    else if (cfg.font_gfx_hours)
+      gfxDrawText(dsp, dsp->getCursorX(), dsp->getCursorY(), buff, cfg.color, cfg.font_gfx_hours, cfg.font_hours_size);
   }
 
   if (!cfg.print_seconds) return;
 
   // make seconds
   std::strftime(std::data(buff), std::size(buff), "%S", t);
-  dsp->setFont(cfg.font_seconds);
+  if (cfg.font_seconds)
+    dsp->setFont(cfg.font_seconds);
+  else if (cfg.font_gfx_seconds)
+    dsp->setFont(cfg.font_gfx_seconds);
+
   dsp->setTextSize(cfg.font_seconds_size);
   // recalculate area for clock and save it to be cleared later
   dsp->getTextBounds(buff, dsp->getCursorX() + cfg.sec_offset_x, dsp->getCursorY() + cfg.sec_offset_y, &_seconds_block_x, &_seconds_block_y, &_seconds_block_w, &_seconds_block_h);
   // print seconds
-  gfxDrawText(dsp, dsp->getCursorX() + cfg.sec_offset_x, dsp->getCursorY() + cfg.sec_offset_y, buff, cfg.color, cfg.font_seconds, cfg.font_seconds_size);
+  if (cfg.font_seconds)
+    gfxDrawText(dsp, dsp->getCursorX() + cfg.sec_offset_x, dsp->getCursorY() + cfg.sec_offset_y, buff, cfg.color, cfg.font_seconds, cfg.font_seconds_size);
+  else if (cfg.font_gfx_seconds)
+    gfxDrawText(dsp, dsp->getCursorX() + cfg.sec_offset_x, dsp->getCursorY() + cfg.sec_offset_y, buff, cfg.color, cfg.font_gfx_seconds, cfg.font_seconds_size);
 }
 
 void ClockWidget::_drawDate(tm* t, Arduino_GFX* dsp){

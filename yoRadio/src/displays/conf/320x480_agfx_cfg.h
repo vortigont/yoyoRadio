@@ -11,7 +11,8 @@
 // Clock
 static const clock_time_cfg_t clock_cfg{
   0, 100,   // clock print position
-  &FONT_CLOCK_H, &FONT_CLOCK_S,
+  nullptr, nullptr,
+  &FONT_CLOCK_DOTS_H, &FONT_CLOCK_DOTS_S,
   FONT_DEFAULT_COLOR, 0,    // color, bgcolor;
   1, 1,       // font_hours_size, font_seconds_size;
   0, -15,     // offset for seconds print after minite's position
