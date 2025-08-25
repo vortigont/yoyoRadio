@@ -135,6 +135,9 @@ class DisplayGFX : public Display {
     // send and event to display to process and draw specific component
     void putRequest(displayRequestType_e type, int payload=0);
 
+    // control display brightness, range 0-100%
+    void setBrightness(uint32_t v);
+
 private:
 /*
     ScrollWidget _meta, _title1, _plcurrent;

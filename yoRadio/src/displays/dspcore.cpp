@@ -1,4 +1,5 @@
 #include "nvs_handle.hpp"
+#include "EmbUI.h"
 #include "dspcore.h"
 #include "core/const_strings.h"
 #include "gfx_engine.h"
@@ -814,12 +815,11 @@ void DisplayGFX::_events_cmd_hndlr(int32_t id, void* data){
       _start();
       break;
 
-    #ifndef HIDE_IP
-    case evt::yo_event_t::displayNewIP :
-      //if(_volip)
-      //  _volip->setText(WiFi.localIP().toString().c_str(), iptxtFmt);
+    // set display brightness
+    case evt::yo_event_t::brightness :
+      setBrightness(*static_cast<uint32_t*>(data));
       break;
-    #endif
+
 
     default:;
   }
@@ -907,6 +907,19 @@ void DisplayGFX::_build_main_screen(){
   _mpp.render(_gfx);
   _gfx->flush();
 }
+
+void DisplayGFX::setBrightness(uint32_t v){
+  _dctrl->setBrightness(v);
+  if (embui.feeders.available()){
+    // publish changed value to EmbUI feeds
+    Interface interf(&embui.feeders);
+    interf.json_frame_value();
+    interf.value(T_brightness, v);
+    interf.json_frame_flush();
+  }
+  // send notification to event bus
+  EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::brightness), &v, sizeof(v));  
+};
 
 // ****************
 //  DisplayControl methods
