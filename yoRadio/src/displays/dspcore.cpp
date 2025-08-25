@@ -1,4 +1,7 @@
+#include "nvs_handle.hpp"
+#include "EmbUI.h"
 #include "dspcore.h"
+#include "core/const_strings.h"
 #include "gfx_engine.h"
 #include "locale/l10n.h"
 #include "core/config.h"
@@ -812,12 +815,11 @@ void DisplayGFX::_events_cmd_hndlr(int32_t id, void* data){
       _start();
       break;
 
-    #ifndef HIDE_IP
-    case evt::yo_event_t::displayNewIP :
-      //if(_volip)
-      //  _volip->setText(WiFi.localIP().toString().c_str(), iptxtFmt);
+    // set display brightness
+    case evt::yo_event_t::brightness :
+      setBrightness(*static_cast<uint32_t*>(data));
       break;
-    #endif
+
 
     default:;
   }
@@ -904,6 +906,73 @@ void DisplayGFX::_build_main_screen(){
   // render newly created screen
   _mpp.render(_gfx);
   _gfx->flush();
+}
+
+void DisplayGFX::setBrightness(uint32_t v){
+  _dctrl->setBrightness(v);
+  if (embui.feeders.available()){
+    // publish changed value to EmbUI feeds
+    Interface interf(&embui.feeders);
+    interf.json_frame_value();
+    interf.value(T_brightness, v);
+    interf.json_frame_flush();
+  }
+  // send notification to event bus
+  EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::brightness), &v, sizeof(v));  
+};
+
+// ****************
+//  DisplayControl methods
+// ****************
+void DisplayControl::init(){
+  // load brightness value from nvs
+  esp_err_t err;
+  std::unique_ptr<nvs::NVSHandle> handle = nvs::open_nvs_handle(T_Display, NVS_READONLY, &err);
+  if (err != ESP_OK)
+    return;
+  handle->get_item(T_brightness, brt);
+  setDevBrightness(brt);
+}
+
+void DisplayControl::setBrightness(int32_t val){
+  brt = clamp(val, 0L, 100L);   // limit to 100%
+  LOGI(T_Display, printf, "setBrightness:%u\n", brt);
+  setDevBrightness(brt);
+
+  // save brightness value to nvs
+  esp_err_t err;
+  std::unique_ptr<nvs::NVSHandle> handle = nvs::open_nvs_handle(T_Display, NVS_READWRITE, &err);
+  if (err == ESP_OK){
+    handle->set_item(T_brightness, brt);
+  }
+  // publish brightness change notification to event bus
+  // TODO: webpublish
+  //EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::audioVolume), &volume, sizeof(volume));
+}
+
+// ****************
+//  DisplayControl_AGFX_PWM methods
+// ****************
+DisplayControl_AGFX_PWM::DisplayControl_AGFX_PWM(int32_t backlight_gpio, int32_t level, Arduino_GFX* device, int32_t pwm_bit, int32_t pwm_hz) : _bcklight(backlight_gpio), _level(level), _dev(device), _pwm_bit(pwm_bit) {
+  if (_bcklight > -1){
+    // backlight
+    ledcAttach(_bcklight, pwm_hz, pwm_bit);
+    if (!level)
+      ledcOutputInvert(_bcklight, true);
+  }
+};
+
+void DisplayControl_AGFX_PWM::displaySuspend(bool state){
+  if (_dev){
+    state ? _dev->displayOff() : _dev->displayOn();
+  }
+  if (state){
+    // save current duty
+    _duty = ledcRead(_bcklight);
+    ledcWrite(_bcklight, 0);    // this ugly Arduino API does not allow to just pause PWM, todo: replace it with native IDF ledc API
+  } else {
+    ledcWrite(_bcklight, _duty);
+  }
 }
 
 
