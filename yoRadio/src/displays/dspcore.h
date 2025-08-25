@@ -11,118 +11,48 @@
 
 #endif
 
-#ifdef NOT_NEEDED
 /**
- * @brief Graphics API core display class
- * it providex a very simplified GFX api to wrap around other grphics libs
- * like AdafruitGFX, ArduinoGFX, etc...
+ * @brief abstract class to control hw features of a display device
+ * i.e. brighness, sleep, touch, etc...
  */
-class DspCoreBase {
-public:
-  DspCoreBase(){}
-  virtual ~DspCoreBase() = default;
-
-  uint16_t plItemHeight, plTtemsCount, plCurrentPos;
-  int plYStart;
-
-  virtual void initDisplay() = 0;
-  virtual void clearDsp(bool black=false) = 0;
-  virtual void loop(bool force=false) = 0;
-
-  virtual void printPLitem(uint8_t pos, const char* item, ScrollWidget& current) = 0;
-  virtual void drawLogo(uint16_t top) = 0;
-  virtual void drawPlaylist(uint16_t currentItem) = 0;
-
-
-  static char* utf8Rus(const char* str, bool uppercase);
-  static uint16_t textWidthGFX(const char *txt, uint8_t textsize);
-
-  /**
-   * @brief method should calculate char size for the DEFAULT font
-   * whatever it is to be for specific display/driver/board
-   * meant to work with monospace fonts only, needs to be refactored for UTF wariable width fonts
-   * 
-   * @param textsize 
-   * @param width 
-   * @param height 
-   */
-  virtual void charSize(uint8_t textsize, uint16_t& width, uint16_t& height);
-  virtual void setNumFont() = 0;
-  virtual void flip(){};
-  virtual void invert(){};
-  virtual void sleep(){};
-  virtual void wake(){};
-
-  /**
-   * @brief display locking
-   * 
-   * @param wait - block until lock could be aquired
-   * @return true - if lock has been aquired
-   * @return false - lock can't been aquired (non-blocking lock)
-   */
-  virtual bool lock(bool wait = true){ return true; };
-
-  /**
-   * @brief release lock
-   * 
-   */
-  virtual void unlock(){};
-
-  void setClipping(clipArea ca);
-  void clearClipping(){ _clipping = false; };
-  //void setScrollId(void * scrollid) { _scrollid = scrollid; }
-  void * getScrollId() { return _scrollid; }
-  uint16_t textWidth(const char *txt);
-
+class DisplayControl {
 protected:
+  // current brightness, default is 70%
+  int32_t brt{70};
+  // device brightness control, should be redefined in derived classes
+  virtual void setDevBrightness(int32_t val) = 0;
 
-  bool _clipping;
-  clipArea _cliparea;
-  void * _scrollid;
-  virtual uint8_t _charWidth(unsigned char c) = 0;
+  public:
+  DisplayControl() = default;
+  virtual ~DisplayControl(){};
+  // init device control
+  virtual void init();
+  // set display brightness in a range of 0-100%
+  void setBrightness(int32_t val);
+  // low power mode enable/disable
+  virtual void displaySuspend(bool state){ setBrightness( state ? 0 : brt); }
 };
 
-
-// abstact class based on ArduinoGFX extending it with drawing helpers
-#ifdef _ARDUINO_GFX_H_
 /**
- * @brief Graphics API core display class
- * it adopts ArduinoGFX API
+ * @brief class that controls backlight through PWM and
+ * uses ArduinoGFX's derivative to potentially put display onto/out of low power mode
+ * 
  */
-//class DspCore_Arduino_GFX : public DspCoreBase, virtual public DISPLAY_ENGINE {
-class DspCore_Arduino_GFX : public DspCoreBase, virtual public DISPLAY_ENGINE {
+class DisplayControl_AGFX_PWM : public DisplayControl {
+  int32_t _bcklight, _level;
+  Arduino_GFX* _dev;
+  int32_t _pwm_bit;
+  uint32_t _duty;
+
 public:
-  DspCore_Arduino_GFX(){};
+  DisplayControl_AGFX_PWM(int32_t backlight_gpio, int32_t level = HIGH, Arduino_GFX* device = nullptr, int32_t pwm_bit = 8, int32_t pwm_hz = 1000 );
+  ~DisplayControl_AGFX_PWM(){ ledcDetach(_bcklight); }
 
-  // Текст
-  void gfxDrawText(int x, int y, const char* text, uint16_t color, uint16_t bgcolor, uint8_t size, const GFXfont* font = nullptr);
-  void gfxDrawNumber(int x, int y, int num, uint16_t color, uint16_t bgcolor, uint8_t size, const GFXfont* font = nullptr);
-  void gfxDrawFormatted(int x, int y, const char* fmt, uint16_t color, uint16_t bgcolor, uint8_t size, const GFXfont* font, ...);
-
-  // Графика
-  void gfxDrawPixel (int x, int y, uint16_t color) { drawPixel(x, y, color); };
-  void gfxDrawLine  (int x0, int y0, int x1, int y1, uint16_t color) { drawLine(x0, y0, x1, y1, color); };
-  void gfxDrawRect  (int x, int y, int w, int h, uint16_t color) { drawRect(x, y, w, h, color); };
-  void gfxFillRect  (int x, int y, int w, int h, uint16_t color){ fillRect(x, y, w, h, color); };
-  void gfxDrawBitmap(int x, int y, const uint16_t* bitmap, int w, int h){ draw16bitRGBBitmap(x, y, const_cast<uint16_t*>(bitmap), w, h); };
-
-  // Очистка
-  void gfxClearArea(int x, int y, int w, int h, uint16_t bgcolor){ fillRect(x, y, w, h, bgcolor); };
-  void gfxClearScreen(uint16_t bgcolor){ fillScreen(bgcolor); };
-  virtual void gfxFlushScreen(){};
-//
-//#ifdef FONT_DEFAULT_AGFX
-  void setFont(const GFXfont* font = nullptr);
-//#endif
-
-//#ifdef FONT_DEFAULT_U8G2
-  void setFont(const uint8_t* font);
-//#endif
-//
-
+  // control PWM brightness
+  void setDevBrightness(int32_t val) override { ledcWrite(_bcklight, map(val, 0, 100, 0, (1 << _pwm_bit) - 1)); };    // map 0-100% to PWM's width
+  // Display low power mode control
+  void displaySuspend(bool state) override;
 };
-#endif    // _ARDUINO_GFX_H_
-#endif // NOT_NEEDED
 
 /**
  * @brief abstract display class (or better say output interface)
@@ -184,12 +114,13 @@ public:
  */
 class DisplayGFX : public Display {
   // display graphics object
-  Arduino_GFX* _gfx;
+  Arduino_GFX*_gfx;
+  DisplayControl* _dctrl;
   MuiPlusPlus _mpp;
   
 
   public:
-    DisplayGFX(Arduino_GFX* gfx) : _gfx(gfx) {};
+    DisplayGFX(Arduino_GFX* gfx, DisplayControl* dctrl) : _gfx(gfx), _dctrl(dctrl) {};
     ~DisplayGFX();
 
     // initialize display (create device driver class)
@@ -203,12 +134,6 @@ class DisplayGFX : public Display {
 
     // send and event to display to process and draw specific component
     void putRequest(displayRequestType_e type, int payload=0);
-//    void flip() override;
-//    void invert() override;
-//    bool deepsleep() override;
-//    void wakeup() override;
-//    void setContrast() override;
-//    void printPLitem(uint8_t pos, const char* item) override;
 
 private:
 /*

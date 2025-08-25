@@ -17,8 +17,6 @@ class Dsp_JC1060P470 {
 public:
   Dsp_JC1060P470(int32_t backlight_gpio = -1);
 
-  void sleep();
-  void wake();
 };
 
 #else   //#if defined(ESP32) && (CONFIG_IDF_TARGET_ESP32P4)
