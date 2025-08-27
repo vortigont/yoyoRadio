@@ -1,11 +1,11 @@
-// Тестовый конфиг для ST7701 (ESP32-4848S040)
 #pragma once
-#include <cstdint>
+#include "displays/dspcore.h"
 
 /* Display */
 // Модуль Guition ESP32-4848S040 (ST7701 RGB 480x480)
 // https://devices.esphome.io/devices/Guition-ESP32-S3-4848S040
-#define DSP_MODEL DSP_ST7701
+// https://github.com/moononournation/Arduino_GFX/discussions/35
+// основано на наработках https://github.com/Witaliy76/Yoradio_JC3248W535C_3_30/tree/4848S040
 
 // Пины дисплея 
 // Командная шина ST7701 (SWSPI)
@@ -115,14 +115,14 @@
 
 // yoradio defines
 namespace Guition_4848S040 {
-  // I2S
+  // I2S configuration
   struct i2s_gpio_t {
     int32_t dout, bclk, lrclk, mclk;
     int32_t mute, mute_lvl;
   };
   static constexpr i2s_gpio_t i2s{G_4848S040_I2S_DOUT, G_4848S040_I2S_BCLK, G_4848S040_I2S_LRC, -1, -1, 0};
 
-  // Display
+  // Display configuration
   struct display_t {
     uint16_t w, h;
     // command bus
@@ -135,6 +135,7 @@ namespace Guition_4848S040 {
     int32_t b0, b1, b2, b3, b4;
     int32_t backlight, backlight_level;
   };
+
   static constexpr display_t display{
     G_4848S040_CS, G_4848S040_SCK, G_4848S040_SDA,
     G_4848S040_DE, G_4848S040_VSYNC, G_4848S040_HSYNC, G_4848S040_PCLK,
@@ -155,4 +156,17 @@ namespace Guition_4848S040 {
     G_4848S040_B3,
     G_4848S040_B4,
   };
-};
+
+
+  // function to create gfx instance
+  Arduino_GFX* create_display_dev(const display_t &cfg, Arduino_DataBus *bus);
+
+  // Module device cointrol
+  class Dsp_4848S040 : public DisplayControl {
+    int32_t _backlight_gpio;
+  public:
+    Dsp_4848S040(int32_t backlight_gpio = -1);
+  };
+
+
+};  // namespace Guition_4848S040 {
