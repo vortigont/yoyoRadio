@@ -47,7 +47,8 @@ void ClockWidget::_drawTime(tm* t, Arduino_GFX* dsp){
   dsp->setTextSize(_tcfg.font_hours_size);
   dsp->getTextBounds(buff, x, y, &_time_block_x, &_time_block_y, &_time_block_w, &_time_block_h);
 
-  if (t->tm_sec % 2){   // draw ':'
+  //LOGV(T_Config, printf, "Draw clock grid: %d,%d, at: %d,%d\n", _tcfg.place.x, _tcfg.place.y, x, y);
+  if (t->tm_sec % 2){   // draw ':' ?
     if (_tcfg.font_hours)
       gfxDrawText(dsp, x, y, buff, _tcfg.color, _tcfg.font_gfx_hours, _tcfg.font_hours_size);
     else if (_tcfg.font_gfx_hours)
