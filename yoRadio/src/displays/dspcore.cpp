@@ -580,10 +580,6 @@ void DisplayGFX::_loopDspTask() {
     // refresh screen items if needed
     if (_mpp.refresh(_gfx))
       _gfx->flush();
-  
-    #if I2S_DOUT==255
-    player.computeVUlevel();
-    #endif
   }
   vTaskDelete( NULL );
   _dspTask=NULL;

@@ -7,7 +7,7 @@ namespace display_1024x600 {
 
 // Clock
 static constexpr clock_time_cfg_t clock_time_cfg {
-  { 6, 2, muipp::coordinate_spec_t::grid, muipp::coordinate_spec_t::grid, 8, 8 },      // placement at (6.2) on (8x8) grid
+  { 22, 2, muipp::coordinate_spec_t::grid, muipp::coordinate_spec_t::grid, 32, 32 },      // placement at (22.2) on (32x32) grid
   nullptr, nullptr,
   &FONT_CLOCK_DOTS_H, &FONT_CLOCK_DOTS_S,
   FONT_DEFAULT_COLOR, 0,    // color, bgcolor;
@@ -18,10 +18,10 @@ static constexpr clock_time_cfg_t clock_time_cfg {
 
 // Date
 static constexpr clock_date_cfg_t clock_date_cfg {
-  { 6, 3, muipp::coordinate_spec_t::grid, muipp::coordinate_spec_t::grid, 8, 8 },     // placement at (6.2) on (8x8) grid
+  { 22, 4, muipp::coordinate_spec_t::grid, muipp::coordinate_spec_t::grid, 32, 32 },     // placement at (22.3) on (32x32) grid
   FONT_SMALL_U8G2,
   FONT_DEFAULT_COLOR, 0,  //  uint16_t color, bgcolor;
-  2,                      // int font_date_size;
+  1,                      // int font_date_size;
   true, false, false      //print_date, dow_short, month_short;
 };
 
@@ -29,7 +29,7 @@ static constexpr clock_cfg_t clock_cfg { &clock_time_cfg, &clock_date_cfg };
 
 // text Widget for device state
 static constexpr text_wdgt_t device_state_cfg {
-  { 0, 10, muipp::coordinate_spec_t::center_offset, muipp::coordinate_spec_t::absolute, 0, 0 },   // centered at the top of the screen
+  { 0, 14, muipp::coordinate_spec_t::center_offset, muipp::coordinate_spec_t::absolute, 0, 0 },   // centered at the top of the screen
   {
     FONT_SMALL_U8G2,              // font
     RGB565_WHITE, 0,              // color, bgcolor;
@@ -41,33 +41,33 @@ static constexpr text_wdgt_t device_state_cfg {
 
 // Scroller 1 - station title or so
 static constexpr scroller_cfg_t scroll_s1_cfg {
-  {1, 24, 0, 1, 1, 16},           // grid x,y; box position on a grid, box size on a grid;
+  {32, 32, 0, 0, 15, 1},           // grid x,y; box position on a grid, box size on a grid;
   {
     FONT_SMALL_U8G2,              // font
     RGB565_OLIVE, 0,              // color, bgcolor;
-    1,                            // font size
+    2,                            // font size
     muipp::text_align_t::left, muipp::text_align_t::baseline, //  muipp::text_align_t halign{muipp::text_align_t::left}, valign{muipp::text_align_t::baseline};
     false                         // transp_bg
   },
-  40                              // scroll speed
+  20                              // scroll speed
 };
 
 // Scroller 2 - song title or so
 static constexpr scroller_cfg_t scroll_s2_cfg {
-  {1, 24, 0, 2, 1, 16},           // grid x,y; box position on a grid, box size on a grid;
+  {32, 32, 0, 1, 16, 1},           // grid x,y; box position on a grid, box size on a grid;
   {
     FONT_SMALL_U8G2,              // font
     RGB565_CYAN, 0,               // color, bgcolor;
-    1,                            // font size
+    2,                            // font size
     muipp::text_align_t::left, muipp::text_align_t::baseline, //  muipp::text_align_t halign{muipp::text_align_t::left}, valign{muipp::text_align_t::baseline};
     false                         // transp_bg
   },
-  40                              // scroll speed
+  60                              // scroll speed
 };
 
 // Bitrate widget box
 static constexpr bitrate_box_cfg_t bitrate_cfg {
-  {16, 16, 0, 8, 1, 2},           // grid x,y; box position on a grid (x,y), box size on a grid (w,h)
+  {32, 32, 18, 0, 3, 3},           // grid x,y; box position on a grid (x,y), box size on a grid (w,h)
   10,                             // radius for round-shaped corners
   {
     FONT_SMALL_U8G2,              // font
@@ -90,6 +90,7 @@ static const std::vector<widget_cfgitem_t> cfg1 {
   { yoyo_wdgt_t::scrollerStation, &scroll_s1_cfg},
   // Scroller 2 - track title, etc...
   { yoyo_wdgt_t::scrollerTitle, &scroll_s2_cfg},
+  // bitrate
   { yoyo_wdgt_t::bitrate, &bitrate_cfg}
 };
 

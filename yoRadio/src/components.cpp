@@ -105,10 +105,13 @@ void load_device_JC1060P470(){
   // create Agfx object
   agfx = JC1060P470::create_display_dev(JC1060P470::display);
   dctrl = new DisplayControl_AGFX_PWM(JC1060P470::display.backlight, JC1060P470::display.backlight_level, agfx);
+  dctrl->init();
+
   // link the above into Display object
   display = new DisplayGFX(agfx, dctrl);
   // Init the display UI
   display->init();
+
   // apply widget preset for 1024x600
   display->load_main_preset(display_1024x600::cfg1);
 }
