@@ -18,11 +18,6 @@
 #define PLERR_LN        64
 #define SET_PLAY_ERROR(...) {char buff[512 + 64]; sprintf(buff,__VA_ARGS__); setError(buff);}
 
-enum class dac_type_t {
-  generic = 0,
-  esp32internal,
-  ES8311
-};
 
 enum plStatus_e : uint8_t{ PLAYING = 1, STOPPED = 2 };
 

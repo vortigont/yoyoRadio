@@ -6,7 +6,6 @@
 #include <LittleFS.h>
 #include <EEPROM.h>
 #include "options.h"
-#include "rtcsupport.h"
 
 #define EEPROM_SIZE       768
 #define EEPROM_START      500

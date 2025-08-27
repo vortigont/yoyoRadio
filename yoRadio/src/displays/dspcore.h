@@ -1,7 +1,6 @@
 #pragma once
 #include "../core/options.h"
 #include "../core/common.h"
-#include "gfx_lib.h"
 #include "Ticker.h"
 #include "nextion.h"
 

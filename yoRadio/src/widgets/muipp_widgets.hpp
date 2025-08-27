@@ -1,9 +1,8 @@
 #pragma once
-#include "muipp_agfx.hpp"
-#include "../gfx_lib.h"
-#include "core/evtloop.h"
 #include <ctime>
-
+#include "muipp_agfx.hpp"
+#include "core/common.h"
+#include "core/evtloop.h"
 
 /**
  * @brief Text-alike widget configuration
