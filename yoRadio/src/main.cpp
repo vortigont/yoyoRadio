@@ -7,7 +7,6 @@
 #include "core/netserver.h"
 #include "core/controls.h"
 #include "core/mqtt.h"
-#include "core/optionschecker.h"
 #include "core/evtloop.h"
 #include "components.hpp"
 #include "core/log.h"
