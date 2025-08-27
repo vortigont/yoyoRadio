@@ -93,6 +93,10 @@ public:
   virtual void setContrast(){};
   virtual void printPLitem(uint8_t pos, const char* item){};
 
+  // widgets features
+
+  // load widgets preset, if supported by display
+  virtual void load_main_preset(const std::vector<widget_cfgitem_t> preset){};
 
 
   // get current display mode
@@ -141,7 +145,7 @@ class DisplayGFX : public Display {
      * 
      * @param cfg 
      */
-    void load_main_preset(const std::vector<widget_cfgitem_t> preset);
+    void load_main_preset(const std::vector<widget_cfgitem_t> preset) override;
 
 private:
 /*

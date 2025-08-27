@@ -85,9 +85,9 @@ static const std::vector<widget_cfgitem_t> cfg1 {
   // text - device state
   { yoyo_wdgt_t::text, &device_state_cfg},
   // Scroller 1 - station
-  { yoyo_wdgt_t::textScroller, &scroll_s1_cfg},
+  { yoyo_wdgt_t::scrollerStation, &scroll_s1_cfg},
   // Scroller 2 - track title, etc...
-  { yoyo_wdgt_t::textScroller, &scroll_s2_cfg},
+  { yoyo_wdgt_t::scrollerTitle, &scroll_s2_cfg},
   { yoyo_wdgt_t::bitrate, &bitrate_cfg}
 };
 

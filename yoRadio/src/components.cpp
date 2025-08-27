@@ -4,7 +4,8 @@
 // device defines
 #include "displays/display_JC3248W535.h"
 #include "displays/display_JC1060P470C.h"
-//
+// presets
+#include "widgets/presets.hpp"
 #include "core/log.h"
 
 #define   MAX_BOOT_FAIL_CNT   5
@@ -87,6 +88,8 @@ void load_device_JC3248W535(){
   display = new DisplayGFX(agfx, dctrl);
   // Init the display UI
   display->init();
+  // apply widget preset for 320x240
+  display->load_main_preset(display_320x480::cfg1);
 }
 
 void load_device_JC1060P470(){
