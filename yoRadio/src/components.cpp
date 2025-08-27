@@ -19,6 +19,11 @@ RTC_DATA_ATTR int setupCnt = 0;
 AudioController* player{nullptr};
 // Display
 Display* display{nullptr};
+DisplayControl* dctrl{nullptr};
+// ArduinoGFX objects
+Arduino_DataBus* bus{nullptr};
+Arduino_GFX* agfx{nullptr};
+
 
 // Module Manager instance
 ModuleManager zookeeper;
@@ -74,7 +79,13 @@ void load_device_JC3248W535(){
   player->init();
 
   // Display
-  display = new DisplayGFX(JC3248W535::create_display_dev(JC3248W535::display));
+  // create Agfx object
+  agfx = JC3248W535::create_display_dev(JC3248W535::display, bus);
+  // create display hw controller
+  dctrl = new DisplayControl_AGFX_PWM(JC3248W535::display.backlight, JC3248W535::display.backlight_level, agfx);
+  // link the above into Display object
+  display = new DisplayGFX(agfx, dctrl);
+  // Init the display UI
   display->init();
 }
 
@@ -85,6 +96,11 @@ void load_device_JC1060P470(){
   player->init();
 
   // Display
-  display = new DisplayGFX(JC1060P470::create_display_dev(JC1060P470::display));
+  // create Agfx object
+  agfx = JC1060P470::create_display_dev(JC1060P470::display);
+  dctrl = new DisplayControl_AGFX_PWM(JC1060P470::display.backlight, JC1060P470::display.backlight_level, agfx);
+  // link the above into Display object
+  display = new DisplayGFX(agfx, dctrl);
+  // Init the display UI
   display->init();
 }
