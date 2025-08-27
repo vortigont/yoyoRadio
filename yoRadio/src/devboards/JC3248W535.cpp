@@ -1,9 +1,8 @@
 #include "canvas/Arduino_Canvas.h"
 #include "display/Arduino_AXS15231B.h"  // ArduinoGFX driver
 #include "databus/Arduino_ESP32QSPI.h"
-#include "display_JC3248W535.h"
-#include "../core/config.h"
-#include "../core/log.h"
+#include "JC3248W535.hpp"
+//#include "core/log.h"
 
 namespace JC3248W535 {
 

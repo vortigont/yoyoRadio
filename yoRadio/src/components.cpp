@@ -2,8 +2,8 @@
 #include "components.hpp"
 #include "displays/dspcore.h"
 // device defines
-#include "displays/display_JC3248W535.h"
-#include "displays/display_JC1060P470C.h"
+#include "devboards/JC3248W535.hpp"
+#include "devboards/JC1060P470C.hpp"
 // presets
 #include "widgets/presets.hpp"
 #include "core/log.h"
