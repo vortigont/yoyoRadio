@@ -84,10 +84,13 @@ void load_device_JC3248W535(){
   agfx = JC3248W535::create_display_dev(JC3248W535::display, bus);
   // create display hw controller
   dctrl = new DisplayControl_AGFX_PWM(JC3248W535::display.backlight, JC3248W535::display.backlight_level, agfx);
+  dctrl->init();
+
   // link the above into Display object
   display = new DisplayGFX(agfx, dctrl);
   // Init the display UI
   display->init();
+
   // apply widget preset for 320x240
   display->load_main_preset(display_320x480::cfg1);
 }

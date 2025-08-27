@@ -902,8 +902,11 @@ void DisplayControl::init(){
   // load brightness value from nvs
   esp_err_t err;
   std::unique_ptr<nvs::NVSHandle> handle = nvs::open_nvs_handle(T_Display, NVS_READONLY, &err);
-  if (err != ESP_OK)
+  if (err != ESP_OK){
+    // if no saved value exist then set bightness to 75% by default
+    setDevBrightness(75);
     return;
+  }
   handle->get_item(T_brightness, brt);
   setDevBrightness(brt);
 }

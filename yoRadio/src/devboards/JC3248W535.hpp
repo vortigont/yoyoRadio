@@ -12,7 +12,7 @@ Arduino_GFX* create_display_dev(const JC3248W535::display_t &cfg, Arduino_DataBu
 class Dsp_JC3248W535 : public DisplayControl {
   int32_t _backlight_gpio;
 public:
-  Dsp_JC3248W535(int32_t backlight_gpio = -1);
+  Dsp_JC3248W535(int32_t backlight_gpio);
 };
 
 }
