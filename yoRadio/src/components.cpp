@@ -106,4 +106,6 @@ void load_device_JC1060P470(){
   display = new DisplayGFX(agfx, dctrl);
   // Init the display UI
   display->init();
+  // apply widget preset for 1024x600
+  display->load_main_preset(display_1024x600::cfg1);
 }

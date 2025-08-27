@@ -12,6 +12,9 @@
 #define FONT_SMALL_U8G2         u8g2_font_10x20_t_cyrillic
 #define FONT_DEFAULT_COLOR      62979
 
+static constexpr const char* T_bitrate_Kbps = "%u Kbps";
+static constexpr const char* T_bitrate_k = "%uk";
+
 /**
  * @brief this struct is a configuration placeholder that carries a widget type and an abstract pointer to it's config struct
  * used to define static configuration presets

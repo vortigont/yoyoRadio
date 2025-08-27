@@ -1,13 +1,13 @@
 #pragma once
 #include "preset_common.hpp"
 
-namespace display_320x480 {
-// display ratio is 6:9
-// let's take a base grid block size as 10x15 (i.e. grid 32x32), all larger grid sizing must be multpliers to this base size
+namespace display_1024x600 {
+// display ratio is 16:9
+// let's take a base grid block size as 16x9 (i.e. grid close to 64x64), all larger grid sizing must be multpliers to this base size
 
 // Clock
 static constexpr clock_time_cfg_t clock_time_cfg {
-  { 0, 2, muipp::coordinate_spec_t::grid, muipp::coordinate_spec_t::grid, 8, 8 },      // placement at (0.2) on (8x8) grid
+  { 6, 2, muipp::coordinate_spec_t::grid, muipp::coordinate_spec_t::grid, 8, 8 },      // placement at (6.2) on (8x8) grid
   nullptr, nullptr,
   &FONT_CLOCK_DOTS_H, &FONT_CLOCK_DOTS_S,
   FONT_DEFAULT_COLOR, 0,    // color, bgcolor;
@@ -18,7 +18,7 @@ static constexpr clock_time_cfg_t clock_time_cfg {
 
 // Date
 static constexpr clock_date_cfg_t clock_date_cfg {
-  { 0, 6, muipp::coordinate_spec_t::absolute, muipp::coordinate_spec_t::grid, 1, 24 },  // grid placement at 3/8 on Y axis
+  { 6, 3, muipp::coordinate_spec_t::grid, muipp::coordinate_spec_t::grid, 8, 8 },     // placement at (6.2) on (8x8) grid
   FONT_SMALL_U8G2,
   FONT_DEFAULT_COLOR, 0,  //  uint16_t color, bgcolor;
   2,                      // int font_date_size;
@@ -31,7 +31,7 @@ static constexpr clock_cfg_t clock_cfg { &clock_time_cfg, &clock_date_cfg };
 static constexpr text_wdgt_t device_state_cfg {
   { 0, 10, muipp::coordinate_spec_t::center_offset, muipp::coordinate_spec_t::absolute, 0, 0 },   // centered at the top of the screen
   {
-    FONT_VERY_SMALL_U8G2,         // font
+    FONT_SMALL_U8G2,              // font
     RGB565_WHITE, 0,              // color, bgcolor;
     1,                            // font size multiplicator
     muipp::text_align_t::center, muipp::text_align_t::baseline,   // horizontal / vertical alignment
@@ -67,7 +67,7 @@ static constexpr scroller_cfg_t scroll_s2_cfg {
 
 // Bitrate widget box
 static constexpr bitrate_box_cfg_t bitrate_cfg {
-  {6, 24, 0, 8, 1, 16},           // grid x,y; box position on a grid (x,y), box size on a grid (w,h)
+  {16, 16, 0, 8, 1, 2},           // grid x,y; box position on a grid (x,y), box size on a grid (w,h)
   10,                             // radius for round-shaped corners
   {
     FONT_SMALL_U8G2,              // font
@@ -76,7 +76,7 @@ static constexpr bitrate_box_cfg_t bitrate_cfg {
     muipp::text_align_t::left, muipp::text_align_t::baseline, //  muipp::text_align_t halign{muipp::text_align_t::left}, valign{muipp::text_align_t::baseline};
     false                         // transp_bg
   },
-  T_bitrate_k                     // print format
+  T_bitrate_Kbps                  // print format
 };
 
 // a preset with set of widgets
