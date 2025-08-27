@@ -4,6 +4,16 @@
 #include "core/common.h"
 #include "core/evtloop.h"
 
+// a list of known widget types
+enum class yoyo_wdgt_t {
+  unknown = 0,
+  bitrate,
+  clock,
+  text,
+  scrollerStation,
+  scrollerTitle
+};
+
 /**
  * @brief Text-alike widget configuration
  * defines placement and text style config
@@ -13,7 +23,6 @@ struct text_wdgt_t {
   muipp::item_position_t place;
   AGFX_text_t style;
 };
-
 
 /**
  * @brief defines configuration for scroller widgets
@@ -66,6 +75,11 @@ struct clock_date_cfg_t {
   bool print_date, dow_short, month_short;
 };
 
+// combined ptr struct for Clock
+struct clock_cfg_t {
+  const clock_time_cfg_t *clk;
+  const clock_date_cfg_t *date;
+};
 
 /**
  * @brief Widget prints clock on a screen
@@ -77,23 +91,20 @@ class ClockWidget: public MuiItem_Uncontrollable {
   // vars to save time block bounds, needed to clear time blocks on next run
   int16_t _time_block_x{0}, _time_block_y{0}, _seconds_block_x{0}, _seconds_block_y{0}, _date_block_x{0}, _date_block_y{0};
   uint16_t  _time_block_w{0}, _time_block_h{0}, _seconds_block_w{0}, _seconds_block_h{0}, _date_block_w{0}, _date_block_h{0};
+  clock_time_cfg_t _tcfg;
+  clock_date_cfg_t _dcfg;
   
 public:
-  ClockWidget(muiItemId id): MuiItem_Uncontrollable(id, nullptr){};
+  ClockWidget(muiItemId id, const clock_time_cfg_t& clk, const clock_date_cfg_t& date): MuiItem_Uncontrollable(id, nullptr), _tcfg(clk), _dcfg(date) {};
 
   void render(const MuiItem* parent, void* r = nullptr) override;
   bool refresh_req() const override;
-
-  clock_time_cfg_t cfg;
-  clock_date_cfg_t dcfg;
 
 private:
   void _drawTime(tm* t, Arduino_GFX* dsp);
   void _drawDate(tm* t, Arduino_GFX* dsp);
   void _clear_clk(Arduino_GFX* dsp);
   void _clear_date(Arduino_GFX* dsp);
-  // move clock in screensaver mode / measure brightness
-  //void _reconfig(tm* t);
 };
 
 
@@ -104,7 +115,9 @@ private:
 class MuiItem_Bitrate_Widget : public MuiItem_Uncontrollable {
   int16_t _x, _y;
   uint16_t _w, _h;
+  uint32_t _radius;
   AGFX_text_t _tcfg;
+  const char* _bitrateFmt;
   bool _pending;
   audio_info_t _info{0, nullptr};
   esp_event_handler_instance_t _hdlr_chg_evt{nullptr};
@@ -122,6 +135,8 @@ public:
       int16_t x, int16_t y,
       uint16_t w, uint16_t h,
       AGFX_text_t tcfg = {});
+
+  MuiItem_Bitrate_Widget(muiItemId id, const bitrate_box_cfg_t *cfg, int16_t screen_w, int16_t screen_h);
 
   ~MuiItem_Bitrate_Widget();
 

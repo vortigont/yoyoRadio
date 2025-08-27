@@ -3,7 +3,6 @@
 #include "core/config.h"
 #include "core/player.h"
 #include "displays/dspcore.h"
-#include "core/network.h"
 #include "core/netserver.h"
 #include "core/controls.h"
 #include "core/mqtt.h"
@@ -33,18 +32,7 @@ void setup() {
 
   LOGI(T_BOOT, println, "Creating hw configuration");
   load_hwcomponets_configuration();
-/*
-  if (!create_display()){
-    LOGE(T_BOOT, println, "Can't create display interface! Boot failed!");
-    return;
-  }
-  display->init();
 
-  // cerate and init Player object
-  LOGI(T_BOOT, println, "Init Player");
-  create_player(DAC_TYPE);
-  player->init();
-*/
   LOGI(T_BOOT, println, "Start WebServer");
   netserver.begin();
   //telnet.begin();
@@ -57,9 +45,6 @@ void setup() {
 
   //LOGI(T_BOOT, println, "Init Controls");
   //initControls();
-
-//  LOGI(T_BOOT, println, "Start Display");
-//  display->putRequest(DSP_START);
 
   #ifdef MQTT_ROOT_TOPIC
     mqttInit();

@@ -1,14 +1,11 @@
 #pragma once
-#include "../core/options.h"
-#include "../core/common.h"
+#include "core/options.h"
+#include "core/common.h"
 #include "Ticker.h"
 #include "nextion.h"
-
-#if __has_include("Arduino_GFX.h")
 #include "Arduino_GFX.h"
 #include "widgets/muipp_widgets.hpp"
-
-#endif
+#include "widgets/preset_common.hpp"
 
 /**
  * @brief abstract class to control hw features of a display device
@@ -106,15 +103,14 @@ public:
 
 };
 
-#ifdef _ARDUINO_GFX_H_
 /**
  * @brief Graphics Display output device. i.e. screens  
  * 
  */
 class DisplayGFX : public Display {
   // display graphics object
-  Arduino_GFX*_gfx;
-  DisplayControl* _dctrl;
+  Arduino_GFX *_gfx;
+  DisplayControl *_dctrl;
   MuiPlusPlus _mpp;
   
 
@@ -136,6 +132,16 @@ class DisplayGFX : public Display {
 
     // control display brightness, range 0-100%
     void setBrightness(uint32_t v);
+
+    // Widgets operations
+
+    /**
+     * @brief Loads a preset with widgets
+     * intended to load static configurations
+     * 
+     * @param cfg 
+     */
+    void load_main_preset(const std::vector<widget_cfgitem_t> preset);
 
 private:
 /*
@@ -173,19 +179,10 @@ private:
     void _station();
     void _drawNextStationNum(uint16_t num);
     void _createDspTask();
-    void _showDialog(const char *title);
     void _buildPager();
     void _bootScreen();
     void _setReturnTicker(uint8_t time_s);
     void _layoutChange(bool played);
-    void _setRSSI(int rssi);
-
-    /**
-     * @brief create and initialize widgets
-     * 
-     */
-    void _start();
-
 
     void _loopDspTask();
 
@@ -219,6 +216,7 @@ private:
 
     // *** Main Screen ***
     // a set of widgets for Main screen (where radio plays)
+    // it's not the best design but OK for now, for future I could use something like ViSets from the Iron project
 
     /**
      * @brief static text with device's status
@@ -238,13 +236,7 @@ private:
      * 
      */
     std::shared_ptr<MuiItem_AGFX_TextScroller> _scroll_title2;
-
-    void _build_main_screen();
-
-
-
 };
-#endif    // _ARDUINO_GFX_H_
 
 
 /**

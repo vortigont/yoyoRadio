@@ -3,8 +3,7 @@
 #include "options.h"
 #include "config.h"
 #include "player.h"
-#include "../displays/dspcore.h"
-#include "network.h"
+#include "displays/dspcore.h"
 #include "netserver.h"
 #include "evtloop.h"
 

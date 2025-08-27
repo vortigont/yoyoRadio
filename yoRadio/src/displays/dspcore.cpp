@@ -212,9 +212,6 @@ DisplayGFX::~DisplayGFX(){
 
 void DisplayGFX::init() {
   LOGI(T_BOOT, println, "display->init");
-#if LIGHT_SENSOR!=255
-  analogSetAttenuation(ADC_0db);
-#endif
   _state = state_t::empty;
   if (_gfx->begin()){
     _gfx->fillScreen(0);
@@ -242,9 +239,12 @@ void DisplayGFX::init() {
     &_dspTask,
     CONFIG_ARDUINO_RUNNING_CORE);
 
+  _mode = PLAYER;
+  _state = state_t::normal;
+
   _events_subsribe();
   // load main page
-  putRequest(DSP_START);
+  //putRequest(DSP_START);
 }
 
 void DisplayGFX::_bootScreen(){
@@ -387,26 +387,6 @@ void DisplayGFX::_apScreen() {
   #else
     dsp->apScreen();
   #endif
-*/
-}
-
-void DisplayGFX::_start() {
-  _mpp.clear();
-  _build_main_screen();
-  _mode = PLAYER;
-  _state = state_t::normal;
-  LOGD(T_Display, println, "DisplayGFX::_started");
-}
-
-void DisplayGFX::_showDialog(const char *title){
-/*
-  dsp->setScrollId(NULL);
-  _pager.setPage( _pages.at(PG_DIALOG));
-  #ifdef META_MOVE
-    _meta.moveTo(metaMove);
-  #endif
-  _meta.setAlign(WA_CENTER);
-  _meta.setText(title);
 */
 }
 
@@ -587,7 +567,6 @@ void DisplayGFX::_loopDspTask() {
           //case DSPRSSI: if(_rssi){ _setRSSI(request.payload); } if (_heapbar && config.store.audioinfo) _heapbar->setValue(player->isRunning()?player->inBufferFilled():0); break;
           case PSTART: _layoutChange(true);   break;
           case PSTOP:  _layoutChange(false);  break;
-          case DSP_START: _start();  break;
 
           default: break;
         }
@@ -608,24 +587,6 @@ void DisplayGFX::_loopDspTask() {
   }
   vTaskDelete( NULL );
   _dspTask=NULL;
-}
-
-void DisplayGFX::_setRSSI(int rssi) {
-/*
-  if(!_rssi) return;
-#if RSSI_DIGIT
-  _rssi->setText(rssi, rssiFmt);
-  return;
-#endif
-  char rssiG[3];
-  int rssi_steps[] = {RSSI_STEPS};
-  if(rssi >= rssi_steps[0]) strlcpy(rssiG, "\004\006", 3);
-  if(rssi >= rssi_steps[1] && rssi < rssi_steps[0]) strlcpy(rssiG, "\004\005", 3);
-  if(rssi >= rssi_steps[2] && rssi < rssi_steps[1]) strlcpy(rssiG, "\004\002", 3);
-  if(rssi >= rssi_steps[3] && rssi < rssi_steps[2]) strlcpy(rssiG, "\003\002", 3);
-  if(rssi <  rssi_steps[3] || rssi >=  0) strlcpy(rssiG, "\001\002", 3);
-  _rssi->setText(rssiG);
-*/
 }
 
 void DisplayGFX::_station() {
@@ -723,12 +684,7 @@ void DisplayGFX::_events_cmd_hndlr(int32_t id, void* data){
     case evt::yo_event_t::displayNewMode :
       _swichMode(*reinterpret_cast<displayMode_e*>(data));
       break;
-/*
-    case evt::yo_event_t::displayClock :
-      //if(_mode==PLAYER || _mode==SCREENSAVER) _time();
-      if(_mode==PLAYER || _mode==SCREENSAVER) display->putRequest(CLOCK);
-      break;
-*/
+
     case evt::yo_event_t::displayNewTitle :
       _title();
       break;
@@ -810,10 +766,6 @@ void DisplayGFX::_events_cmd_hndlr(int32_t id, void* data){
       _layoutChange(false);
       break;
 
-    case evt::yo_event_t::displayStart :
-      _start();
-      break;
-
     // set display brightness
     case evt::yo_event_t::brightness :
       setBrightness(*static_cast<uint32_t*>(data));
@@ -829,16 +781,7 @@ void DisplayGFX::_events_chg_hndlr(int32_t id, void* data){
   LOGV(T_Display, printf, "chg event rcv:%d\n", id);
 
   switch (static_cast<evt::yo_event_t>(id)){
-
-    // process metadata about playing codec
-    case evt::yo_event_t::playerAudioInfo : {
-      audio_info_t* i = reinterpret_cast<audio_info_t*>(data);
-      char buf[20];
-      snprintf(buf, 20, bitrateFmt, i->codecName);
-      break;
-    }
-
-    // device mode change - update "title_status" widget
+    // device mode change - update "title_status" widget (todo: this should be done from inside the widget)
     case evt::yo_event_t::devMode : {
       int32_t v = *static_cast<int32_t*>(data);
       if (_title_status && v >= 0 && v < device_state_literal.size()){
@@ -849,10 +792,10 @@ void DisplayGFX::_events_chg_hndlr(int32_t id, void* data){
 
     // new station title - update "title_status" widget
     case evt::yo_event_t::playerStationTitle : {
-      // this is not thread-safe, to be fixed later
+      // this is not thread-safe, to be fixed later (todo: this should be done from inside the widget)
       const char* c = static_cast<const char*>(data);
       if (_scroll_title1)
-        _scroll_title1->setText(static_cast<const char*>(data), SCROLLER_STATION_SPEED);
+        _scroll_title1->setText(static_cast<const char*>(data));
     }
     break;
 
@@ -861,7 +804,7 @@ void DisplayGFX::_events_chg_hndlr(int32_t id, void* data){
       // this is not thread-safe, to be fixed later
       const char* c = static_cast<const char*>(data);
       if (_scroll_title2)
-        _scroll_title2->setText(static_cast<const char*>(data), SCROLLER_TRACK_SPEED);
+        _scroll_title2->setText(static_cast<const char*>(data));
     }
     break;
     
@@ -870,33 +813,65 @@ void DisplayGFX::_events_chg_hndlr(int32_t id, void* data){
 
 }
 
-void DisplayGFX::_build_main_screen(){
+void DisplayGFX::load_main_preset(const std::vector<widget_cfgitem_t> preset){
+  // purge entire container - now I use only one set, so should be OK untill multiple sets of pages are introduced
+  _mpp.clear();
+  // purge existing objects if any
+  _title_status.reset();
+  _scroll_title1.reset();
+  _scroll_title2.reset();
+
   muiItemId root_page = _mpp.makePage();  // root page
-  // Status title
-  _title_status = std::make_shared<MuiItem_AGFX_StaticText>( _mpp.nextIndex(), device_state_literal.at(0), TITLE_STATUS_POSITION_X, TITLE_STATUS_POSITION_Y, title_status_cfg);
-  _mpp.addMuippItem(_title_status, root_page);
 
-  // Clock
-  ClockWidget* clk = new ClockWidget(_mpp.nextIndex());
-  // pick configs from display-specific include file (conf/display_*)
-  clk->cfg = clock_cfg;
-  clk->dcfg = date_cfg;
-  // move clock object to root page
-  _mpp.addMuippItem(clk, root_page);
+  // parse the preset and populate widgets set
+  for (auto i : preset){
+    switch (i.wtype){
+      // BitRate Widget
+      case yoyo_wdgt_t::bitrate :
+        _mpp.addMuippItem(new MuiItem_Bitrate_Widget(_mpp.nextIndex(), reinterpret_cast<const bitrate_box_cfg_t*>(i.cfg), _gfx->width(), _gfx->height()), root_page);
+        break;
 
-  // Scroller - radio title
-  _scroll_title1 = std::make_shared<MuiItem_AGFX_TextScroller>(_mpp.nextIndex(), SCROLLER_STATION_POSITION_X, SCROLLER_STATION_POSITION_Y, SCROLLER_STATION_POSITION_W, SCROLLER_STATION_POSITION_H, scroller_station_cfg);
-  // let it scroll "ёRadio" by default :)
-  _scroll_title1->setText("ёRadio", SCROLLER_STATION_SPEED);
-  _mpp.addMuippItem(_scroll_title1, root_page);
+      // Clock
+      case yoyo_wdgt_t::clock :
+        _mpp.addMuippItem(new ClockWidget(_mpp.nextIndex(), *reinterpret_cast<const clock_cfg_t*>(i.cfg)->clk, *reinterpret_cast<const clock_cfg_t*>(i.cfg)->date), root_page);
+        break;
 
-  // Scroller - track title
-  _scroll_title2 = std::make_shared<MuiItem_AGFX_TextScroller>(_mpp.nextIndex(), SCROLLER_TRACK_POSITION_X, SCROLLER_TRACK_POSITION_Y, SCROLLER_TRACK_POSITION_W, SCROLLER_TRACK_POSITION_H, scroller_track_cfg);
-  _mpp.addMuippItem(_scroll_title2, root_page);
+      // Status title
+      case yoyo_wdgt_t::text :
+        _title_status = std::make_shared<MuiItem_AGFX_StaticText>(
+          _mpp.nextIndex(),
+          device_state_literal.at(0) /* "idle" */,
+          reinterpret_cast<const text_wdgt_t*>(i.cfg)->place.getAbsoluteXY(_gfx->width(), _gfx->height()),  // unwrap to real position
+          reinterpret_cast<const text_wdgt_t*>(i.cfg)->style
+        );
+        _mpp.addMuippItem(_title_status, root_page);
+        break;
 
-  // BitRate Widget
-  _mpp.addMuippItem(new MuiItem_Bitrate_Widget(_mpp.nextIndex(), BITRATE_WDGT_POSITION_X, BITRATE_WDGT_POSITION_Y, BITRATE_WDGT_W, BITRATE_WDGT_H, bitrate_wdgt_cfg), root_page);
+      // Scroller - main title / radio title
+      case yoyo_wdgt_t::scrollerStation :
+        _scroll_title1 = std::make_shared<MuiItem_AGFX_TextScroller>(
+            _mpp.nextIndex(),
+            reinterpret_cast<const scroller_cfg_t*>(i.cfg)->box.getBoxDimensions(_gfx->width(), _gfx->height()),  // unwrap into absolute position
+            reinterpret_cast<const scroller_cfg_t*>(i.cfg)->scroll_speed,
+            reinterpret_cast<const scroller_cfg_t*>(i.cfg)->style);
+        // let it scroll "ёёRadio" by default :)
+        _scroll_title1->setText("ёёRadio");
+        _mpp.addMuippItem(_scroll_title1, root_page);
+        break;
 
+      // Scroller - track ttile (kind of dublicate, but will do for now)
+      case yoyo_wdgt_t::scrollerTitle :
+        _scroll_title2 = std::make_shared<MuiItem_AGFX_TextScroller>(
+            _mpp.nextIndex(),
+            reinterpret_cast<const scroller_cfg_t*>(i.cfg)->box.getBoxDimensions(_gfx->width(), _gfx->height()),  // unwrap into absolute position
+            reinterpret_cast<const scroller_cfg_t*>(i.cfg)->scroll_speed,
+            reinterpret_cast<const scroller_cfg_t*>(i.cfg)->style);
+        _mpp.addMuippItem(_scroll_title2, root_page);
+        break;
+
+      default:;
+    }
+  }
 
   // this is not a real menu, so no need to activate the items
   //pageAutoSelect(root_page, some_id);
