@@ -495,7 +495,7 @@ bool ESP32_I2S_Generic::getMute() const {
 //  **************************
 
 void ES8311Audio::init(){
-  if(!_es.begin(I2C_SDA, I2C_SCL, 400000)){
+  if(!_es.begin(_sda, _scl, 400000)){
     log_e("ES8311 begin failed");
     return;
   }

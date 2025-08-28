@@ -243,6 +243,7 @@ public:
 
 // ES8311 chip DAC with volume control over i2c
 class ES8311Audio : public AudioController {
+  int32_t _sda, _scl;
   int32_t _mute_gpio;
   bool _mute_state; // mute state
   ES8311 _es;
@@ -251,7 +252,7 @@ class ES8311Audio : public AudioController {
   uint8_t getDACVolume() override { return _es.getVolume(); }
 
 public:
-  ES8311Audio(int32_t bclk, int32_t lcr,  int32_t dout, int32_t mclk, int32_t mute_gpio) : _mute_gpio(mute_gpio) { audio.setPinout(bclk, lcr, dout, mclk); };
+  ES8311Audio(int32_t bclk, int32_t lcr,  int32_t dout, int32_t mclk, int32_t sda, int32_t scl, int32_t mute_gpio) : _sda(sda), _scl(scl), _mute_gpio(mute_gpio) { audio.setPinout(bclk, lcr, dout, mclk); };
 
   void init() override;
 

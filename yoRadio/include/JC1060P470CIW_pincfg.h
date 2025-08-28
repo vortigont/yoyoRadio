@@ -68,7 +68,11 @@ namespace JC1060P470 {
         JC1060P470_PA_ENABLE,
         0x0     // LOW
     };
-  
+
+    // I2C
+    static constexpr int32_t sda{JC1060P470_I2C_SDA};
+    static constexpr int32_t scl{JC1060P470_I2C_SCL};
+
     // Display
     struct display_t {
       uint16_t w, h;
