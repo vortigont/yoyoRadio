@@ -211,10 +211,9 @@ DisplayGFX::~DisplayGFX(){
 }
 
 void DisplayGFX::init() {
-  LOGI(T_BOOT, println, "display->init");
   _state = state_t::empty;
   if (_gfx->begin()){
-    _gfx->fillScreen(0);
+    _gfx->fillScreen(RGB565_BLUE);
     _gfx->setUTF8Print(true);
   } else {
     LOGE(T_BOOT, println, "DisplayGFX.init FAILED!");
@@ -227,7 +226,7 @@ void DisplayGFX::init() {
   }
 
   //_pager.begin();
-  _bootScreen();
+  //_bootScreen();
 
   // create runner task
   xTaskCreatePinnedToCore(
@@ -243,8 +242,7 @@ void DisplayGFX::init() {
   _state = state_t::normal;
 
   _events_subsribe();
-  // load main page
-  //putRequest(DSP_START);
+  LOGI(T_BOOT, println, "display->init");
 }
 
 void DisplayGFX::_bootScreen(){
@@ -578,8 +576,9 @@ void DisplayGFX::_loopDspTask() {
     }
 
     // refresh screen items if needed
-    if (_mpp.refresh(_gfx))
+    if (_mpp.refresh(_gfx)){
       _gfx->flush();
+    }
   }
   vTaskDelete( NULL );
   _dspTask=NULL;
@@ -789,7 +788,6 @@ void DisplayGFX::_events_chg_hndlr(int32_t id, void* data){
     // new station title - update "title_status" widget
     case evt::yo_event_t::playerStationTitle : {
       // this is not thread-safe, to be fixed later (todo: this should be done from inside the widget)
-      const char* c = static_cast<const char*>(data);
       if (_scroll_title1)
         _scroll_title1->setText(static_cast<const char*>(data));
     }
@@ -798,7 +796,6 @@ void DisplayGFX::_events_chg_hndlr(int32_t id, void* data){
     // new track title - update "title_status" widget
     case evt::yo_event_t::playerTrackTitle : {
       // this is not thread-safe, to be fixed later
-      const char* c = static_cast<const char*>(data);
       if (_scroll_title2)
         _scroll_title2->setText(static_cast<const char*>(data));
     }
@@ -809,7 +806,7 @@ void DisplayGFX::_events_chg_hndlr(int32_t id, void* data){
 
 }
 
-void DisplayGFX::load_main_preset(const std::vector<widget_cfgitem_t> preset){
+void DisplayGFX::load_main_preset(const std::vector<widget_cfgitem_t>& preset){
   // purge entire container - now I use only one set, so should be OK untill multiple sets of pages are introduced
   _mpp.clear();
   // purge existing objects if any

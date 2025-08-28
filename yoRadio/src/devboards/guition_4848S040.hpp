@@ -86,11 +86,11 @@
 
 /*  TOUCHSCREEN  */
 /* Touchscreen Configuration для 4848S040 */
-#define TS_MODEL              TS_MODEL_GT911  /* GT911 Capacitive I2C touch screen */
-#define TS_SDA                19              /* Touch screen SDA pin */
-#define TS_SCL                45              /* Touch screen SCL pin */
-#define TS_INT                255             /* Touch screen INT pin (отключен) */
-#define TS_RST                255             /* Touch screen RST pin (отключен) */
+#define G_4848S040_TS_MODEL              TS_MODEL_GT911  /* GT911 Capacitive I2C touch screen */
+#define G_4848S040_TS_SDA                19              /* Touch screen SDA pin */
+#define G_4848S040_TS_SCL                45              /* Touch screen SCL pin */
+#define G_4848S040_TS_INT                255             /* Touch screen INT pin (отключен) */
+#define G_4848S040_TS_RST                255             /* Touch screen RST pin (отключен) */
 
 // Специальные настройки для квадратного экрана 480x480
 #define SQUARE_SCREEN_OPTIMIZATION true

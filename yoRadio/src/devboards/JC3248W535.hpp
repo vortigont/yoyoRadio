@@ -1,7 +1,6 @@
 #pragma once
 
 #include "JC3248W535_pincfg.h"
-//#define GFX_DEV_DEVICE JC3248W535       // this module uses AXS15231B display 
 #include "displays/dspcore.h"
 
 namespace JC3248W535 {

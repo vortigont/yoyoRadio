@@ -76,7 +76,7 @@ void load_device_profile_from_NVS(){
 void load_device_JC3248W535(){
   LOGD(T_devcfg, println, "Creating devices for JC3248W535");
   // JC3248W535 uses generic esp32 DAC
-  player = new ESP32_I2S_Generic(JC3248W535::i2s.bclk, JC3248W535::i2s.lrclk, JC3248W535::i2s.dout, JC3248W535::i2s.mclk, JC3248W535::i2s.mute, JC3248W535::i2s.mute_lvl);
+  player = new ESP32_I2S_Generic(JC3248W535::i2s.bclk, JC3248W535::i2s.lrclk, JC3248W535::i2s.dout, JC3248W535::i2s.mclk);
   player->init();
 
   // Display

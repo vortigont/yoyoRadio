@@ -18,7 +18,7 @@ protected:
   // device brightness control, should be redefined in derived classes
   virtual void setDevBrightness(int32_t val) = 0;
 
-  public:
+public:
   DisplayControl() = default;
   virtual ~DisplayControl(){};
   // init device control
@@ -45,7 +45,7 @@ public:
   ~DisplayControl_AGFX_PWM(){ ledcDetach(_bcklight); }
 
   // control PWM brightness
-  void setDevBrightness(int32_t val) override { ledcWrite(_bcklight, map(val, 0, 100, 0, (1 << _pwm_bit) - 1)); };    // map 0-100% to PWM's width
+  void setDevBrightness(int32_t val) override { ledcWrite(_bcklight, map(clamp(val, 0L, 100L), 0, 100, 0, (1 << _pwm_bit) - 1)); };    // map 0-100% to PWM's width
   // Display low power mode control
   void displaySuspend(bool state) override;
 };
@@ -96,7 +96,7 @@ public:
   // widgets features
 
   // load widgets preset, if supported by display
-  virtual void load_main_preset(const std::vector<widget_cfgitem_t> preset){};
+  virtual void load_main_preset(const std::vector<widget_cfgitem_t>& preset){};
 
 
   // get current display mode
@@ -145,7 +145,7 @@ class DisplayGFX : public Display {
      * 
      * @param cfg 
      */
-    void load_main_preset(const std::vector<widget_cfgitem_t> preset) override;
+    void load_main_preset(const std::vector<widget_cfgitem_t>& preset) override;
 
 private:
 /*
