@@ -1,11 +1,10 @@
 // Arduino_ESP32DSIPanel is available only on ESP32-P4
-#include "display_JC1060P470C.h"
+#include "JC1060P470C.hpp"
 
 #if defined(ESP32) && (CONFIG_IDF_TARGET_ESP32P4)
 
 #include "display/Arduino_DSI_Display.h"
-#include "../core/config.h"
-#include "../core/log.h"
+//#include "core/log.h"
 
 namespace JC1060P470 {
   

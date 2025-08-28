@@ -2,7 +2,6 @@
 
 //#include "../displays/dspcore.h"
 #include "player.h"
-#include "network.h"
 #include "netserver.h"
 #include "controls.h"
 #ifdef USE_SD

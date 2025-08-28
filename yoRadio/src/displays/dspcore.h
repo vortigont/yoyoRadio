@@ -1,15 +1,11 @@
 #pragma once
-#include "../core/options.h"
-#include "../core/common.h"
-#include "gfx_lib.h"
+#include "core/options.h"
+#include "core/common.h"
 #include "Ticker.h"
 #include "nextion.h"
-
-#if __has_include("Arduino_GFX.h")
 #include "Arduino_GFX.h"
 #include "widgets/muipp_widgets.hpp"
-
-#endif
+#include "widgets/preset_common.hpp"
 
 /**
  * @brief abstract class to control hw features of a display device
@@ -22,7 +18,7 @@ protected:
   // device brightness control, should be redefined in derived classes
   virtual void setDevBrightness(int32_t val) = 0;
 
-  public:
+public:
   DisplayControl() = default;
   virtual ~DisplayControl(){};
   // init device control
@@ -49,7 +45,7 @@ public:
   ~DisplayControl_AGFX_PWM(){ ledcDetach(_bcklight); }
 
   // control PWM brightness
-  void setDevBrightness(int32_t val) override { ledcWrite(_bcklight, map(val, 0, 100, 0, (1 << _pwm_bit) - 1)); };    // map 0-100% to PWM's width
+  void setDevBrightness(int32_t val) override { ledcWrite(_bcklight, map(clamp(val, 0L, 100L), 0, 100, 0, (1 << _pwm_bit) - 1)); };    // map 0-100% to PWM's width
   // Display low power mode control
   void displaySuspend(bool state) override;
 };
@@ -97,6 +93,10 @@ public:
   virtual void setContrast(){};
   virtual void printPLitem(uint8_t pos, const char* item){};
 
+  // widgets features
+
+  // load widgets preset, if supported by display
+  virtual void load_main_preset(const std::vector<widget_cfgitem_t>& preset){};
 
 
   // get current display mode
@@ -107,15 +107,14 @@ public:
 
 };
 
-#ifdef _ARDUINO_GFX_H_
 /**
  * @brief Graphics Display output device. i.e. screens  
  * 
  */
 class DisplayGFX : public Display {
   // display graphics object
-  Arduino_GFX*_gfx;
-  DisplayControl* _dctrl;
+  Arduino_GFX *_gfx;
+  DisplayControl *_dctrl;
   MuiPlusPlus _mpp;
   
 
@@ -137,6 +136,16 @@ class DisplayGFX : public Display {
 
     // control display brightness, range 0-100%
     void setBrightness(uint32_t v);
+
+    // Widgets operations
+
+    /**
+     * @brief Loads a preset with widgets
+     * intended to load static configurations
+     * 
+     * @param cfg 
+     */
+    void load_main_preset(const std::vector<widget_cfgitem_t>& preset) override;
 
 private:
 /*
@@ -174,19 +183,10 @@ private:
     void _station();
     void _drawNextStationNum(uint16_t num);
     void _createDspTask();
-    void _showDialog(const char *title);
     void _buildPager();
     void _bootScreen();
     void _setReturnTicker(uint8_t time_s);
     void _layoutChange(bool played);
-    void _setRSSI(int rssi);
-
-    /**
-     * @brief create and initialize widgets
-     * 
-     */
-    void _start();
-
 
     void _loopDspTask();
 
@@ -220,6 +220,7 @@ private:
 
     // *** Main Screen ***
     // a set of widgets for Main screen (where radio plays)
+    // it's not the best design but OK for now, for future I could use something like ViSets from the Iron project
 
     /**
      * @brief static text with device's status
@@ -239,13 +240,7 @@ private:
      * 
      */
     std::shared_ptr<MuiItem_AGFX_TextScroller> _scroll_title2;
-
-    void _build_main_screen();
-
-
-
 };
-#endif    // _ARDUINO_GFX_H_
 
 
 /**

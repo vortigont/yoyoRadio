@@ -2,9 +2,10 @@
 #include "components.hpp"
 #include "displays/dspcore.h"
 // device defines
-#include "displays/display_JC3248W535.h"
-#include "displays/display_JC1060P470C.h"
-//
+#include "devboards/JC3248W535.hpp"
+#include "devboards/JC1060P470C.hpp"
+// presets
+#include "widgets/presets.hpp"
 #include "core/log.h"
 
 #define   MAX_BOOT_FAIL_CNT   5
@@ -75,7 +76,7 @@ void load_device_profile_from_NVS(){
 void load_device_JC3248W535(){
   LOGD(T_devcfg, println, "Creating devices for JC3248W535");
   // JC3248W535 uses generic esp32 DAC
-  player = new ESP32_I2S_Generic(JC3248W535::i2s.bclk, JC3248W535::i2s.lrclk, JC3248W535::i2s.dout, JC3248W535::i2s.mclk, JC3248W535::i2s.mute, JC3248W535::i2s.mute_lvl);
+  player = new ESP32_I2S_Generic(JC3248W535::i2s.bclk, JC3248W535::i2s.lrclk, JC3248W535::i2s.dout, JC3248W535::i2s.mclk);
   player->init();
 
   // Display
@@ -83,10 +84,15 @@ void load_device_JC3248W535(){
   agfx = JC3248W535::create_display_dev(JC3248W535::display, bus);
   // create display hw controller
   dctrl = new DisplayControl_AGFX_PWM(JC3248W535::display.backlight, JC3248W535::display.backlight_level, agfx);
+  dctrl->init();
+
   // link the above into Display object
   display = new DisplayGFX(agfx, dctrl);
   // Init the display UI
   display->init();
+
+  // apply widget preset for 320x240
+  display->load_main_preset(display_320x480::cfg1);
 }
 
 void load_device_JC1060P470(){
@@ -99,8 +105,13 @@ void load_device_JC1060P470(){
   // create Agfx object
   agfx = JC1060P470::create_display_dev(JC1060P470::display);
   dctrl = new DisplayControl_AGFX_PWM(JC1060P470::display.backlight, JC1060P470::display.backlight_level, agfx);
+  dctrl->init();
+
   // link the above into Display object
   display = new DisplayGFX(agfx, dctrl);
   // Init the display UI
   display->init();
+
+  // apply widget preset for 1024x600
+  display->load_main_preset(display_1024x600::cfg1);
 }

@@ -46,7 +46,7 @@ namespace JC3248W535 {
   // I2S
   struct i2s_gpio_t {
     int32_t dout, bclk, lrclk, mclk;
-    int32_t mute, mute_lvl;
+    //int32_t mute, mute_lvl;
   };
   static constexpr i2s_gpio_t i2s{JC3248W535_AUDIO_I2S_DO_IO, JC3248W535_AUDIO_I2S_BCK_IO, JC3248W535_AUDIO_I2S_LRCK_IO, -1};
 

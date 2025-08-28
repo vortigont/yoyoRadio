@@ -2,7 +2,7 @@
 #include "JC1060P470CIW_pincfg.h"
 
 //  Display driver JD9165BA-DS
-#include "dspcore.h"
+#include "displays/dspcore.h"
 
 namespace JC1060P470 {
 
