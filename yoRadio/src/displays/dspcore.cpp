@@ -261,101 +261,6 @@ void DisplayGFX::_bootScreen(){
   */
 }
 
-/*
-void DisplayGFX::_buildPager(){
-  _meta.init("*", metaConf, config.theme.meta, config.theme.metabg);
-  _title1.init("*", title1Conf, config.theme.title1, config.theme.background);
-  _clock.init(clockConf, 0, 0);
-  _clock._datecfg = &dateConf;    // dirty hack with date config
-  #if DSP_MODEL==DSP_NOKIA5110
-    _plcurrent.init("*", playlistConf, 0, 1);
-  #else
-    _plcurrent.init("*", playlistConf, config.theme.plcurrent, config.theme.plcurrentbg);
-  #endif
-  #if !defined(DSP_LCD)
-    _plcurrent.moveTo({TFT_FRAMEWDT, (uint16_t)(dsp->plYStart+dsp->plCurrentPos*dsp->plItemHeight), (int16_t)playlistConf.width});
-  #endif
-  #ifndef HIDE_TITLE2
-    _title2 = new ScrollWidget("*", title2Conf, config.theme.title2, config.theme.background);
-  #endif
-  #if !defined(DSP_LCD) && DSP_MODEL!=DSP_NOKIA5110
-    _plbackground = new FillWidget(playlBGConf, config.theme.plcurrentfill);
-    #if DSP_INVERT_TITLE || defined(DSP_OLED)
-      _metabackground = new FillWidget(metaBGConf, config.theme.metafill);
-    #else
-      _metabackground = new FillWidget(metaBGConfInv, config.theme.metafill);
-    #endif
-  #endif
-  #if DSP_MODEL==DSP_NOKIA5110
-    _plbackground = new FillWidget(playlBGConf, 1);
-    //_metabackground = new FillWidget(metaBGConf, 1);
-  #endif
-  #ifndef HIDE_VU
-    _vuwidget = new VuWidget(vuConf, bandsConf, config.theme.vumax, config.theme.vumin, config.theme.background);
-  #endif
-  #ifndef HIDE_VOLBAR
-    _volbar = new SliderWidget(volbarConf, config.theme.volbarin, config.theme.background, 254, config.theme.volbarout);
-  #endif
-  #ifndef HIDE_HEAPBAR
-    _heapbar = new SliderWidget(heapbarConf, config.theme.buffer, config.theme.background, psramInit()?300000:1600 * AUDIOBUFFER_MULTIPLIER2);
-  #endif
-  #ifndef HIDE_VOL
-    _voltxt = new TextWidget(voltxtConf, 10, false, config.theme.vol, config.theme.background);
-  #endif
-  #ifndef HIDE_IP
-    _volip = new TextWidget(iptxtConf, 30, false, config.theme.ip, config.theme.background);
-  #endif
-  #ifndef HIDE_RSSI
-    _rssi = new TextWidget(rssiConf, 20, false, config.theme.rssi, config.theme.background);
-  #endif
-  _nums.init(numConf, 10, false, config.theme.digit, config.theme.background);
-  #ifndef HIDE_WEATHER
-    _weather = new ScrollWidget("\007", weatherConf, config.theme.weather, config.theme.background);
-  #endif
-  
-  if(_volbar)   _footer.addWidget( _volbar);
-  if(_voltxt)   _footer.addWidget( _voltxt);
-  if(_volip)    _footer.addWidget( _volip);
-  if(_rssi)     _footer.addWidget( _rssi);
-  if(_heapbar)  _footer.addWidget( _heapbar);
-  
-  if(_metabackground) _pages.at(PG_PLAYER)->addWidget( _metabackground);
-  _pages.at(PG_PLAYER)->addWidget(&_meta);
-  _pages.at(PG_PLAYER)->addWidget(&_title1);
-  if(_title2) _pages.at(PG_PLAYER)->addWidget(_title2);
-  if(_weather) _pages.at(PG_PLAYER)->addWidget(_weather);
-  #if BITRATE_FULL
-    _fullbitrate = new BitrateWidget(fullbitrateConf, config.theme.bitrate, config.theme.background);
-    _pages.at(PG_PLAYER)->addWidget( _fullbitrate);
-  #else
-    _bitrate = new TextWidget(bitrateConf, 30, false, config.theme.bitrate, config.theme.background);
-    _pages.at(PG_PLAYER)->addWidget( _bitrate);
-  #endif
-  if(_vuwidget) _pages.at(PG_PLAYER)->addWidget( _vuwidget);
-  _pages.at(PG_PLAYER)->addWidget(&_clock);
-  _pages.at(PG_SCREENSAVER)->addWidget(&_clock);
-  _pages.at(PG_PLAYER)->addPage(&_footer);
-
-  if(_metabackground) _pages.at(PG_DIALOG)->addWidget( _metabackground);
-  _pages.at(PG_DIALOG)->addWidget(&_meta);
-  _pages.at(PG_DIALOG)->addWidget(&_nums);
-  
-  #if !defined(DSP_LCD) && DSP_MODEL!=DSP_NOKIA5110
-    _pages.at(PG_DIALOG)->addPage(&_footer);
-  #endif
-  #if !defined(DSP_LCD)
-  if(_plbackground) {
-    _pages.at(PG_PLAYLIST)->addWidget( _plbackground);
-    _plbackground->setHeight(dsp->plItemHeight);
-    _plbackground->moveTo({0,(uint16_t)(dsp->plYStart+dsp->plCurrentPos*dsp->plItemHeight-playlistConf.widget.textsize*2), (int16_t)playlBGConf.width});
-  }
-  #endif
-  _pages.at(PG_PLAYLIST)->addWidget(&_plcurrent);
-
-  for(const auto& p: _pages) _pager.addPage(p);
-}
-*/
-
 void DisplayGFX::_apScreen() {
 /*
   if(_boot) _pager.removePage(_boot);
@@ -471,10 +376,6 @@ void DisplayGFX::_drawNextStationNum(uint16_t num) {
   //_meta.setText(config.stationByNum(num));
   //_nums.setText(num, "%d");
 }
-
-//void DisplayGFX::printPLitem(uint8_t pos, const char* item){
-  //dsp->printPLitem(pos, item, _plcurrent);
-//}
 
 void DisplayGFX::putRequest(displayRequestType_e type, int payload){
   if(_displayQueue==NULL) return;
@@ -631,27 +532,6 @@ void DisplayGFX::_volume() {
 */
 }
 
-/*
-void  DisplayGFX::setContrast(){
-  #if DSP_MODEL==DSP_NOKIA5110
-    dsp->setContrast(config.store.contrast);
-  #endif
-}
-
-bool DisplayGFX::deepsleep(){
-#if defined(LCD_I2C) || defined(DSP_OLED) || BRIGHTNESS_PIN!=255
-  dsp->sleep();
-  return true;
-#endif
-  return false;
-}
-
-void DisplayGFX::wakeup(){
-#if defined(LCD_I2C) || defined(DSP_OLED) || BRIGHTNESS_PIN!=255
-  dsp->wake();
-#endif
-}
-*/
 void DisplayGFX::_events_subsribe(){
   // command events
   esp_event_handler_instance_register_with(evt::get_hndlr(), YO_CMD_EVENTS, ESP_EVENT_ANY_ID,
@@ -674,92 +554,9 @@ void DisplayGFX::_events_unsubsribe(){
 void DisplayGFX::_events_cmd_hndlr(int32_t id, void* data){
   LOGV(T_Display, printf, "cmd event rcv:%d\n", id);
   switch (static_cast<evt::yo_event_t>(id)){
-
-    // Play radio station from a playlist
-    case evt::yo_event_t::displayNewMode :
-      _swichMode(*reinterpret_cast<displayMode_e*>(data));
-      break;
-
-    case evt::yo_event_t::displayNewTitle :
-      _title();
-      break;
-
-    case evt::yo_event_t::displayNewStation :
-      _station();
-      break;
-
-    case evt::yo_event_t::displayNextStation :
-      _drawNextStationNum(*reinterpret_cast<int32_t*>(data));
-      break;
-
-    case evt::yo_event_t::displayDrawPlaylist :
-      _drawPlaylist();
-      break;
-
-    case evt::yo_event_t::displayDrawVol :
-      _volume();
-      break;
-
-    case evt::yo_event_t::displayShowVUMeter :
-/*
-      if(_vuwidget){
-        _vuwidget->lock(!config.store.vumeter); 
-        _layoutChange(player->isRunning());
-      }
-*/
-    break;
-
-    case evt::yo_event_t::displayShowWeather : /*{
-      if(_weather)
-        _weather->lock(!config.store.showweather);
-      if(!config.store.showweather){
-        #ifndef HIDE_IP
-        if(_volip) _volip->setText(WiFi.localIP().toString().c_str(), iptxtFmt);
-        #endif
-      } else {
-        if(_weather) _weather->setText(const_getWeather);
-      }
-    }*/
-    break;
-/*
-    case evt::yo_event_t::displayNewWeather :
-      if(_weather && network.weatherBuf)
-        _weather->setText(network.weatherBuf);
-      break;
-
-    case evt::yo_event_t::displayBootstring : {
-      auto idx = *reinterpret_cast<int32_t*>(data);
-      if (idx >= sizeof(config.ssids)/sizeof(neworkItem) || idx < 0)
-        return;
-      if(_bootstring)
-        _bootstring->setText(config.ssids[idx].ssid, bootstrFmt);
-      break;
-    }
-
-    case evt::yo_event_t::displayWait4SD :
-      if(_bootstring)
-        _bootstring->setText(const_waitForSD);
-      break;
-
-    case evt::yo_event_t::displaySDFileIndex :
-      if (_mode == SDCHANGE)
-        _nums.setText(*reinterpret_cast<int32_t*>(data), "%d");
-      break;
-
-    case evt::yo_event_t::displayShowRSSI :
-      if(_rssi)
-        { _setRSSI(*reinterpret_cast<int32_t*>(data)); }
-      if (_heapbar && config.store.audioinfo)
-        _heapbar->setValue(player->isRunning() ? player->inBufferFilled() : 0);
-      break;
-*/
-    case evt::yo_event_t::displayPStart :
-      _layoutChange(true);
-      break;
-
-    case evt::yo_event_t::displayPStop :
-      _layoutChange(false);
-      break;
+    //case evt::yo_event_t::displayPStop :
+    //  _layoutChange(false);
+    //  break;
 
     default:;
   }

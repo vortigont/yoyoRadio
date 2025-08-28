@@ -79,16 +79,6 @@ enum class yo_event_t:int32_t {
   // Display events
   displayBootstring = 200,
   displayBrightness,        // set / get display brightness change, param int32_t - brightness in range 0-100%
-  displayPStop,
-  displayNewMode,
-  displayShowWeather,
-  displayDrawPlaylist,
-  displayNewTitle,
-  displayNewStation,
-  displayNextStation,
-  displayDrawVol,
-  displayShowVUMeter,
-  displayPStart,
 
   // ext devices control
   btnLock = 300,            // Lock button
