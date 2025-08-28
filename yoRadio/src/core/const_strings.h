@@ -33,6 +33,9 @@ static constexpr const char* T_n_a = "n/a";                     // not available
 static constexpr const char* A_ui_page_modules = "ui_page_modules";             // modules page
 static constexpr const char* A_dev_profile = "dev_profile";                     // device profile setup
 
+// Управление дисплеем
+static constexpr const char* T_disp_brt = "disp_brt";               // display brightness
+
 
 // Modules
 static constexpr const char* T_mod_mgr_cfg = "/modules.json";

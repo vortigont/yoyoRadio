@@ -672,6 +672,7 @@ void DisplayGFX::load_main_preset(const std::vector<widget_cfgitem_t>& preset){
 // ****************
 DisplayControl::~DisplayControl(){
   _events_unsubsribe();
+  _embui_actions_unregister();
 }
 
 void DisplayControl::init(){
@@ -685,6 +686,7 @@ void DisplayControl::init(){
   }
   handle->get_item(T_brightness, brt);
   setDevBrightness(brt);
+  _embui_actions_register();
 }
 
 void DisplayControl::setBrightness(int32_t val){
@@ -743,6 +745,16 @@ void DisplayControl::_events_cmd_hndlr(int32_t id, void* data){
     default:;
   }
 }
+
+void DisplayControl::_embui_actions_register(){
+  // brightness control from EmbUI
+  embui.action.add(T_disp_brt, [this](Interface *interf, JsonVariantConst data, const char* action){ setBrightness(data); } );
+}
+
+void DisplayControl::_embui_actions_unregister(){
+  embui.action.remove(T_disp_brt);
+}
+
 
 // ****************
 //  DisplayControl_AGFX_PWM methods

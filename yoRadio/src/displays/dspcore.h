@@ -29,28 +29,31 @@ public:
   virtual void displaySuspend(bool state){ setBrightness( state ? 0 : brt); }
 
 private:
-    // event function handlers
-    esp_event_handler_instance_t _hdlr_cmd_evt{nullptr};
-    esp_event_handler_instance_t _hdlr_chg_evt{nullptr};
+  // event function handlers
+  esp_event_handler_instance_t _hdlr_cmd_evt{nullptr};
+  esp_event_handler_instance_t _hdlr_chg_evt{nullptr};
 
-    /**
-     * @brief subscribe to event mesage bus
-     * 
-     */
-    void _events_subsribe();
+  /**
+   * @brief subscribe to event mesage bus
+   * 
+   */
+  void _events_subsribe();
 
-    /**
-     * @brief unregister from event loop
-     * 
-     */
-    void _events_unsubsribe();
+  /**
+   * @brief unregister from event loop
+   * 
+   */
+  void _events_unsubsribe();
 
-    // command events handler
-    void _events_cmd_hndlr(int32_t id, void* data);
+  // command events handler
+  void _events_cmd_hndlr(int32_t id, void* data);
 
-    // state change events handler
-    void _events_chg_hndlr(int32_t id, void* data);
+  // state change events handler
+  void _events_chg_hndlr(int32_t id, void* data);
 
+  // EmbUI handlers
+  void _embui_actions_register();
+  void _embui_actions_unregister();
 };
 
 /**

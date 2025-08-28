@@ -46,6 +46,17 @@
             "onChange": true
           },
           {
+            "id":"disp_brt",
+            "html":"input",
+            "type": "range",
+            "class": "yoinput",
+            "min": 0,
+            "max": 100,
+            "step": 5,
+            "label": "🔅 Яркость дисплея",
+            "onChange": true
+          },
+          {
             "section": "player_equalizer",
             "hidden": true,
             "show_btn": false,
