@@ -3,7 +3,6 @@
 #include "dspcore.h"
 #include "locale/l10n.h"
 #include "core/const_strings.h"
-#include "core/config.h"
 #include "core/evtloop.h"
 #include "core/log.h"
 

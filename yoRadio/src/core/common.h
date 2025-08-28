@@ -2,6 +2,14 @@
 #define COMMON_H
 #include <cstdint>
 
+#define PLAYLIST_PATH     "/data/playlist.csv"
+#define SSIDS_PATH        "/data/wifi.csv"
+#define TMP_PATH          "/data/tmpfile.txt"
+#define INDEX_PATH        "/data/index.dat"
+
+#define PLAYLIST_SD_PATH     "/data/playlistsd.csv"
+#define INDEX_SD_PATH        "/data/indexsd.dat"
+
 enum displayMode_e { PLAYER, VOL, STATIONS, NUMBERS, LOST, UPDATING, INFO, SETTINGS, TIMEZONE, WIFI, CLEAR, SLEEPING, SDCHANGE, SCREENSAVER, SCREENBLANK };
 //enum class pages_e : uint8_t  { PG_PLAYER=0, PG_DIALOG=1, PG_PLAYLIST=2, PG_SCREENSAVER=3 };
 

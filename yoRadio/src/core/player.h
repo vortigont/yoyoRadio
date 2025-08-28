@@ -162,7 +162,6 @@ public:
     void toggle();
 
 
-    void stopInfo();
     void setResumeFilePos(uint32_t pos) { _resumeFilePos = pos; }
 
     // needed in Config::changeMode for some reason

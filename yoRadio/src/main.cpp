@@ -1,6 +1,5 @@
 #include "Arduino.h"
 #include "core/options.h"
-#include "core/config.h"
 #include "core/player.h"
 #include "displays/dspcore.h"
 #include "core/netserver.h"
@@ -25,9 +24,6 @@ void setup() {
 
   // Start event loop task
   evt::start();
-
-  LOGI(T_BOOT, println, "Init Config");
-  config.init();
 
   LOGI(T_BOOT, println, "Creating hw configuration");
   load_hwcomponets_configuration();

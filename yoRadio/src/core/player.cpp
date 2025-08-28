@@ -1,10 +1,8 @@
 #include "nvs_handle.hpp"
-#include "config.h"
 #include "common.h"
 #include "player.h"
 #include "const_strings.h"
 #include "locale/l10n.h"
-#include "sdmanager.h"
 #include "netserver.h"
 #include "evtloop.h"
 #include "log.h"
@@ -38,11 +36,6 @@ void AudioController::init() {
   audio.setLiteralCallback([this](const char* msg, audiolib::callback_type_t type){ _audio_cb_generic(msg, type); });
   // Enable all type of literal callbacks (most verbose one)
   audio.enableCallbackType(audiolib::callback_type_t::all, true);
-}
-
-void AudioController::stopInfo() {
-  config.setSmartStart(0);
-  netserver.requestOnChange(MODE, 0);
 }
 
 void AudioController::setError(const char *e){
@@ -90,43 +83,16 @@ void AudioController::_play(uint16_t stationId) {
   LOGD(T_Player, printf, "_play:%u\n", stationId);
 
   setError("");
-  //setDefaults();    this is private in a new version of ESP32-audioI2S lib
   remoteStationName = false;
-  config.setDspOn(1);
-  config.vuThreshold = 0;
-  config.screensaverTicks=SCREENSAVERSTARTUPDELAY;
-  config.screensaverPlayingTicks=SCREENSAVERSTARTUPDELAY;
   setMute(false);
-  //config.setTitle(config.getMode()==PM_WEB?const_PlConnect:"");
-  if(!config.loadStation(stationId)){
-    LOGW(T_Player, printf, "Can't load station index:%u\n", stationId);
-    return;
-  }
 
-  if(config.store.smartstart!=2)
-    config.setSmartStart(0);
   bool isConnected = false;
   audio.stopSong();
-  if(config.getMode()==PM_SDCARD && SDC_CS!=255){
-    isConnected = false;
-    // disable it for now
-    //isConnected = audio.connecttoFS(sdman,config.station.url,config.sdResumePos==0?_resumeFilePos:config.sdResumePos - sd_min);
-  } else {
-    config.saveValue(&config.store.play_mode, static_cast<uint8_t>(PM_WEB));
-  }
   // try to connect to remote host
   //if(config.getMode()==PM_WEB)
 
   if(isConnected){
-  //if (config.store.play_mode==PM_WEB?connecttohost(config.station.url):connecttoFS(SD,config.station.url,config.sdResumePos==0?_resumeFilePos:config.sdResumePos-player.sd_min)) {
     _status = PLAYING;
-    if(config.getMode()==PM_SDCARD) {
-      config.sdResumePos = 0;
-      config.saveValue(&config.store.lastSdStation, stationId);
-    }
-    if(config.store.smartstart!=2)
-      config.setSmartStart(1);
-    netserver.requestOnChange(MODE, 0);
 
     // notify that device has switched to 'webstream' playback mode
     int32_t d = e2int(evt::yo_state::webstream);
