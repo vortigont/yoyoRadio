@@ -20,13 +20,37 @@ protected:
 
 public:
   DisplayControl() = default;
-  virtual ~DisplayControl(){};
+  virtual ~DisplayControl();
   // init device control
   virtual void init();
   // set display brightness in a range of 0-100%
   void setBrightness(int32_t val);
   // low power mode enable/disable
   virtual void displaySuspend(bool state){ setBrightness( state ? 0 : brt); }
+
+private:
+    // event function handlers
+    esp_event_handler_instance_t _hdlr_cmd_evt{nullptr};
+    esp_event_handler_instance_t _hdlr_chg_evt{nullptr};
+
+    /**
+     * @brief subscribe to event mesage bus
+     * 
+     */
+    void _events_subsribe();
+
+    /**
+     * @brief unregister from event loop
+     * 
+     */
+    void _events_unsubsribe();
+
+    // command events handler
+    void _events_cmd_hndlr(int32_t id, void* data);
+
+    // state change events handler
+    void _events_chg_hndlr(int32_t id, void* data);
+
 };
 
 /**
@@ -90,7 +114,6 @@ public:
   virtual void invert(){};
   virtual bool deepsleep(){ return true; };
   virtual void wakeup(){};
-  virtual void setContrast(){};
   virtual void printPLitem(uint8_t pos, const char* item){};
 
   // widgets features
@@ -114,12 +137,11 @@ public:
 class DisplayGFX : public Display {
   // display graphics object
   Arduino_GFX *_gfx;
-  DisplayControl *_dctrl;
   MuiPlusPlus _mpp;
   
 
   public:
-    DisplayGFX(Arduino_GFX* gfx, DisplayControl* dctrl) : _gfx(gfx), _dctrl(dctrl) {};
+    DisplayGFX(Arduino_GFX* gfx) : _gfx(gfx) {};
     ~DisplayGFX();
 
     // initialize display (create device driver class)
@@ -133,9 +155,6 @@ class DisplayGFX : public Display {
 
     // send and event to display to process and draw specific component
     void putRequest(displayRequestType_e type, int payload=0);
-
-    // control display brightness, range 0-100%
-    void setBrightness(uint32_t v);
 
     // Widgets operations
 

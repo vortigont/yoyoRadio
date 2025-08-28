@@ -80,14 +80,15 @@ void load_device_JC3248W535(){
   player->init();
 
   // Display
-  // create Agfx object
-  agfx = JC3248W535::create_display_dev(JC3248W535::display, bus);
   // create display hw controller
   dctrl = new DisplayControl_AGFX_PWM(JC3248W535::display.backlight, JC3248W535::display.backlight_level, agfx);
   dctrl->init();
 
+  // create Agfx object
+  agfx = JC3248W535::create_display_dev(JC3248W535::display, bus);
+
   // link the above into Display object
-  display = new DisplayGFX(agfx, dctrl);
+  display = new DisplayGFX(agfx);
   // Init the display UI
   display->init();
 
@@ -102,16 +103,18 @@ void load_device_JC1060P470(){
   player->init();
 
   // Display
-  // create Agfx object
-  agfx = JC1060P470::create_display_dev(JC1060P470::display);
+
+  // Create and init display device controller
   dctrl = new DisplayControl_AGFX_PWM(JC1060P470::display.backlight, JC1060P470::display.backlight_level, agfx);
   dctrl->init();
 
-  // link the above into Display object
-  display = new DisplayGFX(agfx, dctrl);
+  // create Agfx object
+  agfx = JC1060P470::create_display_dev(JC1060P470::display);
+    // link the above into Display object
+  display = new DisplayGFX(agfx);
   // Init the display UI
   display->init();
-
+  
   // apply widget preset for 1024x600
   display->load_main_preset(display_1024x600::cfg1);
 }

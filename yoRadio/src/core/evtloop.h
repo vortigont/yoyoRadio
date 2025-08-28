@@ -78,24 +78,17 @@ enum class yo_event_t:int32_t {
 
   // Display events
   displayBootstring = 200,
-  displayClock,
-  displayDrawPlaylist,
-  displayDrawVol,
-  displayNewIP,
-  displayNewMode,
-  displayNewStation,
-  displayNewTitle,
-  displayNewWeather,
-  displayNextStation,
-  displayNope,
-  displayPStart,
+  displayBrightness,        // set / get display brightness change, param int32_t - brightness in range 0-100%
   displayPStop,
-  displaySDFileIndex,
-  displayShowRSSI,
-  displayShowVUMeter,
+  displayNewMode,
   displayShowWeather,
-  displayStart,
-  displayWait4SD,
+  displayDrawPlaylist,
+  displayNewTitle,
+  displayNewStation,
+  displayNextStation,
+  displayDrawVol,
+  displayShowVUMeter,
+  displayPStart,
 
   // ext devices control
   btnLock = 300,            // Lock button
@@ -105,7 +98,7 @@ enum class yo_event_t:int32_t {
   encoderMode = 310,        // change event, which mode encoder has switched to, param: unsigned
 
   // Module manager
-  modClk = 1000,             // Enable/disable Clock module. param: unsigned n, if zero, disable, other - enable
+  modClk = 1000,            // Enable/disable Clock module. param: unsigned n, if zero, disable, other - enable
   modClkPreset,             // switch Clock preset, param: signed n, if negative switch to random profile
   modTxtScroller,           // Enable/disable Text module. param: unsigned n, if zero, disable, other - enable
   modTxtScrollerPreset,     // switch TextScroller preset, param: signed n, if negative switch to random profile

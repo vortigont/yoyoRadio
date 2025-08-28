@@ -761,12 +761,6 @@ void DisplayGFX::_events_cmd_hndlr(int32_t id, void* data){
       _layoutChange(false);
       break;
 
-    // set display brightness
-    case evt::yo_event_t::brightness :
-      setBrightness(*static_cast<uint32_t*>(data));
-      break;
-
-
     default:;
   }
 }
@@ -875,22 +869,14 @@ void DisplayGFX::load_main_preset(const std::vector<widget_cfgitem_t>& preset){
   _gfx->flush();
 }
 
-void DisplayGFX::setBrightness(uint32_t v){
-  _dctrl->setBrightness(v);
-  if (embui.feeders.available()){
-    // publish changed value to EmbUI feeds
-    Interface interf(&embui.feeders);
-    interf.json_frame_value();
-    interf.value(T_brightness, v);
-    interf.json_frame_flush();
-  }
-  // send notification to event bus
-  EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::brightness), &v, sizeof(v));  
-};
 
 // ****************
 //  DisplayControl methods
 // ****************
+DisplayControl::~DisplayControl(){
+  _events_unsubsribe();
+}
+
 void DisplayControl::init(){
   // load brightness value from nvs
   esp_err_t err;
@@ -915,9 +901,50 @@ void DisplayControl::setBrightness(int32_t val){
   if (err == ESP_OK){
     handle->set_item(T_brightness, brt);
   }
+  // send notification to event bus
+  if (embui.feeders.available()){
+    // publish changed value to EmbUI feeds
+    Interface interf(&embui.feeders);
+    interf.json_frame_value();
+    interf.value(T_brightness, val);
+    interf.json_frame_flush();
+  }
   // publish brightness change notification to event bus
-  // TODO: webpublish
-  //EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::audioVolume), &volume, sizeof(volume));
+  EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::brightness), &val, sizeof(val));  
+}
+
+void DisplayControl::_events_subsribe(){
+  // command events
+  esp_event_handler_instance_register_with(evt::get_hndlr(), YO_CMD_EVENTS, ESP_EVENT_ANY_ID,
+    [](void* self, esp_event_base_t base, int32_t id, void* data){ static_cast<DisplayControl*>(self)->_events_cmd_hndlr(id, data); },
+    this, &_hdlr_cmd_evt
+  );
+
+  // state change events
+  /*
+  esp_event_handler_instance_register_with(evt::get_hndlr(), YO_CHG_STATE_EVENTS, ESP_EVENT_ANY_ID,
+    [](void* self, esp_event_base_t base, int32_t id, void* data){ static_cast<DisplayControl*>(self)->_events_chg_hndlr(id, data); },
+    this, &_hdlr_chg_evt
+  );
+*/
+}
+
+void DisplayControl::_events_unsubsribe(){
+  esp_event_handler_instance_unregister_with(evt::get_hndlr(), YO_CMD_EVENTS, ESP_EVENT_ANY_ID, _hdlr_cmd_evt);
+//  esp_event_handler_instance_unregister_with(evt::get_hndlr(), YO_CHG_STATE_EVENTS, ESP_EVENT_ANY_ID, _hdlr_chg_evt);
+}
+
+void DisplayControl::_events_cmd_hndlr(int32_t id, void* data){
+  LOGV(T_Display, printf, "cmd event rcv:%d\n", id);
+  switch (static_cast<evt::yo_event_t>(id)){
+
+    // brightness control
+    case evt::yo_event_t::displayBrightness :
+      setBrightness(*reinterpret_cast<int32_t*>(data));
+      break;
+
+    default:;
+  }
 }
 
 // ****************
