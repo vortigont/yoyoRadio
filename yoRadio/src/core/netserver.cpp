@@ -370,13 +370,6 @@ void NetServer::processQueue(){
         obj["scrpb"] =  config.store.screensaverPlayingBlank;
         break;
 
-      case GETWEATHER:
-        obj["wen"] = config.store.showweather;
-        obj["wlat"] = config.store.weatherlat;
-        obj["wlon"] = config.store.weatherlon;
-        obj["wkey"] = config.store.weatherkey;
-        break;
-
       case GETCONTROLS:
         obj["vols"] =  config.store.volsteps;
         obj["enca"] =  config.store.encacc;

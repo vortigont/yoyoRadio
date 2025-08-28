@@ -36,7 +36,6 @@
 #define REAL_INDEX   getMode()==PM_WEB?INDEX_PATH:INDEX_SD_PATH
 
 #define MAX_PLAY_MODE   1
-#define WEATHERKEY_LENGTH 58
 #define MDNS_LENGTH 24
 #if SDC_CS!=255
   #define USE_SD
@@ -60,7 +59,6 @@ struct theme_t {
   uint16_t title2;
   uint16_t digit;
   uint16_t div;
-  uint16_t weather;
   uint16_t vumax;
   uint16_t vumin;
   uint16_t clock;
@@ -101,10 +99,6 @@ struct config_t
   bool      dspon;
   uint8_t   brightness;
   uint8_t   contrast;
-  bool      showweather;
-  char      weatherlat[10];
-  char      weatherlon[10];
-  char      weatherkey[WEATHERKEY_LENGTH];
   uint16_t  _reserved;
   uint16_t  lastSdStation;
   uint8_t   volsteps;
@@ -205,8 +199,6 @@ class Config {
     void setScreensaverPlayingTimeout(uint16_t val);
     void setScreensaverPlayingBlank(bool val);
     void setSntpOne(const char *val);
-    void setShowweather(bool val);
-    void setWeatherKey(const char *val);
     void setSDpos(uint32_t val);
 #if IR_PIN!=255
     void setIrBtn(int val);

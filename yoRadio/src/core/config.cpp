@@ -3,7 +3,6 @@
 //#include "../displays/dspcore.h"
 #include "player.h"
 #include "netserver.h"
-#include "controls.h"
 #ifdef USE_SD
 #include "sdmanager.h"
 #endif
@@ -245,7 +244,6 @@ void Config::loadTheme(){
   theme.title2        = color565(COLOR_SNG_TITLE_2);
   theme.digit         = color565(COLOR_DIGITS);
   theme.div           = color565(COLOR_DIVIDER);
-  theme.weather       = color565(COLOR_WEATHER);
   theme.vumax         = color565(COLOR_VU_MAX);
   theme.vumin         = color565(COLOR_VU_MIN);
   theme.clock         = color565(COLOR_CLOCK);
@@ -294,66 +292,7 @@ void Config::reset(){
   delay(500);
   ESP.restart();
 }
-void Config::enableScreensaver(bool val){
-  saveValue(&store.screensaverEnabled, val);
-#ifndef DSP_LCD
-  int32_t d = PLAYER;
-  EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
-#endif
-}
-void Config::setScreensaverTimeout(uint16_t val){
-  val=constrain(val,5,65520);
-  saveValue(&store.screensaverTimeout, val);
-#ifndef DSP_LCD
-  int32_t d = PLAYER;
-  EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
-#endif
-}
-void Config::setScreensaverBlank(bool val){
-  saveValue(&store.screensaverBlank, val);
-#ifndef DSP_LCD
-  int32_t d = PLAYER;
-  EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
-#endif
-}
-void Config::setScreensaverPlayingEnabled(bool val){
-  saveValue(&store.screensaverPlayingEnabled, val);
-#ifndef DSP_LCD
-  int32_t d = PLAYER;
-  EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
-#endif
-}
-void Config::setScreensaverPlayingTimeout(uint16_t val){
-  val=constrain(val,1,1080);
-  config.saveValue(&config.store.screensaverPlayingTimeout, val);
-#ifndef DSP_LCD
-  int32_t d = PLAYER;
-  EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
-#endif
-}
-void Config::setScreensaverPlayingBlank(bool val){
-  saveValue(&store.screensaverPlayingBlank, val);
-#ifndef DSP_LCD
-  int32_t d = PLAYER;
-  EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
-#endif
-}
 
-void Config::setShowweather(bool val){
-  config.saveValue(&config.store.showweather, val);
-  //network.trueWeather=false;
-  //network.forceWeather = true;
-  EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayShowWeather));
-
-}
-void Config::setWeatherKey(const char *val){
-  saveValue(store.weatherkey, val, WEATHERKEY_LENGTH);
-  //network.trueWeather=false;
-  int32_t d = CLEAR;
-  EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
-  d = PLAYER;
-  EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
-}
 void Config::setSDpos(uint32_t val){
 /*
   if (getMode()==PM_SDCARD){
@@ -367,15 +306,7 @@ void Config::setSDpos(uint32_t val){
   }
 */
 }
-#if IR_PIN!=255
-void Config::setIrBtn(int val){
-  irindex = val;
-  netserver.irRecordEnable = (irindex >= 0);
-  irchck = 0;
-  netserver.irValsToWs();
-  if (irindex < 0) saveIR();
-}
-#endif
+
 void Config::resetSystem(const char *val, uint8_t clientId){
   if (strcmp(val, "system") == 0) {
     saveValue(&store.smartstart, (uint8_t)2, false);
@@ -384,60 +315,10 @@ void Config::resetSystem(const char *val, uint8_t clientId){
     saveValue(&store.softapdelay, (uint8_t)0, false);
     snprintf(store.mdnsname, MDNS_LENGTH, "yoradio-%x", getChipId());
     saveValue(store.mdnsname, store.mdnsname, MDNS_LENGTH, true, true);
-    int32_t d = CLEAR;
-    EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
-    d = PLAYER;
-    EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
     netserver.requestOnChange(GETSYSTEM, clientId);
     return;
   }
-  if (strcmp(val, "screen") == 0) {
-    saveValue(&store.flipscreen, false, false);
-    saveValue(&store.invertdisplay, false, false);
-    //display->invert();
-    saveValue(&store.dspon, true, false);
-    store.brightness = 100;
-    setBrightness(false);
-    saveValue(&store.contrast, (uint8_t)55, false);
-    //display->setContrast();
-    saveValue(&store.numplaylist, false);
-    saveValue(&store.screensaverEnabled, false);
-    saveValue(&store.screensaverTimeout, (uint16_t)20);
-    saveValue(&store.screensaverBlank, false);
-    saveValue(&store.screensaverPlayingEnabled, false);
-    saveValue(&store.screensaverPlayingTimeout, (uint16_t)5);
-    saveValue(&store.screensaverPlayingBlank, false);
-    int32_t d = CLEAR;
-    EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
-    d = PLAYER;
-    EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
-    netserver.requestOnChange(GETSCREEN, clientId);
-    return;
-  }
 
-  if (strcmp(val, "weather") == 0) {
-    saveValue(&store.showweather, false, false);
-    saveValue(store.weatherlat, "55.7512", 10, false);
-    saveValue(store.weatherlon, "37.6184", 10, false);
-    saveValue(store.weatherkey, "", WEATHERKEY_LENGTH);
-    //network.trueWeather=false;
-    int32_t d = CLEAR;
-    EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
-    d = PLAYER;
-    EVT_POST_DATA(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewMode), &d, sizeof(d));
-    netserver.requestOnChange(GETWEATHER, clientId);
-    return;
-  }
-  if (strcmp(val, "controls") == 0) {
-    saveValue(&store.volsteps, (uint8_t)1, false);
-    saveValue(&store.fliptouch, false, false);
-    saveValue(&store.dbgtouch, false, false);
-    saveValue(&store.skipPlaylistUpDown, false);
-    setEncAcceleration(200);
-    setIRTolerance(40);
-    netserver.requestOnChange(GETCONTROLS, clientId);
-    return;
-  }
   if (strcmp(val, "1") == 0) {
     config.reset();
     return;
@@ -465,10 +346,6 @@ void Config::setDefaults() {
   store.dspon=true;
   store.brightness=100;
   store.contrast=55;
-  store.showweather=false;
-  strlcpy(store.weatherlat,"55.7512", 10);
-  strlcpy(store.weatherlon,"37.6184", 10);
-  strlcpy(store.weatherkey,"", WEATHERKEY_LENGTH);
   store._reserved = 0;
   store.lastSdStation = 0;
   store.volsteps = 1;
@@ -764,7 +641,6 @@ void Config::bootInfo() {
   BOOTLOG("softapdelay:\t%d", store.softapdelay);
   BOOTLOG("flipscreen:\t%s", store.flipscreen?"true":"false");
   BOOTLOG("invertdisplay:\t%s", store.invertdisplay?"true":"false");
-  BOOTLOG("showweather:\t%s", store.showweather?"true":"false");
   BOOTLOG("buttons:\tleft=%d, center=%d, right=%d, up=%d, down=%d, mode=%d, pullup=%s", 
           BTN_LEFT, BTN_CENTER, BTN_RIGHT, BTN_UP, BTN_DOWN, BTN_MODE, BTN_INTERNALPULLUP?"true":"false");
   BOOTLOG("encoders:\tl1=%d, b1=%d, r1=%d, pullup=%s, l2=%d, b2=%d, r2=%d, pullup=%s", 

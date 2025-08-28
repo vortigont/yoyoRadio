@@ -4,7 +4,6 @@
 #include "core/player.h"
 #include "displays/dspcore.h"
 #include "core/netserver.h"
-#include "core/controls.h"
 #include "core/mqtt.h"
 #include "core/evtloop.h"
 #include "components.hpp"

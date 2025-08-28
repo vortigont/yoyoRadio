@@ -63,16 +63,6 @@ void AudioController::_stop(){
   // update stream's meta info
   audio_info_t info{ 0, T_n_a };
   EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerAudioInfo), &info, sizeof(info));
-  EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayPStop));
-}
-
-void AudioController::initHeaders(const char *file) {
-  if(strlen(file)==0 || true) return; //TODO Read TAGs
-  //audio.connecttoFS(sdman,file);
-  //eofHeader = false;
-  //while(!eofHeader) Audio::loop();
-  //netserver.requestOnChange(SDPOS, 0);
-  //setDefaults();
 }
 
 #ifndef PL_QUEUE_TICKS
@@ -106,23 +96,13 @@ void AudioController::_play(uint16_t stationId) {
   config.vuThreshold = 0;
   config.screensaverTicks=SCREENSAVERSTARTUPDELAY;
   config.screensaverPlayingTicks=SCREENSAVERSTARTUPDELAY;
-  if(config.getMode()!=PM_SDCARD) {
-    EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayPStop));
-  }
   setMute(false);
   //config.setTitle(config.getMode()==PM_WEB?const_PlConnect:"");
   if(!config.loadStation(stationId)){
     LOGW(T_Player, printf, "Can't load station index:%u\n", stationId);
     return;
   }
-  //config.setTitle(config.getMode() == PM_WEB ? const_PlConnect:"[next track]");
-  
-  //EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayNewStation));
 
-  netserver.requestOnChange(STATION, 0);
-  // todo: why do this netserver loop calls from here??? it's a wrong thread to execute without proper locking!
-  //netserver.loop();
-  //netserver.loop();
   if(config.store.smartstart!=2)
     config.setSmartStart(0);
   bool isConnected = false;
@@ -144,7 +124,6 @@ void AudioController::_play(uint16_t stationId) {
       config.sdResumePos = 0;
       config.saveValue(&config.store.lastSdStation, stationId);
     }
-    //config.setTitle("");
     if(config.store.smartstart!=2)
       config.setSmartStart(1);
     netserver.requestOnChange(MODE, 0);
