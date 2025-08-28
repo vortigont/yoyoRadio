@@ -5,6 +5,7 @@
 // Модуль Guition ESP32-4848S040 (ST7701 RGB 480x480)
 // https://devices.esphome.io/devices/Guition-ESP32-S3-4848S040
 // https://github.com/moononournation/Arduino_GFX/discussions/35
+//
 // основано на наработках https://github.com/Witaliy76/Yoradio_JC3248W535C_3_30/tree/4848S040
 
 // Пины дисплея 
@@ -118,9 +119,8 @@ namespace Guition_4848S040 {
   // I2S configuration
   struct i2s_gpio_t {
     int32_t dout, bclk, lrclk, mclk;
-    int32_t mute, mute_lvl;
   };
-  static constexpr i2s_gpio_t i2s{G_4848S040_I2S_DOUT, G_4848S040_I2S_BCLK, G_4848S040_I2S_LRC, -1, -1, 0};
+  static constexpr i2s_gpio_t i2s{G_4848S040_I2S_DOUT, G_4848S040_I2S_BCLK, G_4848S040_I2S_LRC, -1};
 
   // Display configuration
   struct display_t {
@@ -131,7 +131,7 @@ namespace Guition_4848S040 {
     int32_t de, vsync, hsync, pclk;
     // colors
     int32_t r0, r1, r2, r3, r4;
-    int32_t g0, g1, g2, g3, g4;
+    int32_t g0, g1, g2, g3, g4, g5;
     int32_t b0, b1, b2, b3, b4;
     int32_t backlight, backlight_level;
   };

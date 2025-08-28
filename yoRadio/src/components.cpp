@@ -4,6 +4,7 @@
 // device defines
 #include "devboards/JC3248W535.hpp"
 #include "devboards/JC1060P470C.hpp"
+#include "devboards/guition_4848S040.hpp"
 // presets
 #include "widgets/presets.hpp"
 #include "core/log.h"
@@ -12,6 +13,7 @@
 
 static constexpr const char* T_dev_JC3248W535         = "JC3248W535";     //  Guition JC3248W535
 static constexpr const char* T_dev_JC1060P470         = "JC1060P470";     //  Guition JC1060P470 ESP32-P4
+static constexpr const char* T_dev_G4848S040         = "G4848S040";     //  Guition JC1060P470 ESP32-P4
 
 // var to keep boot couter across reboots
 RTC_DATA_ATTR int setupCnt = 0;
@@ -29,6 +31,12 @@ Arduino_GFX* agfx{nullptr};
 // Module Manager instance
 ModuleManager zookeeper;
 
+// fwd declaration
+// create and init devices for JC3248W535 board
+void load_device_JC3248W535();
+// create and init devices for JC1060P470 board
+void load_device_JC1060P470();
+void load_device_G4848S040();
 
 
 void load_hwcomponets_configuration(){
@@ -71,6 +79,7 @@ void load_device_profile_from_NVS(){
   std::string_view sv(profile);
   if (sv.compare(T_dev_JC3248W535) == 0) return load_device_JC3248W535();
   if (sv.compare(T_dev_JC1060P470) == 0) return load_device_JC1060P470();
+  if (sv.compare(T_dev_G4848S040) == 0) return load_device_G4848S040();
 }
 
 void load_device_JC3248W535(){
@@ -117,4 +126,27 @@ void load_device_JC1060P470(){
   
   // apply widget preset for 1024x600
   display->load_main_preset(display_1024x600::cfg1);
+}
+
+void load_device_G4848S040(){
+  LOGD(T_devcfg, println, "Creating devices for JC3248W535");
+  // G4848S040 uses generic esp32 DAC
+  player = new ESP32_I2S_Generic(Guition_4848S040::i2s.bclk, Guition_4848S040::i2s.lrclk, Guition_4848S040::i2s.dout, Guition_4848S040::i2s.mclk);
+  player->init();
+
+  // Display
+  // create display hw controller
+  dctrl = new DisplayControl_AGFX_PWM(Guition_4848S040::display.backlight, Guition_4848S040::display.backlight_level, agfx);
+  dctrl->init();
+
+  // create Agfx object
+  agfx = Guition_4848S040::create_display_dev(Guition_4848S040::display, bus);
+
+  // link the above into Display object
+  display = new DisplayGFX(agfx);
+  // Init the display UI
+  display->init();
+
+  // apply widget preset for 320x240
+  display->load_main_preset(display_320x480::cfg1);
 }
