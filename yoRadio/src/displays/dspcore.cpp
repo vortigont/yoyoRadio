@@ -212,7 +212,7 @@ DisplayGFX::~DisplayGFX(){
 void DisplayGFX::init() {
   _state = state_t::empty;
   if (_gfx->begin()){
-    _gfx->fillScreen(RGB565_BLUE);
+    _gfx->fillScreen(0);
     _gfx->setUTF8Print(true);
   } else {
     LOGE(T_BOOT, println, "DisplayGFX.init FAILED!");
@@ -681,10 +681,10 @@ void DisplayControl::init(){
   if (err != ESP_OK){
     // if no saved value exist then set bightness to 75% by default
     setDevBrightness(75);
-    return;
+  } else {
+    handle->get_item(T_brightness, brt);
+    setDevBrightness(brt);
   }
-  handle->get_item(T_brightness, brt);
-  setDevBrightness(brt);
   _embui_actions_register();
 }
 

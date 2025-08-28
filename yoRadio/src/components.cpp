@@ -108,7 +108,7 @@ void load_device_JC3248W535(){
 void load_device_JC1060P470(){
   LOGD(T_devcfg, println, "Creating devices for JC1060P470");
   // JC1060P470 uses ES8311 DAC chip
-  player = new ES8311Audio(JC1060P470::i2s.bclk, JC1060P470::i2s.lrclk, JC1060P470::i2s.dout, JC1060P470::i2s.mclk, JC1060P470::i2s.mute);
+  player = new ES8311Audio(JC1060P470::i2s.bclk, JC1060P470::i2s.lrclk, JC1060P470::i2s.dout, JC1060P470::i2s.mclk, JC1060P470::sda, JC1060P470::scl, JC1060P470::i2s.mute);
   player->init();
 
   // Display
