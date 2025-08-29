@@ -16,7 +16,8 @@
 
 // ESP32 event loop defines
 ESP_EVENT_DECLARE_BASE(YO_CMD_EVENTS);          // declaration of Yo setter Command events (in reply to this command, an YO_CHG_EVENTS could be generated)
-ESP_EVENT_DECLARE_BASE(YO_GET_STATE_EVENTS);    // declaration of Yo "Get State" Command events - this is a request of some current states (in reply to this command, an YO_NTF_EVENTS could be generated)
+// not used for now, CMD_EVENT could be used for same
+//ESP_EVENT_DECLARE_BASE(YO_GET_STATE_EVENTS);    // declaration of Yo "Get State" Command events - this is a request of some current states (in reply to this command, an YO_NTF_EVENTS could be generated)
 ESP_EVENT_DECLARE_BASE(YO_NTF_STATE_EVENTS);    // declaration of Yo "Notify State" command events - this a current state reporting event (those events are published on request, not on change!!!)
 ESP_EVENT_DECLARE_BASE(YO_CHG_STATE_EVENTS);    // declaration of Yo "Change State" notification events base (those events are published when some state changes or in reply to "cmd set" events)
 
@@ -43,11 +44,13 @@ enum class yo_event_t:int32_t {
   brightness_lcurve,        // set brightness luma curve
   brightness_scale,         // set brightness scale
   brightness_step,          // step brightness incr/decr w/o fade, param: int n - step to shift
-  gradualFade,              // start gradual brightness fade, param gradual_fade_t
 
   // Device modes
   devMode = 30,             // set/notify about generic device mode changes, param - a member of yo_state enum. Dev modes has respective literal naming
 
+  // State reporting
+  reportStateAll,           // request state report from all componets
+  
   // Audio player
   // Audio player states
   playerStop = 100,         // player's state command/state, no param allowed

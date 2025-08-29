@@ -20,14 +20,14 @@
 static const char* TAG = "evt";
 
 ESP_EVENT_DEFINE_BASE(YO_CMD_EVENTS);
-ESP_EVENT_DEFINE_BASE(YO_GET_STATE_EVENTS);
+//ESP_EVENT_DEFINE_BASE(YO_GET_STATE_EVENTS);
 ESP_EVENT_DEFINE_BASE(YO_NTF_STATE_EVENTS);
 ESP_EVENT_DEFINE_BASE(YO_CHG_STATE_EVENTS);
 
 namespace evt {
 
-#define LOOP_EVT_Q_SIZE         8              // events loop queue size
-#define LOOP_EVT_PRIORITY       1              // task priority is same as arduino's loop() to avoid extra context switches
+#define LOOP_EVT_Q_SIZE         16             // events loop queue size
+#define LOOP_EVT_PRIORITY       2              // task priority is a bit higher than arduino's loop()
 #define LOOP_EVT_RUNNING_CORE   ARDUINO_RUNNING_CORE  //   tskNO_AFFINITY
 #ifdef YO_DEBUG_LEVEL
  #define LOOP_EVT_STACK_SIZE     5120           // task stack size
