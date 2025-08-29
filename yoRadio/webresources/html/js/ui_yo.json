@@ -128,7 +128,7 @@
         ]
       },
       {
-        "section":"callback",
+        "section":"callback___disabled",
         "block":[
           {"action": "player_getValues"}
         ]

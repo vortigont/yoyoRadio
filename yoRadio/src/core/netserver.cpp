@@ -83,6 +83,8 @@ void ui_page_radio(Interface *interf, JsonVariantConst data, const char* action)
   interf->json_section_uidata();
     interf->uidata_pick( "yo.pages.radio" );
   interf->json_frame_flush();
+  // request state reports, it should trigger sending WebUI updates for player state, screen brightness, etc...
+  EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::reportStateAll));
 }
 
 // buld additional section under "Settings" page

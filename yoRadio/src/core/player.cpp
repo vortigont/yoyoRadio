@@ -201,7 +201,8 @@ void AudioController::setVolume(int32_t vol) {
 }
 
 void AudioController::setBalance(int8_t bal){
-  LOGI(T_Player, printf, "set Balance:%d\n", volume);
+  LOGI(T_Player, printf, "set Balance:%d\n", bal);
+  balance = bal;
   setDACBalance(bal);
   // save volume value to nvs
   esp_err_t err;
@@ -210,7 +211,7 @@ void AudioController::setBalance(int8_t bal){
     handle->set_item(T_balance, bal);
   }
   // publish balance change notification to event bus
-  EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::audioBalance), &bal, sizeof(bal));
+  EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::audioBalance), &balance, sizeof(balance));
 }
 
 void AudioController::setTone(equalizer_tone_t t){
@@ -278,6 +279,16 @@ void AudioController::_events_cmd_hndlr(int32_t id, void* data){
 
     case evt::yo_event_t::audioTone :
       setTone(*reinterpret_cast<equalizer_tone_t*>(data));
+      _embui_publish_audio_values();
+      break;
+
+    // state report request
+    case evt::yo_event_t::reportStateAll :
+      // send notify events via bus
+      EVT_POST_DATA(YO_NTF_STATE_EVENTS, e2int(evt::yo_event_t::audioVolume), &volume, sizeof(volume));
+      EVT_POST_DATA(YO_NTF_STATE_EVENTS, e2int(evt::yo_event_t::audioBalance), &balance, sizeof(balance));
+      EVT_POST_DATA(YO_NTF_STATE_EVENTS, e2int(evt::yo_event_t::audioBalance), &tone, sizeof(tone));
+      // publish values to Web/MQTT
       _embui_publish_audio_values();
       break;
 
@@ -350,6 +361,7 @@ void AudioController::_embui_player_commands(Interface *interf, JsonVariantConst
 
 void AudioController::_embui_publish_audio_values(Interface* interf){
   // here now only WS publish, todo: MQTT
+  LOGD(T_Display, println, "snd publish");
 
   // this method could be called with or without Interface object
   // with - when WebUI requests for data from it's side

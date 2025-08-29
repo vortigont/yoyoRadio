@@ -685,6 +685,9 @@ void DisplayControl::init(){
     handle->get_item(T_brightness, brt);
     setDevBrightness(brt);
   }
+  // event bus
+  _events_subsribe();
+  // embui actions
   _embui_actions_register();
 }
 
@@ -698,14 +701,6 @@ void DisplayControl::setBrightness(int32_t val){
   std::unique_ptr<nvs::NVSHandle> handle = nvs::open_nvs_handle(T_Display, NVS_READWRITE, &err);
   if (err == ESP_OK){
     handle->set_item(T_brightness, brt);
-  }
-  // send notification to event bus
-  if (embui.feeders.available()){
-    // publish changed value to EmbUI feeds
-    Interface interf(&embui.feeders);
-    interf.json_frame_value();
-    interf.value(T_brightness, val);
-    interf.json_frame_flush();
   }
   // publish brightness change notification to event bus
   EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::brightness), &val, sizeof(val));  
@@ -733,13 +728,19 @@ void DisplayControl::_events_unsubsribe(){
 }
 
 void DisplayControl::_events_cmd_hndlr(int32_t id, void* data){
-  LOGV(T_Display, printf, "cmd event rcv:%d\n", id);
+  LOGD(T_Display, printf, "cmd event rcv:%d\n", id);
   switch (static_cast<evt::yo_event_t>(id)){
 
     // brightness control
     case evt::yo_event_t::displayBrightness :
       setBrightness(*reinterpret_cast<int32_t*>(data));
       break;
+
+    // status request
+    case evt::yo_event_t::reportStateAll :
+      EVT_POST_DATA(YO_NTF_STATE_EVENTS, e2int(evt::yo_event_t::brightness), &brt, sizeof(brt));
+      embui_publish();
+    break;
 
     default:;
   }
@@ -752,6 +753,16 @@ void DisplayControl::_embui_actions_register(){
 
 void DisplayControl::_embui_actions_unregister(){
   embui.action.remove(T_disp_brt);
+}
+
+void DisplayControl::embui_publish(){
+  LOGD(T_Display, println, "brt publish");
+  if (!embui.feeders.available()) return;
+  // publish value to EmbUI feeds
+  Interface interf(&embui.feeders);
+  interf.json_frame_value();
+  interf.value(T_brightness, brt);
+  interf.json_frame_flush();
 }
 
 

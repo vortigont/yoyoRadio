@@ -28,6 +28,9 @@ public:
   // low power mode enable/disable
   virtual void displaySuspend(bool state){ setBrightness( state ? 0 : brt); }
 
+protected:
+  virtual void embui_publish();
+
 private:
   // event function handlers
   esp_event_handler_instance_t _hdlr_cmd_evt{nullptr};
