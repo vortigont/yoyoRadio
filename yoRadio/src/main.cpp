@@ -25,11 +25,13 @@ void setup() {
   // Start event loop task
   evt::start();
 
-  LOGI(T_BOOT, println, "Creating hw configuration");
-  load_hwcomponets_configuration();
-
+  // bring up radio firts (it would also mount LittleFS)
   LOGI(T_BOOT, println, "Start WebServer");
   netserver.begin();
+
+  LOGI(T_BOOT, println, "Loading hw configuration");
+  load_hwcomponets_configuration();
+
   //telnet.begin();
 /*
   if(SDC_CS!=255) {
