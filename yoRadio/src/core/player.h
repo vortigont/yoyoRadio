@@ -166,7 +166,6 @@ public:
 
     // needed in Config::changeMode for some reason
     bool isRunning(){ return audio.isRunning(); }
-    bool setFilePos(uint32_t pos){ return audio.setFilePos(pos); };
     // needed in src/core/netserver.cpp
     uint32_t getFileSize(){ return audio.getFileSize(); };
     uint32_t getAudioCurrentTime(){ return audio.getAudioCurrentTime(); };
@@ -217,7 +216,7 @@ private:
 
   // Audio lib callbacks
 
-  void _audio_cb_generic(const char* msg, audiolib::callback_type_t type);
+  void _audio_cb_generic( Audio::event_t e, const char* msg);
 };
 
 // generic I2S DAC for ESP32 with software volume control

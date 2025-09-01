@@ -33,9 +33,11 @@ void AudioController::init() {
   // EmbUI messages
   _embui_actions_register();
   // Audio callbacks
-  audio.setLiteralCallback([this](const char* msg, audiolib::callback_type_t type){ _audio_cb_generic(msg, type); });
+  audio.setLiteralCallback([this](Audio::event_t e, const char* msg){ _audio_cb_generic(e, msg); });
   // Enable all type of literal callbacks (most verbose one)
-  audio.enableCallbackType(audiolib::callback_type_t::all, true);
+  audio.enableCallbackType(Audio::evt_all, true);
+  audio.enableCallbackType(Audio::evt_image, false);
+  audio.enableCallbackType(Audio::evt_lyrics, false);
 }
 
 void AudioController::setError(const char *e){
@@ -400,15 +402,15 @@ void AudioController::_embui_publish_audio_values(Interface* interf){
   interf->json_frame_flush();
 }
 
-void AudioController::_audio_cb_generic(const char* msg, audiolib::callback_type_t type){
-  switch (type){
-    case audiolib::callback_type_t::id3data :
+void AudioController::_audio_cb_generic(Audio::event_t e, const char* msg){
+  switch (e){
+    case Audio::evt_id3data :
       LOGI(T_Player, print, "id3data: ");
       LOG(println, msg);
       break;
 
     // track title
-    case audiolib::callback_type_t::streamtitle : {
+    case Audio::evt_streamtitle : {
       LOGI(T_Player, print, "Stream title: ");
       LOG(println, msg);
       // copy by value including null terminator
@@ -417,7 +419,7 @@ void AudioController::_audio_cb_generic(const char* msg, audiolib::callback_type
     } break;
 
     // station title
-    case audiolib::callback_type_t::station : {
+    case Audio::evt_name : {
       LOGI(T_Player, print, "Station title: ");
       LOG(println, msg);
       // copy by value including null terminator
@@ -425,34 +427,34 @@ void AudioController::_audio_cb_generic(const char* msg, audiolib::callback_type
       EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerStationTitle), msg, strlen(msg)+1);
     } break;
 
-    case audiolib::callback_type_t::bitrate : {
+    case Audio::evt_bitrate : {
         LOGI(T_Player, print, "BitRate: ");
         LOG(println, msg);
         audio_info_t info{ audio.getBitRate() / 1000, audio.getCodecname() };
         EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerAudioInfo), &info, sizeof(info));
     } break;
 /*
-    case audiolib::callback_type_t::id3lyrics :
+    case Audio::id3lyrics :
       break;
-    case audiolib::callback_type_t::commercial :
+    case Audio::commercial :
       break;
-    case audiolib::callback_type_t::icyurl :
+    case Audio::icyurl :
       break;
-    case audiolib::callback_type_t::icylogo :
+    case Audio::icylogo :
       break;
-    case audiolib::callback_type_t::icydescr :
+    case Audio::icydescr :
       break;
-    case audiolib::callback_type_t::lasthost :
+    case Audio::lasthost :
       // passes connection URL
       break;
 */
-    case audiolib::callback_type_t::eof :
+    case Audio::evt_eof :
       LOGI(T_Player, println, "End of file reached");
       break;
 
     default: {
       // default is just print the message
-      LOGI(T_Player, printf, "Audio %u:", static_cast<size_t>(type));
+      LOGI(T_Player, printf, "Audio %u: ", e);
       LOG(println, msg);
       #ifdef USE_NEXTION
         //nextion.audioinfo(info);    // nextion print debug messages???
