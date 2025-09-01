@@ -144,4 +144,13 @@ public:
   void render(const MuiItem* parent, void* r = nullptr) override;
   bool refresh_req() const override { return _pending; };
   void setInfo(audio_info_t* i){ _info = *i; _pending = true; }
+
+private:
+
+  /**
+   * @brief subscribe to event mesage bus
+   * 
+   */
+  void _events_subsribe();
+
 };
