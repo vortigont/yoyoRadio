@@ -124,21 +124,14 @@ MuiItem_Bitrate_Widget::MuiItem_Bitrate_Widget(muiItemId id,
   int16_t x, int16_t y,
   uint16_t w, uint16_t h,
   AGFX_text_t tcfg)
-    : MuiItem_Uncontrollable(id), _x(x), _y(y), _w(w), _h(h),  _tcfg(tcfg) {
-
-  // bitrate state change event picker
-  esp_event_handler_instance_register_with(evt::get_hndlr(), YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerAudioInfo),
-    [](void* self, esp_event_base_t base, int32_t id, void* data){ static_cast<MuiItem_Bitrate_Widget*>(self)->setInfo(static_cast<audio_info_t*>(data)); },
-    this, &_hdlr_chg_evt
-  );
-
-};
+    : MuiItem_Uncontrollable(id), _x(x), _y(y), _w(w), _h(h),  _tcfg(tcfg) { _events_subsribe(); };
 
 MuiItem_Bitrate_Widget::MuiItem_Bitrate_Widget(muiItemId id, const bitrate_box_cfg_t *cfg, int16_t screen_w, int16_t screen_h) : MuiItem_Uncontrollable(id){
   std::tie(_x, _y, _w, _h) = cfg->box.getBoxDimensions(screen_w, screen_h);
   _radius = cfg->radius;
   _tcfg = cfg->style;
   _bitrateFmt = cfg->bitrateFmt;
+  _events_subsribe();
 };
 
 MuiItem_Bitrate_Widget::~MuiItem_Bitrate_Widget(){
@@ -179,6 +172,14 @@ void MuiItem_Bitrate_Widget::render(const MuiItem* parent, void* r){
   g->setTextColor(_tcfg.bgcolor);
   g->print(a.data());
   _pending = false;
+}
+
+void MuiItem_Bitrate_Widget::_events_subsribe(){
+  // bitrate state change event picker
+  esp_event_handler_instance_register_with(evt::get_hndlr(), YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerAudioInfo),
+    [](void* self, esp_event_base_t base, int32_t id, void* data){ static_cast<MuiItem_Bitrate_Widget*>(self)->setInfo(static_cast<audio_info_t*>(data)); },
+    this, &_hdlr_chg_evt
+  );
 }
 
 // The function convert value to RGB565 color value
