@@ -656,6 +656,8 @@ void DisplayGFX::load_main_preset(const std::vector<widget_cfgitem_t>& preset){
     }
   }
 
+  _mpp.addMuippItem(new SpectrumAnalyser_Widget(_mpp.nextIndex()), root_page);
+
   // this is not a real menu, so no need to activate the items
   //pageAutoSelect(root_page, some_id);
   // start menu from page mainmenu

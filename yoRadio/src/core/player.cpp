@@ -7,6 +7,11 @@
 #include "evtloop.h"
 #include "log.h"
 
+void data_proc(const int16_t *data, int32_t size, bool* do_out){
+  LOGD(T_Player, printf, "i2s data samples: %u\n", size);
+}
+
+
 AudioController::~AudioController(){
   _events_unsubsribe();
   _embui_actions_unregister();
@@ -38,6 +43,8 @@ void AudioController::init() {
   audio.enableCallbackType(Audio::evt_all, true);
   audio.enableCallbackType(Audio::evt_image, false);
   audio.enableCallbackType(Audio::evt_lyrics, false);
+  if (_dsp.init())
+    audio.setI2SProcessCallback( [this](const int16_t* outBuff, int32_t validSamples, bool *continueI2S){ _dsp.data_sink(outBuff, validSamples, continueI2S); *continueI2S = true; } );
 }
 
 void AudioController::setError(const char *e){

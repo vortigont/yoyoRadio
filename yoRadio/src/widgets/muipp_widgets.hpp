@@ -145,3 +145,19 @@ public:
   bool refresh_req() const override { return _pending; };
   void setInfo(audio_info_t* i){ _info = *i; _pending = true; }
 };
+
+
+class SpectrumAnalyser_Widget : public MuiItem_Uncontrollable {
+  //muipp::grid_box _box;
+  int16_t _y{200};
+  uint8_t _h{0};
+
+public:
+  SpectrumAnalyser_Widget(muiItemId id /*, const muipp::grid_box &box*/): MuiItem_Uncontrollable(id, nullptr)/*, _box(box)*/ {};
+  void render(const MuiItem* parent, void* r = nullptr) override { return _draw_spectrum(static_cast<Arduino_GFX*>(r)); };
+  bool refresh_req() const override {return true; };
+  
+private:
+  void _draw_spectrum(Arduino_GFX* dsp);
+
+};

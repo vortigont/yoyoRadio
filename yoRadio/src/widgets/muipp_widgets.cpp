@@ -1,5 +1,6 @@
 #if __has_include("Arduino_GFX.h")
 #include "muipp_widgets.hpp"
+#include "components.hpp"
 #include "agfx.h"
 #include "locale/l10n.h"
 #include "core/log.h"
@@ -178,6 +179,60 @@ void MuiItem_Bitrate_Widget::render(const MuiItem* parent, void* r){
   g->setTextColor(_tcfg.bgcolor);
   g->print(a.data());
   _pending = false;
+}
+
+// The function convert value to RGB565 color value
+static int8_t colors[3][3] = { {0, 0, 31}, {0, 63, 0}, {31, 0, 0} };
+static uint16_t convert_to_rgb(uint8_t minval, uint8_t maxval, int8_t val)
+{
+    uint16_t result;
+
+    float i_f = (float)(val - minval) / (float)(maxval - minval) * 2;
+
+    int Ii = i_f;
+    float If = i_f - Ii;
+
+    int8_t *c1 = colors[Ii];
+    int8_t *c2 = colors[Ii + 1];
+    uint16_t res_colors[3];
+
+    res_colors[0] = c1[0] + If * (c2[0] - c1[0]);
+    res_colors[1] = c1[1] + If * (c2[1] - c1[1]);
+    res_colors[2] = c1[2] + If * (c2[2] - c1[2]);
+    result = res_colors[2] | (res_colors[1] << 5) | (res_colors[0] << 11);
+    return result;
+}
+
+void SpectrumAnalyser_Widget::_draw_spectrum(Arduino_GFX* dsp){
+  const float* result_data = player->getDSP().getData();
+  size_t len = player->getDSP().getDataSize();
+
+  // clear amplitude area
+  dsp->fillRect(512, _y - 128, 512, 256, 0);
+  // Add left channel to the screen
+  // The order of the values inverted
+  for (int x = 0 ; x != len / 2; x++) {
+    // Left channel:
+    // invert the order of values and clamp it to 0-127
+    float data = result_data[len / 2 - x - 1];
+
+    // Convert input value in dB to the color - this will draw "waterfall spectrogram"
+    dsp->writePixel(x, _y + _h, convert_to_rgb(0, 128, clamp(data, 0.0F, 127.0F)));
+    // this will draw dot amplitudes (with inverted Y axis)
+    dsp->writePixel(x + 512, _y + 127 - data, RGB565_CYAN);
+
+    // Right channel:
+    data = result_data[len / 2 + x];
+    // Convert input value in dB to the color - this will draw "waterfall spectrogram"
+    dsp->writePixel(len / 2 + x, _y + _h, convert_to_rgb(0, 128, clamp(data, 0.0F, 127.0F)));
+    // this will draw dot amplitudes (with inverted Y axis)
+    dsp->writePixel(len / 2 + x + 512, _y + 127 - data, RGB565_CYAN);
+  }
+  
+  // move spectrogram offset
+  ++_h;
+  // reset offset window
+  if (_h>127) _h = 0;
 }
 
 #endif  // #if __has_include("Arduino_GFX.h")

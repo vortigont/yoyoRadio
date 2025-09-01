@@ -6,6 +6,7 @@
 #include "Audio.h"
 #include "es8311.h"
 #include "EmbUI.h"
+#include "spectrum.hpp"
 
 #ifndef MQTT_BURL_SIZE
   #define MQTT_BURL_SIZE  512
@@ -66,6 +67,8 @@ class AudioController {
     plStatus_e  _status;
     char        _plError[PLERR_LN];
 
+  SpectraDSP _dsp;
+
     void _stop();
     void _play(uint16_t stationId);
 
@@ -110,6 +113,8 @@ public:
 
     // virtual methods
     virtual void init();
+
+    SpectraDSP& getDSP(){ return _dsp; };
 
     /**
      * @brief Set player's Volume
