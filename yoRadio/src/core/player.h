@@ -67,8 +67,6 @@ class AudioController {
     plStatus_e  _status;
     char        _plError[PLERR_LN];
 
-  SpectraDSP _dsp;
-
     void _stop();
     void _play(uint16_t stationId);
 
@@ -104,17 +102,12 @@ protected:
 public:
     bool resumeAfterUrl = false;
     uint32_t sd_min, sd_max;
-    #ifdef MQTT_ROOT_TOPIC
-    char      burl[MQTT_BURL_SIZE];  /* buffer for browseUrl  */
-    #endif
 
     AudioController() = default;
     virtual ~AudioController();
 
     // virtual methods
     virtual void init();
-
-    SpectraDSP& getDSP(){ return _dsp; };
 
     /**
      * @brief Set player's Volume
@@ -176,7 +169,9 @@ public:
     uint32_t getAudioCurrentTime(){ return audio.getAudioCurrentTime(); };
     uint32_t getAudioFileDuration(){ return getAudioFileDuration(); };
 
-
+    // attach DSP callback
+    void setDSPCallback(Audio::i2s_process_cb_t cb){ audio.setI2SProcessCallback(cb); };
+    void unsetDSPCallback(){ audio.setI2SProcessCallback(nullptr); }
 
 private:
   std::mutex _mtx;

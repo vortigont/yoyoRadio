@@ -43,8 +43,6 @@ void AudioController::init() {
   audio.enableCallbackType(Audio::evt_all, true);
   audio.enableCallbackType(Audio::evt_image, false);
   audio.enableCallbackType(Audio::evt_lyrics, false);
-  if (_dsp.init())
-    audio.setI2SProcessCallback( [this](const int16_t* outBuff, int32_t validSamples, bool *continueI2S){ _dsp.data_sink(outBuff, validSamples, continueI2S); *continueI2S = true; } );
 }
 
 void AudioController::setError(const char *e){
@@ -65,6 +63,8 @@ void AudioController::_stop(){
   // update stream's meta info
   audio_info_t info{ 0, T_n_a };
   EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerAudioInfo), &info, sizeof(info));
+  // notify that playback has stopped
+  EVT_POST(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerStop));
 }
 
 #ifndef PL_QUEUE_TICKS
@@ -106,6 +106,8 @@ void AudioController::_play(uint16_t stationId) {
     // notify that device has switched to 'webstream' playback mode
     int32_t d = e2int(evt::yo_state::webstream);
     EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::devMode), &d, sizeof(d));
+    // notify that playback has started
+    EVT_POST(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerPlay));
   } else {
     //telnet.printf("##ERROR#:\tError connecting to %s\n", config.station.url);
     _stop();
@@ -255,10 +257,9 @@ void AudioController::_events_cmd_hndlr(int32_t id, void* data){
   switch (static_cast<evt::yo_event_t>(id)){
 
     // Play radio station from a playlist
-    case evt::yo_event_t::playerStation : {
+    case evt::yo_event_t::playerStation :
       _play_station_from_playlist(*reinterpret_cast<int32_t*>(data));
       break;
-    }
 
     case evt::yo_event_t::playerStop :
       _stop();
