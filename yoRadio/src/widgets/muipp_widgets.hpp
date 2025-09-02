@@ -3,6 +3,7 @@
 #include "muipp_agfx.hpp"
 #include "core/common.h"
 #include "core/evtloop.h"
+#include "core/spectrum.hpp"
 
 // a list of known widget types
 enum class yoyo_wdgt_t {
@@ -11,7 +12,8 @@ enum class yoyo_wdgt_t {
   clock,
   text,
   scrollerStation,
-  scrollerTitle
+  scrollerTitle,
+  spectrumAnalyzer
 };
 
 /**
@@ -156,17 +158,57 @@ private:
 };
 
 
+// *****  SpectrumAnalyser_Widget
+/**
+ * @brief config for Spectrum Analyzer widget box
+ * 
+ */
+struct spectrum_box_cfg_t {
+  // widget box on a grid
+  muipp::grid_box box;
+};
+
+/**
+ * @brief graphics spectrum analyzer
+ * 
+ */
 class SpectrumAnalyser_Widget : public MuiItem_Uncontrollable {
-  //muipp::grid_box _box;
-  int16_t _y{200};
-  uint8_t _h{0};
+  int16_t _x, _y;
+  uint16_t _w, _h;
+  // y-offset for spectrogram
+  uint16_t _hh{0};
 
 public:
-  SpectrumAnalyser_Widget(muiItemId id /*, const muipp::grid_box &box*/): MuiItem_Uncontrollable(id, nullptr)/*, _box(box)*/ {};
-  void render(const MuiItem* parent, void* r = nullptr) override { return _draw_spectrum(static_cast<Arduino_GFX*>(r)); };
-  bool refresh_req() const override {return true; };
-  
-private:
-  void _draw_spectrum(Arduino_GFX* dsp);
+  SpectrumAnalyser_Widget(muiItemId id, const muipp::grid_box &cfg, int16_t screen_w, int16_t screen_h);
+  ~SpectrumAnalyser_Widget();
 
+  void render(const MuiItem* parent, void* r = nullptr);
+  bool refresh_req() const override { return _running; };
+
+  enum class visual_t { bands, spectrogram };
+
+private:
+  bool _running{false}, _cleanup{false};
+  // visualization type
+  enum visual_t _v{visual_t::bands};
+
+  esp_event_handler_instance_t _hdlr_chg_evt{nullptr};
+  
+  SpectraDSP _spectradsp;
+
+  void _draw_spectrum(Arduino_GFX* g);
+
+  void _draw_bands(Arduino_GFX* g);
+
+  // cleanup widget area when audio stops
+  void _clean_canvas(Arduino_GFX* g);
+
+  /**
+   * @brief subscribe to event mesage bus
+   * 
+   */
+  void _events_subsribe();
+
+  // change events
+  void _events_chg_hndlr(int32_t id, void* data);
 };

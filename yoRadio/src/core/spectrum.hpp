@@ -62,7 +62,7 @@ private:
 	// flag that indicates that all buffs are alloc'ed
 	bool _ready{false};
 	// amplifying coefficient for scaling resulting data
-	float _amp{8};
+	float _amp{6};
 	// FFT, data and window buffers
 	int16_t *_fft_w_table_sc16{nullptr}, *_audio_buffer{nullptr}, *_wnd_buffer{nullptr};
 	// FFT result buffer

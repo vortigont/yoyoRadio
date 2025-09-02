@@ -652,11 +652,13 @@ void DisplayGFX::load_main_preset(const std::vector<widget_cfgitem_t>& preset){
         _mpp.addMuippItem(_scroll_title2, root_page);
         break;
 
+      case yoyo_wdgt_t::spectrumAnalyzer :
+        _mpp.addMuippItem(new SpectrumAnalyser_Widget(_mpp.nextIndex(), reinterpret_cast<const spectrum_box_cfg_t*>(i.cfg)->box, _gfx->width(), _gfx->height()), root_page);
+        break;
+
       default:;
     }
   }
-
-  _mpp.addMuippItem(new SpectrumAnalyser_Widget(_mpp.nextIndex()), root_page);
 
   // this is not a real menu, so no need to activate the items
   //pageAutoSelect(root_page, some_id);

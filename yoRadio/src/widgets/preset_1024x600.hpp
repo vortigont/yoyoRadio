@@ -79,6 +79,13 @@ static constexpr bitrate_box_cfg_t bitrate_cfg {
   T_bitrate_Kbps                  // print format
 };
 
+
+// Spectrum Analyzer
+static constexpr spectrum_box_cfg_t spectrum_cfg {
+  {32, 32, 0, 16, 16, 16},        // grid x,y; box position on a grid (x,y), box size on a grid (w,h)
+
+};
+
 // a preset with set of widgets
 
 static const std::vector<widget_cfgitem_t> cfg1 {
@@ -91,7 +98,9 @@ static const std::vector<widget_cfgitem_t> cfg1 {
   // Scroller 2 - track title, etc...
   { yoyo_wdgt_t::scrollerTitle, &scroll_s2_cfg},
   // bitrate
-  { yoyo_wdgt_t::bitrate, &bitrate_cfg}
+  { yoyo_wdgt_t::bitrate, &bitrate_cfg},
+  // spectrum
+  { yoyo_wdgt_t::spectrumAnalyzer, &spectrum_cfg }
 };
 
 };    // namespace   display_320x480
