@@ -34,14 +34,14 @@ static constexpr text_wdgt_t device_state_cfg {
     FONT_SMALL_U8G2,              // font
     RGB565_WHITE, 0,              // color, bgcolor;
     1,                            // font size multiplicator
-    muipp::text_align_t::center, muipp::text_align_t::baseline,   // horizontal / vertical alignment
+    muipp::text_align_t::left, muipp::text_align_t::baseline,   // horizontal / vertical alignment
     true                          // transparent background
   }
 };
 
 // Scroller 1 - station title or so
 static constexpr scroller_cfg_t scroll_s1_cfg {
-  {32, 32, 0, 0, 15, 1},           // grid x,y; box position on a grid, box size on a grid;
+  {32, 32, 0, 0, 16, 2},           // grid x,y; box position on a grid, box size on a grid;
   {
     FONT_SMALL_U8G2,              // font
     RGB565_OLIVE, 0,              // color, bgcolor;
@@ -54,7 +54,7 @@ static constexpr scroller_cfg_t scroll_s1_cfg {
 
 // Scroller 2 - song title or so
 static constexpr scroller_cfg_t scroll_s2_cfg {
-  {32, 32, 0, 1, 16, 1},           // grid x,y; box position on a grid, box size on a grid;
+  {32, 32, 0, 2, 16, 2},           // grid x,y; box position on a grid, box size on a grid;
   {
     FONT_SMALL_U8G2,              // font
     RGB565_CYAN, 0,               // color, bgcolor;
@@ -67,7 +67,7 @@ static constexpr scroller_cfg_t scroll_s2_cfg {
 
 // Bitrate widget box
 static constexpr bitrate_box_cfg_t bitrate_cfg {
-  {32, 32, 18, 0, 3, 3},           // grid x,y; box position on a grid (x,y), box size on a grid (w,h)
+  {32, 32, 16, 1, 3, 3},           // grid x,y; box position on a grid (x,y), box size on a grid (w,h)
   10,                             // radius for round-shaped corners
   {
     FONT_SMALL_U8G2,              // font
