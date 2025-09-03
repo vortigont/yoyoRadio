@@ -17,8 +17,8 @@
 
 
 Currently this project is developed and tested for two combo modules:
- - Guition `JC1060P470` (ESP32-P4, yes, it works pretty fine on P4 chip, Maestro!)
- - Guition `JC3248W535` (ESP32-S3)
+ - Guition [JC1060P470](https://www.aliexpress.com/item/1005008328088576.html) (ESP32-P4, yes, it works pretty fine on P4 chip, Maestro!)
+ - Guition [JC3248W535](https://www.aliexpress.com/item/1005007566315926.html) (ESP32-S3)
 
 Audio core, streaming, basic display elements and WebUI part is fully functional, the rest of the features would come later.
 Stay in touch!
