@@ -90,17 +90,17 @@ static constexpr spectrum_box_cfg_t spectrum_cfg {
 
 static const std::vector<widget_cfgitem_t> cfg1 {
   // Clock
-  { yoyo_wdgt_t::clock, &clock_cfg},
+  { T_clock, &clock_cfg},
   // text - device state
-  { yoyo_wdgt_t::text, &device_state_cfg},
+  { T_stateHeader, &device_state_cfg},
   // Scroller 1 - station
-  { yoyo_wdgt_t::scrollerStation, &scroll_s1_cfg},
+  { T_scrollerStation, &scroll_s1_cfg},
   // Scroller 2 - track title, etc...
-  { yoyo_wdgt_t::scrollerTitle, &scroll_s2_cfg},
+  { T_scrollerTitle, &scroll_s2_cfg},
   // bitrate
-  { yoyo_wdgt_t::bitrate, &bitrate_cfg},
+  { T_bitrate, &bitrate_cfg},
   // spectrum
-  { yoyo_wdgt_t::spectrumAnalyzer, &spectrum_cfg }
+  { T_spectrumAnalyzer, &spectrum_cfg }
 };
 
 };    // namespace   display_320x480

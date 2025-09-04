@@ -6,10 +6,6 @@
 */
 
 
-// Manager that creates dynamicaly loaded components
-#include "modules/mod_manager.hpp"
-extern ModuleManager zookeeper;
-
 // ******************
 extern AudioController* player;
 

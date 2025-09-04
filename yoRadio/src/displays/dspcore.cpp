@@ -409,6 +409,10 @@ void DisplayGFX::_layoutChange(bool played){
 }
 
 void DisplayGFX::_loopDspTask() {
+  // first force draw the screen
+  _mpp->render(_gfx);
+  _gfx->flush();
+
   while(true){
     requestParams_t request;
     if(xQueueReceive(_displayQueue, &request, DSP_QUEUE_TICKS)){
@@ -476,7 +480,7 @@ void DisplayGFX::_loopDspTask() {
     }
 
     // refresh screen items if needed
-    if (_mpp.refresh(_gfx)){
+    if (_mpp->refresh(_gfx)){
       _gfx->flush();
     }
   }
@@ -594,79 +598,6 @@ void DisplayGFX::_events_chg_hndlr(int32_t id, void* data){
     default:;
   }
 
-}
-
-void DisplayGFX::load_main_preset(const std::vector<widget_cfgitem_t>& preset){
-  // purge entire container - now I use only one set, so should be OK untill multiple sets of pages are introduced
-  _mpp.clear();
-  // purge existing objects if any
-  _title_status.reset();
-  _scroll_title1.reset();
-  _scroll_title2.reset();
-
-  muiItemId root_page = _mpp.makePage();  // root page
-
-  // parse the preset and populate widgets set
-  for (auto i : preset){
-    switch (i.wtype){
-      // BitRate Widget
-      case yoyo_wdgt_t::bitrate :
-        _mpp.addMuippItem(new MuiItem_Bitrate_Widget(_mpp.nextIndex(), reinterpret_cast<const bitrate_box_cfg_t*>(i.cfg), _gfx->width(), _gfx->height()), root_page);
-        break;
-
-      // Clock
-      case yoyo_wdgt_t::clock :
-        _mpp.addMuippItem(new ClockWidget(_mpp.nextIndex(), *reinterpret_cast<const clock_cfg_t*>(i.cfg)->clk, *reinterpret_cast<const clock_cfg_t*>(i.cfg)->date), root_page);
-        break;
-
-      // Status title
-      case yoyo_wdgt_t::text :
-        _title_status = std::make_shared<MuiItem_AGFX_StaticText>(
-          _mpp.nextIndex(),
-          device_state_literal.at(0) /* "idle" */,
-          reinterpret_cast<const text_wdgt_t*>(i.cfg)->place.getAbsoluteXY(_gfx->width(), _gfx->height()),  // unwrap to real position
-          reinterpret_cast<const text_wdgt_t*>(i.cfg)->style
-        );
-        _mpp.addMuippItem(_title_status, root_page);
-        break;
-
-      // Scroller - main title / radio title
-      case yoyo_wdgt_t::scrollerStation :
-        _scroll_title1 = std::make_shared<MuiItem_AGFX_TextScroller>(
-            _mpp.nextIndex(),
-            reinterpret_cast<const scroller_cfg_t*>(i.cfg)->box.getBoxDimensions(_gfx->width(), _gfx->height()),  // unwrap into absolute position
-            reinterpret_cast<const scroller_cfg_t*>(i.cfg)->scroll_speed,
-            reinterpret_cast<const scroller_cfg_t*>(i.cfg)->style);
-        // let it scroll "ёёRadio" by default :)
-        _scroll_title1->setText("ёёRadio");
-        _mpp.addMuippItem(_scroll_title1, root_page);
-        break;
-
-      // Scroller - track ttile (kind of dublicate, but will do for now)
-      case yoyo_wdgt_t::scrollerTitle :
-        _scroll_title2 = std::make_shared<MuiItem_AGFX_TextScroller>(
-            _mpp.nextIndex(),
-            reinterpret_cast<const scroller_cfg_t*>(i.cfg)->box.getBoxDimensions(_gfx->width(), _gfx->height()),  // unwrap into absolute position
-            reinterpret_cast<const scroller_cfg_t*>(i.cfg)->scroll_speed,
-            reinterpret_cast<const scroller_cfg_t*>(i.cfg)->style);
-        _mpp.addMuippItem(_scroll_title2, root_page);
-        break;
-
-      case yoyo_wdgt_t::spectrumAnalyzer :
-        _mpp.addMuippItem(new SpectrumAnalyser_Widget(_mpp.nextIndex(), reinterpret_cast<const spectrum_box_cfg_t*>(i.cfg)->box, _gfx->width(), _gfx->height()), root_page);
-        break;
-
-      default:;
-    }
-  }
-
-  // this is not a real menu, so no need to activate the items
-  //pageAutoSelect(root_page, some_id);
-  // start menu from page mainmenu
-  _mpp.menuStart(root_page);
-  // render newly created screen
-  _mpp.render(_gfx);
-  _gfx->flush();
 }
 
 

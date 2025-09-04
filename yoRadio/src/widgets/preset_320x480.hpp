@@ -83,14 +83,9 @@ static constexpr bitrate_box_cfg_t bitrate_cfg {
 
 static const std::vector<widget_cfgitem_t> cfg1 {
   // Clock
-  { yoyo_wdgt_t::clock, &clock_cfg},
+  { T_clock, &clock_cfg},
   // text - device state
-  { yoyo_wdgt_t::text, &device_state_cfg},
-  { yoyo_wdgt_t::bitrate, &bitrate_cfg}
-  // Scroller 1 - station
-  //{ yoyo_wdgt_t::scrollerStation, &scroll_s1_cfg},
-  // Scroller 2 - track title, etc...
-  //{ yoyo_wdgt_t::scrollerTitle, &scroll_s2_cfg},
+  { T_stateHeader, &device_state_cfg}
 };
 
 };    // namespace   display_320x480

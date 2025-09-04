@@ -1,6 +1,8 @@
 #include "nvs_handle.hpp"
 #include "components.hpp"
+#include "core/const_strings.h"
 #include "displays/dspcore.h"
+#include "widgets/widget_dispatcher.hpp"
 // device defines
 #include "devboards/JC3248W535.hpp"
 #include "devboards/JC1060P470C.hpp"
@@ -10,7 +12,7 @@
 
 #define   MAX_BOOT_FAIL_CNT   5
 
-static constexpr const char* T_dev_JC3248W535         = "JC3248W535";     //  Guition JC3248W535
+static constexpr const char* T_dev_JC3248W535         = "JC3248W535";     //  Guition JC3248W535 ESP32-S3
 static constexpr const char* T_dev_JC1060P470         = "JC1060P470";     //  Guition JC1060P470 ESP32-P4
 
 // var to keep boot couter across reboots
@@ -18,16 +20,14 @@ RTC_DATA_ATTR int setupCnt = 0;
 
 // Audio player controller
 AudioController* player{nullptr};
-// Display
-Display* display{nullptr};
-DisplayControl* dctrl{nullptr};
 // ArduinoGFX objects
 Arduino_DataBus* bus{nullptr};
 Arduino_GFX* agfx{nullptr};
-
-
-// Module Manager instance
-ModuleManager zookeeper;
+// Widgets
+Widget_Dispatcher* wdispatcher{nullptr};
+// Display
+Display* display{nullptr};
+DisplayControl* dctrl{nullptr};
 
 
 
@@ -42,7 +42,7 @@ void load_hwcomponets_configuration(){
     if (err == ESP_OK)
       handle->erase_all();
 
-    LOGE(T_profile, printf, "Bootloop count:%u, aborting device configuration, pls login to WebIU and revise your setup", setupCnt);
+    LOGE(T_profile, printf, "Bootloop count:%u, aborting device configuration, pls login to WebUI and revise your setup", setupCnt);
     return;
   }
   
@@ -86,14 +86,18 @@ void load_device_JC3248W535(){
 
   // create Agfx object
   agfx = JC3248W535::create_display_dev(JC3248W535::display, bus);
+  
+  // create Widget dispatcher
+  wdispatcher = new Widget_Dispatcher(agfx->width(), agfx->height(), &display_320x480::cfg1);
+
 
   // link the above into Display object
-  display = new DisplayGFX(agfx);
+  display = new DisplayGFX(agfx, wdispatcher->getMuipp());
   // Init the display UI
   display->init();
 
   // apply widget preset for 320x240
-  display->load_main_preset(display_320x480::cfg1);
+  //display->load_main_preset(display_320x480::cfg1);
 }
 
 void load_device_JC1060P470(){
@@ -110,11 +114,13 @@ void load_device_JC1060P470(){
 
   // create Agfx object
   agfx = JC1060P470::create_display_dev(JC1060P470::display);
-    // link the above into Display object
-  display = new DisplayGFX(agfx);
+
+  // create Widget dispatcher
+  wdispatcher = new Widget_Dispatcher(agfx->width(), agfx->height(), &display_1024x600::cfg1);
+  wdispatcher->begin();
+
+  // link the above into Display object
+  display = new DisplayGFX(agfx, wdispatcher->getMuipp());
   // Init the display UI
   display->init();
-  
-  // apply widget preset for 1024x600
-  display->load_main_preset(display_1024x600::cfg1);
 }

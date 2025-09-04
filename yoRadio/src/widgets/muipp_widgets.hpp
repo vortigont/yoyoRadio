@@ -10,11 +10,23 @@ enum class yoyo_wdgt_t {
   unknown = 0,
   bitrate,
   clock,
-  text,
-  scrollerStation,
-  scrollerTitle,
+  textStatic,
+  textScroller,
   spectrumAnalyzer
 };
+
+/**
+ * @brief this struct is a configuration placeholder that carries a widget type and an abstract pointer to it's config struct
+ * used to define static configuration presets
+ * @note mapping widget's label to it's class type is done via 'widgets_map' struct in "widget_dispatcher.hpp"
+ */
+struct widget_cfgitem_t {
+    // widget's label
+    const char* wlabel;
+    // a pointer to it's configuration
+    const void* cfg;
+};
+
 
 /**
  * @brief Text-alike widget configuration

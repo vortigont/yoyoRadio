@@ -143,11 +143,11 @@ public:
 class DisplayGFX : public Display {
   // display graphics object
   Arduino_GFX *_gfx;
-  MuiPlusPlus _mpp;
+  MuiPlusPlus *_mpp;
   
 
   public:
-    DisplayGFX(Arduino_GFX* gfx) : _gfx(gfx) {};
+    DisplayGFX(Arduino_GFX *gfx, MuiPlusPlus *mpp) : _gfx(gfx), _mpp(mpp) {};
     ~DisplayGFX();
 
     // initialize display (create device driver class)
@@ -162,15 +162,6 @@ class DisplayGFX : public Display {
     // send and event to display to process and draw specific component
     void putRequest(displayRequestType_e type, int payload=0);
 
-    // Widgets operations
-
-    /**
-     * @brief Loads a preset with widgets
-     * intended to load static configurations
-     * 
-     * @param cfg 
-     */
-    void load_main_preset(const std::vector<widget_cfgitem_t>& preset) override;
 
 private:
 /*
