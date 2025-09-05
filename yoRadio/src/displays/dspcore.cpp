@@ -95,21 +95,22 @@ void DisplayGFX::_loopDspTask() {
 
 void DisplayGFX::_events_subsribe(){
   // command events
+/*
   esp_event_handler_instance_register_with(evt::get_hndlr(), YO_CMD_EVENTS, ESP_EVENT_ANY_ID,
     [](void* self, esp_event_base_t base, int32_t id, void* data){ static_cast<DisplayGFX*>(self)->_events_cmd_hndlr(id, data); },
     this, &_hdlr_cmd_evt
   );
-
   // state change events
   esp_event_handler_instance_register_with(evt::get_hndlr(), YO_CHG_STATE_EVENTS, ESP_EVENT_ANY_ID,
     [](void* self, esp_event_base_t base, int32_t id, void* data){ static_cast<DisplayGFX*>(self)->_events_chg_hndlr(id, data); },
     this, &_hdlr_chg_evt
   );
+*/
 }
 
 void DisplayGFX::_events_unsubsribe(){
-  esp_event_handler_instance_unregister_with(evt::get_hndlr(), YO_CMD_EVENTS, ESP_EVENT_ANY_ID, _hdlr_cmd_evt);
-  esp_event_handler_instance_unregister_with(evt::get_hndlr(), YO_CHG_STATE_EVENTS, ESP_EVENT_ANY_ID, _hdlr_chg_evt);
+  //esp_event_handler_instance_unregister_with(evt::get_hndlr(), YO_CMD_EVENTS, ESP_EVENT_ANY_ID, _hdlr_cmd_evt);
+  //esp_event_handler_instance_unregister_with(evt::get_hndlr(), YO_CHG_STATE_EVENTS, ESP_EVENT_ANY_ID, _hdlr_chg_evt);
 }
 
 void DisplayGFX::_events_cmd_hndlr(int32_t id, void* data){
@@ -130,29 +131,9 @@ void DisplayGFX::_events_chg_hndlr(int32_t id, void* data){
   switch (static_cast<evt::yo_event_t>(id)){
     // device mode change - update "title_status" widget (todo: this should be done from inside the widget)
     case evt::yo_event_t::devMode : {
-      int32_t v = *static_cast<int32_t*>(data);
-      if (_title_status && v >= 0 && v < device_state_literal.size()){
-        _title_status->setName(device_state_literal.at(v));
-      }
     }
     break;
 
-    // new station title - update "title_status" widget
-    case evt::yo_event_t::playerStationTitle : {
-      // this is not thread-safe, to be fixed later (todo: this should be done from inside the widget)
-      if (_scroll_title1)
-        _scroll_title1->setText(static_cast<const char*>(data));
-    }
-    break;
-
-    // new track title - update "title_status" widget
-    case evt::yo_event_t::playerTrackTitle : {
-      // this is not thread-safe, to be fixed later
-      if (_scroll_title2)
-        _scroll_title2->setText(static_cast<const char*>(data));
-    }
-    break;
-    
     default:;
   }
 

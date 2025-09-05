@@ -47,6 +47,7 @@ class Widget_Dispatcher : public EmbUI_Unit_Manager {
 
 public:
   Widget_Dispatcher(int16_t w, int16_t h, const std::vector<widget_cfgitem_t>* bootstrap) : EmbUI_Unit_Manager("wdgts"), _w(w), _h(h), _bootstrap(bootstrap) {}
+  ~Widget_Dispatcher(){ _events_subsribe(); }
 
   // Access MuiPlusPlus object
   MuiPlusPlus* getMuipp(){ return &_mpp; }
@@ -78,6 +79,30 @@ private:
   MuiPlusPlus _mpp;
   muiItemId root_page;
 
+  // temporary objects till I will make a queue
+  std::shared_ptr<MuiItem_AGFX_TextScroller> _scroll_title1, _scroll_title2;
+
+  // event function handlers
+  esp_event_handler_instance_t _hdlr_cmd_evt{nullptr};
+  esp_event_handler_instance_t _hdlr_chg_evt{nullptr};
+  
+  /**
+   * @brief subscribe to event mesage bus
+   * 
+   */
+  void _events_subsribe();
+
+  /**
+   * @brief unregister from event loop
+   * 
+   */
+  void _events_unsubsribe();
+
+  // command events handler
+  void _events_cmd_hndlr(int32_t id, void* data);
+
+  // state change events handler
+  void _events_chg_hndlr(int32_t id, void* data);
 
   /**
    * @brief spawn a new instance of a module with supplied config
@@ -87,6 +112,6 @@ private:
   void spawn(std::string_view label) override;
 
   // spawn unit with static bootstrap config
-  void _spawn_static(yoyo_wdgt_t unit, const void* cfg);
+  void _spawn_static(yoyo_wdgt_t unit, const void* cfg, const char* lbl = NULL);
 
 };

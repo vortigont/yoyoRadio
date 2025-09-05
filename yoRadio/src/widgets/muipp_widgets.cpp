@@ -127,7 +127,7 @@ MuiItem_Bitrate_Widget::MuiItem_Bitrate_Widget(muiItemId id,
   AGFX_text_t tcfg)
     : MuiItem_Uncontrollable(id), _x(x), _y(y), _w(w), _h(h),  _tcfg(tcfg) { _events_subsribe(); };
 
-MuiItem_Bitrate_Widget::MuiItem_Bitrate_Widget(muiItemId id, const bitrate_box_cfg_t *cfg, int16_t screen_w, int16_t screen_h) : MuiItem_Uncontrollable(id){
+MuiItem_Bitrate_Widget::MuiItem_Bitrate_Widget(muiItemId id, const bitrate_box_cfg_t *cfg, int16_t screen_w, int16_t screen_h, const char* label) : MuiItem_Uncontrollable(id, label){
   std::tie(_x, _y, _w, _h) = cfg->box.getBoxDimensions(screen_w, screen_h);
   _radius = cfg->radius;
   _tcfg = cfg->style;

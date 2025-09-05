@@ -187,26 +187,6 @@ private:
   // state change events handler
   void _events_chg_hndlr(int32_t id, void* data);
 
-  // *** Main Screen ***
-  // a set of widgets for Main screen (where radio plays)
-  // it's not the best design but OK for now, for future I could use something like ViSets from the Iron project
-  /**
-   * @brief static text with device's status
-   * i.e. 'mode', 'playback'...
-   * 
-   */
-  MuiItem_pt _title_status;
-  /**
-   * @brief Scroller #1 - for station name
-   * 
-   */
-  std::shared_ptr<MuiItem_AGFX_TextScroller> _scroll_title1;
-  /**
-   * @brief Scroller #2 - for track title
-   * 
-   */
-  std::shared_ptr<MuiItem_AGFX_TextScroller> _scroll_title2;
-   
 };
 
 

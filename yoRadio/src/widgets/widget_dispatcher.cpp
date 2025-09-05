@@ -42,22 +42,22 @@ void Widget_Dispatcher::begin(){
   for (const auto i : *_bootstrap){
     switch (hash_djb2a(i.wlabel)){
       case "bitrate"_sh :
-        _spawn_static(yoyo_wdgt_t::bitrate, i.cfg);
+        _spawn_static(yoyo_wdgt_t::bitrate, i.cfg, T_bitrate);
         break;
       case "clock"_sh :
-        _spawn_static(yoyo_wdgt_t::clock, i.cfg);
+        _spawn_static(yoyo_wdgt_t::clock, i.cfg, T_clock);
         break;
       case "stateHeader"_sh :
-        _spawn_static(yoyo_wdgt_t::textStatic, i.cfg);
+        _spawn_static(yoyo_wdgt_t::textStatic, i.cfg, T_stateHeader);
         break;
       case "scrollerStation"_sh :
-        _spawn_static(yoyo_wdgt_t::textScroller, i.cfg);
+        _spawn_static(yoyo_wdgt_t::textScroller, i.cfg, T_scrollerStation);
         break;
       case "scrollerTitle"_sh :
-        _spawn_static(yoyo_wdgt_t::textScroller, i.cfg);
+        _spawn_static(yoyo_wdgt_t::textScroller, i.cfg, T_scrollerTitle);
         break;
       case "spectrumAnalyzer"_sh :
-        _spawn_static(yoyo_wdgt_t::spectrumAnalyzer, i.cfg);
+        _spawn_static(yoyo_wdgt_t::spectrumAnalyzer, i.cfg, T_spectrumAnalyzer);
         break;
       default:;
     }
@@ -67,6 +67,7 @@ void Widget_Dispatcher::begin(){
   //pageAutoSelect(root_page, some_id);
   // start menu from page mainmenu
   _mpp.menuStart(root_page);
+  _events_subsribe();
 }
 
 void Widget_Dispatcher::start(std::string_view label){
@@ -82,13 +83,13 @@ void Widget_Dispatcher::spawn(std::string_view label){
 
 }
 
-void Widget_Dispatcher::_spawn_static(yoyo_wdgt_t unit, const void* cfg){
+void Widget_Dispatcher::_spawn_static(yoyo_wdgt_t unit, const void* cfg, const char* lbl){
   LOGD(T_WidgetMgr, printf, "Static wdgt:%u\n", e2int(unit));
 
   switch (unit){
     // BitRate Widget
     case yoyo_wdgt_t::bitrate :
-      _mpp.addMuippItem(new MuiItem_Bitrate_Widget(_mpp.nextIndex(), reinterpret_cast<const bitrate_box_cfg_t*>(cfg), _w, _h), root_page);
+      _mpp.addMuippItem(new MuiItem_Bitrate_Widget(_mpp.nextIndex(), reinterpret_cast<const bitrate_box_cfg_t*>(cfg), _w, _h, lbl), root_page);
       break;
 
     // Clock
@@ -114,8 +115,14 @@ void Widget_Dispatcher::_spawn_static(yoyo_wdgt_t unit, const void* cfg){
           _mpp.nextIndex(),
           reinterpret_cast<const scroller_cfg_t*>(cfg)->box.getBoxDimensions(_w, _h),  // unwrap into absolute position
           reinterpret_cast<const scroller_cfg_t*>(cfg)->scroll_speed,
-          reinterpret_cast<const scroller_cfg_t*>(cfg)->style);
+          reinterpret_cast<const scroller_cfg_t*>(cfg)->style,
+          lbl);
       _mpp.addMuippItem(u, root_page);
+      // temp solution, till I make the Q
+      if (std::string_view(lbl).compare(T_scrollerStation))
+        _scroll_title1 = u;
+      if (std::string_view(lbl).compare(T_scrollerTitle))
+        _scroll_title2 = u;
       }
       break;
 
@@ -127,5 +134,76 @@ void Widget_Dispatcher::_spawn_static(yoyo_wdgt_t unit, const void* cfg){
     default:;
   }
 
+
+}
+
+
+void Widget_Dispatcher::_events_subsribe(){
+  // command events
+/*
+  esp_event_handler_instance_register_with(evt::get_hndlr(), YO_CMD_EVENTS, ESP_EVENT_ANY_ID,
+    [](void* self, esp_event_base_t base, int32_t id, void* data){ static_cast<Widget_Dispatcher*>(self)->_events_cmd_hndlr(id, data); },
+    this, &_hdlr_cmd_evt
+  );
+*/
+  // state change events
+  esp_event_handler_instance_register_with(evt::get_hndlr(), YO_CHG_STATE_EVENTS, ESP_EVENT_ANY_ID,
+    [](void* self, esp_event_base_t base, int32_t id, void* data){ static_cast<Widget_Dispatcher*>(self)->_events_chg_hndlr(id, data); },
+    this, &_hdlr_chg_evt
+  );
+}
+
+void Widget_Dispatcher::_events_unsubsribe(){
+  //esp_event_handler_instance_unregister_with(evt::get_hndlr(), YO_CMD_EVENTS, ESP_EVENT_ANY_ID, _hdlr_cmd_evt);
+  esp_event_handler_instance_unregister_with(evt::get_hndlr(), YO_CHG_STATE_EVENTS, ESP_EVENT_ANY_ID, _hdlr_chg_evt);
+}
+
+void Widget_Dispatcher::_events_cmd_hndlr(int32_t id, void* data){
+  LOGV(T_WidgetMgr, printf, "cmd event rcv:%d\n", id);
+  switch (static_cast<evt::yo_event_t>(id)){
+    //case evt::yo_event_t::displayPStop :
+    //  _layoutChange(false);
+    //  break;
+
+    default:;
+  }
+}
+
+// notifications events
+void Widget_Dispatcher::_events_chg_hndlr(int32_t id, void* data){
+  LOGV(T_WidgetMgr, printf, "chg event rcv:%d\n", id);
+
+  switch (static_cast<evt::yo_event_t>(id)){
+/*
+    // device mode change - update "title_status" widget (todo: this should be done from inside the widget)
+    case evt::yo_event_t::devMode : {
+      auto u = getUnitPtr(T_stateHeader);
+      int32_t v = *static_cast<int32_t*>(data);
+        if (u && v >= 0 && v < device_state_literal.size()){
+          static_cast<MuiItem_AGFX_StaticText*>(u)->setName(device_state_literal.at(v));
+        }
+
+      }
+    }
+    break;
+*/
+    // new station title - update "title_status" widget
+    case evt::yo_event_t::playerStationTitle : {
+      // this is not thread-safe, to be fixed later (todo: this should be done from inside the widget)
+      if (_scroll_title1)
+        _scroll_title1->setText(static_cast<const char*>(data));
+    }
+    break;
+
+    // new track title - update "title_status" widget
+    case evt::yo_event_t::playerTrackTitle : {
+      // this is not thread-safe, to be fixed later
+      if (_scroll_title2)
+        _scroll_title2->setText(static_cast<const char*>(data));
+    }
+    break;
+    
+    default:;
+  }
 
 }

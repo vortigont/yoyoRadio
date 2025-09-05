@@ -150,7 +150,7 @@ public:
       uint16_t w, uint16_t h,
       AGFX_text_t tcfg = {});
 
-  MuiItem_Bitrate_Widget(muiItemId id, const bitrate_box_cfg_t *cfg, int16_t screen_w, int16_t screen_h);
+  MuiItem_Bitrate_Widget(muiItemId id, const bitrate_box_cfg_t *cfg, int16_t screen_w, int16_t screen_h, const char* label = nullptr);
 
   ~MuiItem_Bitrate_Widget();
 
