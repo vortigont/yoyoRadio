@@ -1,5 +1,5 @@
 /*
-  This file is a part of yoRadio project
+  This file is a part of yoyoRadio project
   https://github.com/vortigont/yoyoRadio/
 
   a fork of yoRadio project from https://github.com/e2002/yoradio
@@ -10,6 +10,9 @@
 #pragma once
 #include "embui_units.hpp"
 #include "widgets/muipp_widgets.hpp"
+
+// namespace for Unit Manager
+static constexpr const char* T_wdgt = "wdgt";
 
 // widgets lables - a list of predefined widgets which have individual configuration
 static constexpr const char* T_bitrate = "bitrate";
@@ -40,14 +43,16 @@ static const std::vector< std::pair<const char*, yoyo_wdgt_t> > widgets_map {
 
 */
 class Widget_Dispatcher : public EmbUI_Unit_Manager {
+  // a bootstrap list of widgets to mange in this instance
+  std::vector<widget_cfgitem_t> _baseline;
   // operating screen resolution
   int16_t _w, _h;
-  // configuration vector for bootstraping when json config on FS is not available
-  const std::vector<widget_cfgitem_t>* _bootstrap;
+  std::string _units_index_page;
 
 public:
-  Widget_Dispatcher(int16_t w, int16_t h, const std::vector<widget_cfgitem_t>* bootstrap) : EmbUI_Unit_Manager("wdgts"), _w(w), _h(h), _bootstrap(bootstrap) {}
-  ~Widget_Dispatcher(){ _events_subsribe(); }
+  Widget_Dispatcher(const char* name_space, uint32_t baseline_ver, const std::vector<widget_cfgitem_t> &baseline, int16_t w, int16_t h);
+
+  ~Widget_Dispatcher(){ _events_unsubsribe(); }
 
   // Access MuiPlusPlus object
   MuiPlusPlus* getMuipp(){ return &_mpp; }
@@ -74,9 +79,20 @@ public:
    */
   void stop(std::string_view label = {}) override;
 
+  void getUnitsStatuses(Interface *interf) const override;
+
 private:
+
+  struct lbl2mpp_map_t {
+    const char* lbl;
+    muiItemId id;
+  };
+
   // MuiPP container
   MuiPlusPlus _mpp;
+  // map unit labels to mpp id's
+  std::vector<lbl2mpp_map_t> _lbl2mpp;
+  // root page id
   muiItemId root_page;
 
   // temporary objects till I will make a queue
@@ -109,9 +125,12 @@ private:
    * used with configuration is suplied via webui for non existing modules
    * @param label 
    */
-  void spawn(std::string_view label) override;
+  void spawn(std::string_view label) override {};
 
   // spawn unit with static bootstrap config
-  void _spawn_static(yoyo_wdgt_t unit, const void* cfg, const char* lbl = NULL);
+  void _spawn_wdgt(const widget_cfgitem_t &item);
+  //void _spawn_wdgt(yoyo_wdgt_t unit, const char* lbl, const void* cfg);
+  
 
+  void _save_baseline_to_nvs();
 };

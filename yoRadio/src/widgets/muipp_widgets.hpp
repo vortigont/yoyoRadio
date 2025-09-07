@@ -21,10 +21,14 @@ enum class yoyo_wdgt_t {
  * @note mapping widget's label to it's class type is done via 'widgets_map' struct in "widget_dispatcher.hpp"
  */
 struct widget_cfgitem_t {
-    // widget's label
-    const char* wlabel;
-    // a pointer to it's configuration
-    const void* cfg;
+  // widget type
+  yoyo_wdgt_t wtype;
+  // widget's label, should point to constant string persisting during whole duration of Dispatcher run-time
+  const char* wlabel;
+  // weither widget is loaded on start or not
+  bool enabled;
+  // a pointer to it's bootstrap configuration
+  const void* cfg;
 };
 
 
@@ -109,7 +113,8 @@ class ClockWidget: public MuiItem_Uncontrollable {
   clock_date_cfg_t _dcfg;
   
 public:
-  ClockWidget(muiItemId id, const clock_time_cfg_t& clk, const clock_date_cfg_t& date): MuiItem_Uncontrollable(id, nullptr), _tcfg(clk), _dcfg(date) {};
+  ClockWidget(muiItemId id, const clock_time_cfg_t *clk, const clock_date_cfg_t *date): MuiItem_Uncontrollable(id, nullptr), _tcfg(*clk), _dcfg(*date) {};
+  //ClockWidget(muiItemId id, const clock_time_cfg_t& clk, const clock_date_cfg_t& date): MuiItem_Uncontrollable(id, nullptr), _tcfg(clk), _dcfg(date) {};
 
   void render(const MuiItem* parent, void* r = nullptr) override;
   bool refresh_req() const override;

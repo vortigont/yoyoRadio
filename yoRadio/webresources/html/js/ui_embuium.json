@@ -1,0 +1,67 @@
+{
+  "wdgt":{
+    "list":{
+      "section":"units",
+      "comment":"list of widgets",
+      "label":"🏗 Виджеты",
+      "main":true,
+      "block":[
+        {
+          "section":"clock",
+          "line":true,
+          "block":[
+            {
+              "id":"set_embuium_wdgt_clock_state",
+              "html":"input",
+              "label":"🕓 Часы",
+              "type":"checkbox",
+              "onChange": true
+            },
+            {
+              "id": "get_embuium_wdgt_clock_page",
+              "html": "button",
+              "type": 0,
+              "label": "🛠 Параметры"
+            }
+          ]
+        },
+        {
+          "section":"spectrumAnalyzer",
+          "line":true,
+          "block":[
+            {
+              "id":"set_embuium_wdgt_spectrumAnalyzer_state",
+              "html":"input",
+              "label":"Спектроанализатор",
+              "type":"checkbox",
+              "onChange": true
+            },
+            {
+              "id": "get_embuium_wdgt_spectrumAnalyzer_page",
+              "html": "button",
+              "type": 0,
+              "label": "🛠 Параметры"
+            }
+          ]
+        }
+      ]    
+    },
+    "unit":{
+      "spectrumAnalyzer":{
+        "page":{
+          "idx":{
+            "section":"spectrumAnalyzer",
+            "label":"🕓 Часы поверх эффекта",
+            "main":true,
+            "block":[
+              {
+                "html":"comment",
+                "label":"Параметры настройки см. в <a href=\"https://github.com/vortigont/FireLamp_JeeUI/wiki/%D0%92%D0%B8%D0%B4%D0%B6%D0%B5%D1%82-%D1%87%D0%B0%D1%81%D1%8B\">WiKi</a>"
+              }
+            ]      
+          }
+        }
+      }
+    }
+  }
+}

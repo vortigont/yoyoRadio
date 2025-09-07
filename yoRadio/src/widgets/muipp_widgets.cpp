@@ -216,6 +216,7 @@ SpectrumAnalyser_Widget::SpectrumAnalyser_Widget(muiItemId id, const muipp::grid
   };
 
 SpectrumAnalyser_Widget::~SpectrumAnalyser_Widget(){
+  player->setDSPCallback(nullptr);
   esp_event_handler_instance_unregister_with(evt::get_hndlr(), YO_CHG_STATE_EVENTS, ESP_EVENT_ANY_ID, _hdlr_chg_evt);
 }
 

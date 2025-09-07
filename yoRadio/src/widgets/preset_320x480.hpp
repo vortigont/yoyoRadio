@@ -80,12 +80,13 @@ static constexpr bitrate_box_cfg_t bitrate_cfg {
 };
 
 // a preset with set of widgets
+#define  baseline_320x480  25090521UL
 
 static const std::vector<widget_cfgitem_t> cfg1 {
   // Clock
-  { T_clock, &clock_cfg},
+  { yoyo_wdgt_t::clock, T_clock, true, &clock_cfg},
   // text - device state
-  { T_stateHeader, &device_state_cfg}
+  { yoyo_wdgt_t::textStatic, T_stateHeader, true, &device_state_cfg}
 };
 
 };    // namespace   display_320x480

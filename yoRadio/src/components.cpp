@@ -88,8 +88,8 @@ void load_device_JC3248W535(){
   agfx = JC3248W535::create_display_dev(JC3248W535::display, bus);
   
   // create Widget dispatcher
-  wdispatcher = new Widget_Dispatcher(agfx->width(), agfx->height(), &display_320x480::cfg1);
-
+  wdispatcher = new Widget_Dispatcher(T_wdgt, baseline_320x480, display_320x480::cfg1, agfx->width(), agfx->height());
+  wdispatcher->begin();
 
   // link the above into Display object
   display = new DisplayGFX(agfx, wdispatcher->getMuipp());
@@ -116,11 +116,13 @@ void load_device_JC1060P470(){
   agfx = JC1060P470::create_display_dev(JC1060P470::display);
 
   // create Widget dispatcher
-  wdispatcher = new Widget_Dispatcher(agfx->width(), agfx->height(), &display_1024x600::cfg1);
+  wdispatcher = new Widget_Dispatcher(T_wdgt, baseline_1024x600, display_1024x600::cfg1, agfx->width(), agfx->height());
   wdispatcher->begin();
 
+  
   // link the above into Display object
   display = new DisplayGFX(agfx, wdispatcher->getMuipp());
   // Init the display UI
   display->init();
+
 }

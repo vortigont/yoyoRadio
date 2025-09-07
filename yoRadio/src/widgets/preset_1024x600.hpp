@@ -8,7 +8,7 @@ namespace display_1024x600 {
 // Clock
 static constexpr clock_time_cfg_t clock_time_cfg {
   { 22, 2, muipp::coordinate_spec_t::grid, muipp::coordinate_spec_t::grid, 32, 32 },      // placement at (22.2) on (32x32) grid
-  nullptr, nullptr,
+  nullptr, nullptr,         // U8G2 font
   &FONT_CLOCK_DOTS_H, &FONT_CLOCK_DOTS_S,
   FONT_DEFAULT_COLOR, 0,    // color, bgcolor;
   1, 1,       // font_hours_size, font_seconds_size;
@@ -87,20 +87,21 @@ static constexpr spectrum_box_cfg_t spectrum_cfg {
 };
 
 // a preset with set of widgets
+#define  baseline_1024x600  25090711U
 
 static const std::vector<widget_cfgitem_t> cfg1 {
   // Clock
-  { T_clock, &clock_cfg},
+  { yoyo_wdgt_t::clock, T_clock, true, &clock_cfg},
   // text - device state
-  { T_stateHeader, &device_state_cfg},
+  { yoyo_wdgt_t::textStatic, T_stateHeader, true, &device_state_cfg},
   // Scroller 1 - station
-  { T_scrollerStation, &scroll_s1_cfg},
+  { yoyo_wdgt_t::textScroller, T_scrollerStation, true, &scroll_s1_cfg},
   // Scroller 2 - track title, etc...
-  { T_scrollerTitle, &scroll_s2_cfg},
+  { yoyo_wdgt_t::textScroller, T_scrollerTitle, true, &scroll_s2_cfg},
   // bitrate
-  { T_bitrate, &bitrate_cfg},
+  { yoyo_wdgt_t::bitrate, T_bitrate, true, &bitrate_cfg},
   // spectrum
-  { T_spectrumAnalyzer, &spectrum_cfg }
+  { yoyo_wdgt_t::spectrumAnalyzer, T_spectrumAnalyzer, true, &spectrum_cfg }
 };
 
-};    // namespace   display_320x480
+};    // namespace   display_1024x600
