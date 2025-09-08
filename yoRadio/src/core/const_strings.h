@@ -49,4 +49,5 @@ static constexpr const char* T_profiles = "profiles";
 static constexpr const char* T_spectre = "spectre";
 
 
+static constexpr const char* T_amp = "amp";
 static constexpr const char* T_brightness = "brightness";

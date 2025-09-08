@@ -22,12 +22,12 @@
 #include "embui_units.hpp"
 #include "muipp_widgets.hpp"
 
-class SpectrumAnalyser_Controller : public EmbUIUnit {
+class SpectrumAnalyser_Controller : public EmbUIUnit_Presets {
   std::shared_ptr<SpectrumAnalyser_Widget> _unit;
 
 public:
   SpectrumAnalyser_Controller(const char* label, const char* name_space, std::shared_ptr<SpectrumAnalyser_Widget> unit) :
-    EmbUIUnit(label, name_space, false), _unit(unit) {}
+    EmbUIUnit_Presets(label, name_space), _unit(unit) {}
 
   // start or initialize unit
   void start() override {};

@@ -9,6 +9,7 @@
 
 #include "nvs_handle.hpp"
 #include "widget_dispatcher.hpp"
+#include "widget_controllers.hpp"
 #include "EmbUI.h"
 #include "locale/l10n.h"
 #include "core/log.h"
@@ -118,8 +119,17 @@ void Widget_Dispatcher::start(std::string_view label){
 void Widget_Dispatcher::stop(std::string_view label){
   LOGI(T_UnitMgr, printf, "Trying to stop %s widget\n", label.data());
   auto i = std::find_if(_baseline.begin(), _baseline.end(), [label](const widget_cfgitem_t &w){ return label.compare(w.wlabel) == 0; });
-  if (i == _baseline.end()) return;   // unknown label
-  if (!i->enabled)  return;           // instance is not running
+  if (i == _baseline.end() || !i->enabled) return;   // unknown label or instance is not running
+
+  // check if controller unit is spawned
+  auto u = std::find_if(units.cbegin(), units.cend(), EmbUIUnit_MatchLabel<EmbUIUnit_pt>(label));
+  if ( u != units.cend() ){
+    LOGI(T_UnitMgr, printf, "deactivate %s\n", label.data()); // in general it's wrong to pass sv's data, but this sv was instantiated from a valid null-terminated string, so should be OK, just could have some unexpected trailing suffix
+    // stop the Unit first
+    (*u)->stop();
+    // remove widget controller unit itself
+    units.erase(u);
+  }
 
   // find mapped mpp items to this unit instance and remove it from available pages,
   // widget might be uncontrollable and does not have a widget controller unit
@@ -131,16 +141,6 @@ void Widget_Dispatcher::stop(std::string_view label){
 
   // remove mapping
   std::erase_if(_lbl2mpp, [label](const lbl2mpp_map_t &m){ return label.compare(m.lbl) == 0; });
-
-  // check if controller unit is spawned
-  auto u = std::find_if(units.cbegin(), units.cend(), EmbUIUnit_MatchLabel<EmbUIUnit_pt>(label));
-  if ( u != units.cend() ){
-    LOGI(T_UnitMgr, printf, "deactivate %s\n", label.data()); // in general it's wrong to pass sv's data, but this sv was instantiated from a valid null-terminated string, so should be OK, just could have some unexpected trailing suffix
-    // stop the Unit first
-    (*u)->stop();
-    // remove widget controller unit itself
-    units.erase(u);
-  }
 
   // remove state flag from NVS
   i->enabled = false;
@@ -206,6 +206,14 @@ void Widget_Dispatcher::_spawn_wdgt(const widget_cfgitem_t &item){
       //LOGD(T_WidgetMgr, printf, "Spawn spect:%u\n", _lbl2mpp.back().id);
       auto w = std::make_shared<SpectrumAnalyser_Widget>(_lbl2mpp.back().id, reinterpret_cast<const spectrum_box_cfg_t*>(item.cfg)->box, _w, _h);
       _mpp.addMuippItem(w, root_page);
+      // SpectrumAnalyser_Controller
+      // spawn a new unit based on label
+      auto wc = std::make_unique<SpectrumAnalyser_Controller>(item.wlabel, ns, w);
+      if (!wc) return;   // maker was unable to produce an object
+      // load unit's configuration
+      wc->load();
+      // move it into container
+      units.emplace_back(std::move(wc));
       }
       break;
 

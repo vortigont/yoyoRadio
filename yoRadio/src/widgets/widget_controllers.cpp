@@ -8,10 +8,13 @@
 */
 
 #include "widget_controllers.hpp"
+#include "core/const_strings.h"
 #include "core/log.h"
 
-void generate_cfg(JsonVariant cfg){
-
+void SpectrumAnalyser_Controller::generate_cfg(JsonVariant cfg) const {
+  cfg[P_type] = e2int(_unit->getVisType());
+  cfg[T_amp] = _unit->getAmp();
+  cfg[P_color] = _unit->getColors();
 }
 
 /**
@@ -20,8 +23,10 @@ void generate_cfg(JsonVariant cfg){
  * class specific json object
  * @param cfg 
  */
-void load_cfg(JsonVariantConst cfg){
+void SpectrumAnalyser_Controller::load_cfg(JsonVariantConst cfg){
   LOGD(T_WidgetMgr, println, "load cfg");
   serializeJsonPretty(cfg, Serial);
-
+  _unit->setVisType(static_cast<SpectrumAnalyser_Widget::visual_t>(cfg[P_type].as<int>()));
+  _unit->setAmp(cfg[T_amp]);
+  _unit->setColors(cfg[P_color]);
 }
