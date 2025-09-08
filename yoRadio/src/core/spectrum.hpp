@@ -41,7 +41,7 @@ public:
 
 	void setAmp(float amp){ _amp = amp; }
 
-	float getAmp(){ return _amp; }
+	float getAmp() const { return _amp; }
 
 	/**
 	 * @brief audio data sink

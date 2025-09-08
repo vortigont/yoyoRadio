@@ -194,6 +194,7 @@ class SpectrumAnalyser_Widget : public MuiItem_Uncontrollable {
   uint16_t _w, _h;
   // y-offset for spectrogram
   uint16_t _hh{0};
+  SpectraDSP _spectradsp;
 
 public:
   SpectrumAnalyser_Widget(muiItemId id, const muipp::grid_box &cfg, int16_t screen_w, int16_t screen_h);
@@ -202,20 +203,41 @@ public:
   void render(const MuiItem* parent, void* r = nullptr);
   bool refresh_req() const override { return _running; };
 
-  enum class visual_t { bands, spectrogram };
+  // Controls
+  enum class visual_t { wave, spectrogram, line };
+
+  // set Visualization type
+  void setVisType(visual_t v){ _v = v; };
+
+  // set amlification
+  void setAmp(float amp){ _spectradsp.setAmp(amp); };
+
+  // set Colors
+  void setColors(uint16_t c1){ _color1 = c1; };
+
+  // getters
+
+  visual_t getVisType() const { return _v; }
+  float getAmp() const { return _spectradsp.getAmp(); }
+  uint16_t getColors() const { return _color1; }
 
 private:
   bool _running{false}, _cleanup{false};
+
+  // Controls
   // visualization type
-  enum visual_t _v{visual_t::bands};
+  enum visual_t _v{visual_t::wave};
+  // Colors
+  uint16_t _color1{RGB565_CYAN};     // amplitude
 
   esp_event_handler_instance_t _hdlr_chg_evt{nullptr};
   
-  SpectraDSP _spectradsp;
 
   void _draw_spectrum(Arduino_GFX* g);
 
-  void _draw_bands(Arduino_GFX* g);
+  void _draw_wave(Arduino_GFX* g);
+
+  void _draw_lines(Arduino_GFX* g);
 
   // cleanup widget area when audio stops
   void _clean_canvas(Arduino_GFX* g);
