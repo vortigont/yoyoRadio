@@ -55,9 +55,6 @@ void DisplayGFX::init() {
 }
 
 void DisplayGFX::_loopDspTask() {
-  // first force draw the screen
-  _mpp->render(_gfx);
-  _gfx->flush();
 
   TickType_t xLastWakeTime = xTaskGetTickCount();                                                                                                             
   TickType_t delay_time = display_delay_ticks;
@@ -73,8 +70,13 @@ void DisplayGFX::_loopDspTask() {
       continue;
     }
 
-    // refresh screen items if needed
-    if (_mpp->refresh(_gfx)){
+    if (_redraw){
+      // force redraw the entire screen
+      _gfx->fillScreen(0);
+      _mpp->render(_gfx);
+      _gfx->flush();
+    } else if (_mpp->refresh(_gfx)){
+      // refresh screen items if needed
       _gfx->flush();
       #if YO_DEBUG_LEVEL == 5
       ++fps2;
@@ -95,16 +97,16 @@ void DisplayGFX::_loopDspTask() {
 
 void DisplayGFX::_events_subsribe(){
   // command events
-/*
   esp_event_handler_instance_register_with(evt::get_hndlr(), YO_CMD_EVENTS, ESP_EVENT_ANY_ID,
-    [](void* self, esp_event_base_t base, int32_t id, void* data){ static_cast<DisplayGFX*>(self)->_events_cmd_hndlr(id, data); },
-    this, &_hdlr_cmd_evt
+  [](void* self, esp_event_base_t base, int32_t id, void* data){ static_cast<DisplayGFX*>(self)->_events_cmd_hndlr(id, data); },
+  this, &_hdlr_cmd_evt
   );
+/*
   // state change events
   esp_event_handler_instance_register_with(evt::get_hndlr(), YO_CHG_STATE_EVENTS, ESP_EVENT_ANY_ID,
-    [](void* self, esp_event_base_t base, int32_t id, void* data){ static_cast<DisplayGFX*>(self)->_events_chg_hndlr(id, data); },
-    this, &_hdlr_chg_evt
-  );
+  [](void* self, esp_event_base_t base, int32_t id, void* data){ static_cast<DisplayGFX*>(self)->_events_chg_hndlr(id, data); },
+  this, &_hdlr_chg_evt
+);
 */
 }
 
@@ -116,9 +118,9 @@ void DisplayGFX::_events_unsubsribe(){
 void DisplayGFX::_events_cmd_hndlr(int32_t id, void* data){
   LOGV(T_Display, printf, "cmd event rcv:%d\n", id);
   switch (static_cast<evt::yo_event_t>(id)){
-    //case evt::yo_event_t::displayPStop :
-    //  _layoutChange(false);
-    //  break;
+    case evt::yo_event_t::displayRedraw :
+      _redraw = true;
+      break;
 
     default:;
   }

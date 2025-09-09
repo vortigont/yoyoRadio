@@ -158,6 +158,8 @@ public:
   void init() override;
 
 private:
+  // flag demanding a full wipe/redraw the screen
+  bool _redraw{true};
   state_t _state{state_t::empty};
   void _createDspTask();
   void _loopDspTask();

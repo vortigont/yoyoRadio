@@ -142,9 +142,13 @@ void Widget_Dispatcher::stop(std::string_view label){
   // remove mapping
   std::erase_if(_lbl2mpp, [label](const lbl2mpp_map_t &m){ return label.compare(m.lbl) == 0; });
 
+  
   // remove state flag from NVS
   i->enabled = false;
   _save_baseline_to_nvs();
+
+  // request to redraw display
+  EVT_POST(YO_CMD_EVENTS, e2int(evt::yo_event_t::displayRedraw));  
 }
 
 //void Widget_Dispatcher::_spawn_wdgt(yoyo_wdgt_t unit, const char* lbl, const void* cfg){
