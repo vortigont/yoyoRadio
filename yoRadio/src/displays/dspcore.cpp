@@ -237,7 +237,7 @@ void DisplayControl::embui_publish(){
   // publish value to EmbUI feeds
   Interface interf(&embui.feeders);
   interf.json_frame_value();
-  interf.value(T_brightness, brt);
+  interf.value(T_disp_brt, brt);
   interf.json_frame_flush();
 }
 
