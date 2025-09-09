@@ -81,14 +81,13 @@ void SpectraDSP::data_sink(const int16_t *dataBuff, size_t numSamples){
   dsps_cplx2reC_sc16(_audio_buffer, _fft_size);
 
   // The output data array presented as moving average for input in dB
-
-  dsps_mulc_f32(_result, _result, _fft_size, 0.8, 1, 1);  // scale down existing values
+  dsps_mulc_f32(_result, _result, _fft_size, _avg, 1, 1);  // scale down existing values
 
   for (int i = 0 ; i != _fft_size ; i++) {
     float spectrum_sqr = _audio_buffer[i * 2 + 0] * _audio_buffer[i * 2 + 0] + _audio_buffer[i * 2 + 1] * _audio_buffer[i * 2 + 1];
-    // Bels (I won't x10 here for dB but rather apply amp coefficient later to aviod extra multiplication)
+    // Bels (I won't x10 here for dB but rather apply amp coefficient later to avoid extra multiplication)
     float spectrum_B = log10f(0.1 + spectrum_sqr);
-    // Multiply with amp coefficient for better view data on screen ()
+    // Multiply with amp coefficient to fit it better to screen size
     _result[i] += _amp * spectrum_B;
   }
 }

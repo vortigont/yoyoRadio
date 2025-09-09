@@ -24,9 +24,11 @@ void SpectrumAnalyser_Controller::generate_cfg(JsonVariant cfg) const {
  * @param cfg 
  */
 void SpectrumAnalyser_Controller::load_cfg(JsonVariantConst cfg){
-  LOGD(T_WidgetMgr, println, "load cfg");
-  serializeJsonPretty(cfg, Serial);
+  //LOGD(T_WidgetMgr, println, "load cfg");
+  //serializeJsonPretty(cfg, Serial);
+  if (cfg.isNull()) return; // ignore empty object
   _unit->setVisType(static_cast<SpectrumAnalyser_Widget::visual_t>(cfg[P_type].as<int>()));
-  _unit->setAmp(cfg[T_amp]);
+  _unit->setAmp(cfg[T_amp] | 4);
+  _unit->setAvg(cfg[T_avg] | 0.8);
   _unit->setColors(cfg[P_color]);
 }

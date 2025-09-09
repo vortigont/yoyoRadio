@@ -78,6 +78,15 @@
                 "step":0.25
               },
               {
+                "id":"avg",
+                "html":"input",
+                "type":"range",
+                "label":"Усредняющий фактор",
+                "min":0.5,
+                "max":0.95,
+                "step":0.05
+              },
+              {
                 "id":"color",
                 "html":"input",
                 "type":"color",

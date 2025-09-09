@@ -207,18 +207,21 @@ public:
   enum class visual_t { wave, spectrogram, line };
 
   // set Visualization type
-  void setVisType(visual_t v){ _v = v; };
+  void setVisType(visual_t val){ _v = val; };
 
   // set amlification
-  void setAmp(float amp){ _spectradsp.setAmp(amp); };
+  void setAmp(float val){ _spectradsp.setAmp(val); };
+
+  // set averaging factor
+  void setAvg(float val){ _spectradsp.setAvg(val); };
 
   // set Colors
   void setColors(uint16_t c1){ _color1 = c1; };
 
   // getters
-
   visual_t getVisType() const { return _v; }
   float getAmp() const { return _spectradsp.getAmp(); }
+  float getAvg() const { return _spectradsp.getAvg(); }
   uint16_t getColors() const { return _color1; }
 
 private:

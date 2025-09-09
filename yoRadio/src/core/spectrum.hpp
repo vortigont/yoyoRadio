@@ -40,8 +40,11 @@ public:
 	void reset(size_t fft_size = 512, size_t sampling_rate = 48000, size_t channels = 2);
 
 	void setAmp(float amp){ _amp = amp; }
-
 	float getAmp() const { return _amp; }
+
+	// set averaging factor
+	void setAvg(float avg){ _avg = avg; }
+	float getAvg() const { return _avg; }
 
 	/**
 	 * @brief audio data sink
@@ -63,6 +66,8 @@ private:
 	bool _ready{false};
 	// amplifying coefficient for scaling resulting data
 	float _amp{6};
+	// averaging factor
+	float _avg{0.8};
 	// FFT, data and window buffers
 	int16_t *_fft_w_table_sc16{nullptr}, *_audio_buffer{nullptr}, *_wnd_buffer{nullptr};
 	// FFT result buffer
