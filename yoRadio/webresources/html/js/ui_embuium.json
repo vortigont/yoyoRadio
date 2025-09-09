@@ -11,17 +11,11 @@
           "line":true,
           "block":[
             {
-              "id":"set_embuium_wdgt_clock_state",
+              "id":"set_embuium_wdgt_unit_clock_state",
               "html":"input",
               "label":"🕓 Часы",
               "type":"checkbox",
               "onChange": true
-            },
-            {
-              "id": "get_embuium_wdgt_clock_page",
-              "html": "button",
-              "type": 0,
-              "label": "🛠 Параметры"
             }
           ]
         },
@@ -30,14 +24,14 @@
           "line":true,
           "block":[
             {
-              "id":"set_embuium_wdgt_spectrumAnalyzer_state",
+              "id":"set_embuium_wdgt_unit_spectrumAnalyzer_state",
               "html":"input",
               "label":"Спектроанализатор",
               "type":"checkbox",
               "onChange": true
             },
             {
-              "id": "get_embuium_wdgt_spectrumAnalyzer_page",
+              "id": "get_embuium_wdgt_unit_spectrumAnalyzer_page",
               "html": "button",
               "type": 0,
               "label": "🛠 Параметры"
@@ -98,7 +92,7 @@
               },
               {
                 "html":"button",
-                "action": "ui_page_settings",
+                "action": "embuium.wdgt.list",
                 "color": "green",
                 "type":"generic",
                 "label":"🔙 Выход"
