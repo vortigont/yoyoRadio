@@ -79,14 +79,27 @@ static constexpr bitrate_box_cfg_t bitrate_cfg {
   T_bitrate_k                     // print format
 };
 
+static constexpr spectrum_box_cfg_t spectrum_cfg {
+  {16, 16, 0, 10, 16, 6},        // grid x,y; box position on a grid (x,y), box size on a grid (w,h)
+
+};
+
 // a preset with set of widgets
-#define  baseline_320x480  25090521UL
+#define  baseline_320x480  25091001UL
 
 static const std::vector<widget_cfgitem_t> cfg1 {
   // Clock
   { yoyo_wdgt_t::clock, T_clock, true, &clock_cfg},
   // text - device state
-  { yoyo_wdgt_t::textStatic, T_stateHeader, true, &device_state_cfg}
+  { yoyo_wdgt_t::textStatic, T_stateHeader, true, &device_state_cfg},
+  // Scroller 1 - station
+  { yoyo_wdgt_t::textScroller, T_scrollerStation, true, &scroll_s1_cfg},
+  // Scroller 2 - track title, etc...
+  { yoyo_wdgt_t::textScroller, T_scrollerTitle, true, &scroll_s2_cfg},
+  // bitrate
+  { yoyo_wdgt_t::bitrate, T_bitrate, true, &bitrate_cfg},
+  // spectrum
+  { yoyo_wdgt_t::spectrumAnalyzer, T_spectrumAnalyzer, true, &spectrum_cfg }
 };
 
 };    // namespace   display_320x480
