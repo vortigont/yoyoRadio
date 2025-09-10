@@ -342,11 +342,12 @@ void Widget_Dispatcher::getUnitsStatuses(Interface *interf) const {
       std::string s(T_set_embuium_);
       s.append(ns);
       s.append(1, (char)0x5f);  // '_'
+      s.append(P_unit);
+      s.append(1, (char)0x5f);  // '_'
       s.append(i->wlabel);
       s.append(T__state);
       interf->value(s, true);
     }
-
   }
   // not needed
   //interf->json_frame_flush();
