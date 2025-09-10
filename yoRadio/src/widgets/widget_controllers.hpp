@@ -21,6 +21,7 @@
 #pragma once
 #include "embui_units.hpp"
 #include "muipp_widgets.hpp"
+#include "core/textmsgq.hpp"
 
 class SpectrumAnalyser_Controller : public EmbUIUnit_Presets {
   std::shared_ptr<SpectrumAnalyser_Widget> _unit;
@@ -53,4 +54,74 @@ private:
    */
   void load_cfg(JsonVariantConst cfg) override;
 
+};
+
+/**
+ * @brief this controller implements text message queue that is displayed via MuiPP text scroller
+ * it depends on MessagePool instance to consume new messages from and event bus
+ */
+class MessageQ_Controller : public EmbUIUnit {
+  std::shared_ptr<AGFX_TextScroller> _unit;
+
+public:
+  MessageQ_Controller(const char* label, const char* name_space, std::shared_ptr<AGFX_TextScroller> unit, size_t qid = 0, size_t qlen = 16) :
+    EmbUIUnit(label, name_space), _unit(unit), qid(qid), _max_q_len(qlen) {}
+  ~MessageQ_Controller(){ _events_unsubsribe(); }
+
+  // start or initialize unit
+  void start() override;
+
+  // stop or deactivate unit without destroying it
+  void stop() override { _events_unsubsribe(); };
+
+  // Instance's queue ID
+  const size_t qid;
+
+private:
+  const size_t _max_q_len;
+  // message queue
+  using message_t = std::unique_ptr<TextMessage>;
+  std::list< message_t > _mqueue;
+  message_t _current_msg;
+
+  esp_event_handler_instance_t _hdlr_msg_evt{nullptr};
+
+  /**
+   * @brief subscribe to event mesage bus
+   * 
+   */
+  void _events_subsribe();
+
+  /**
+   * @brief unregister from event loop
+   * 
+   */
+  void _events_unsubsribe();
+
+  // command events handler
+  void _events_msg_hndlr(int32_t id, void* data);
+
+  /**
+   * @brief derived method should generate object's configuration into provided JsonVariant
+   * 
+   * @param cfg 
+   * @return JsonVariantConst 
+   */
+  void generate_cfg(JsonVariant cfg) const override {};
+
+  /**
+   * @brief load configuration from a json object
+   * method should be implemented in derived class to process
+   * class specific json object
+   * @param cfg 
+   */
+  void load_cfg(JsonVariantConst cfg) override {};
+
+  // consume messages from a pool
+  void _consume_msg();
+
+  bool _scroller_callback(CanvasTextScroller::event_t e);
+
+  // reevaluate current messeage and start scrolling next one
+  void _scroll_next_message();
 };

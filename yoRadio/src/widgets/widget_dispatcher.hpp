@@ -96,7 +96,7 @@ private:
   muiItemId root_page;
 
   // temporary objects till I will make a queue
-  std::shared_ptr<MuiItem_AGFX_TextScroller> _scroll_title1, _scroll_title2;
+  //std::shared_ptr<MuiItem_AGFX_TextScroller> _scroll_title1, _scroll_title2;
 
   // event function handlers
   esp_event_handler_instance_t _hdlr_cmd_evt{nullptr};

@@ -77,3 +77,4 @@ static constexpr const char* T_Module = "module";
 static constexpr const char* T_Player = "Player";
 static constexpr const char* T_WebUI = "WebUI";
 static constexpr const char* T_WidgetMgr = "WidgetMgr";
+static constexpr const char* T_Scroller = "Scroller";

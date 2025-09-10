@@ -3,8 +3,9 @@
 #include "player.h"
 #include "const_strings.h"
 #include "locale/l10n.h"
-#include "netserver.h"
+//#include "netserver.h"
 #include "evtloop.h"
+#include "textmsgq.hpp"
 #include "log.h"
 
 void data_proc(const int16_t *data, int32_t size, bool* do_out){
@@ -423,23 +424,31 @@ void AudioController::_audio_cb_generic(Audio::event_t e, const char* msg){
       LOG(println, msg);
       // copy by value including null terminator
       // todo: check if it is safe to pass by pointer
-      EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerTrackTitle), msg, strlen(msg)+1);
+      msgPool.addMsg({ msg , -1 /*cnt*/, 0 /* interval*/, e2int(evt::yo_event_t::playerTrackTitle) /* id*/, SCROLLER_TRACK_GID /* qid*/});
+      //EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerTrackTitle), msg, strlen(msg)+1);
     } break;
 
+    // station URL
+    case Audio::evt_icyurl : {
+      LOGI(T_Player, print, "icy-url: "); LOG(println, msg);
+      msgPool.addMsg({ msg , 1 /*cnt*/, 0 /* interval*/, e2int(evt::yo_event_t::playerTrackTitle) /* id*/, SCROLLER_HEADER_GID /* qid*/});
+    } break;
+    
     // station title
     case Audio::evt_name : {
       LOGI(T_Player, print, "Station title: ");
       LOG(println, msg);
       // copy by value including null terminator
       // todo: check if it is safe to pass by pointer
-      EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerStationTitle), msg, strlen(msg)+1);
+      msgPool.addMsg({ msg , -1 /*cnt*/, 0, e2int(evt::yo_event_t::playerStationTitle), SCROLLER_HEADER_GID});
+      //EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerStationTitle), msg, strlen(msg)+1);
     } break;
 
     case Audio::evt_bitrate : {
-        LOGI(T_Player, print, "BitRate: ");
-        LOG(println, msg);
-        audio_info_t info{ audio.getBitRate() / 1000, audio.getCodecname() };
-        EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerAudioInfo), &info, sizeof(info));
+      LOGI(T_Player, print, "BitRate: ");
+      LOG(println, msg);
+      audio_info_t info{ audio.getBitRate() / 1000, audio.getCodecname() };
+      EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerAudioInfo), &info, sizeof(info));
     } break;
 /*
     case Audio::id3lyrics :
