@@ -218,11 +218,15 @@ public:
   // set Colors
   void setColors(uint16_t c1){ _color1 = c1; };
 
+  // reset analyzer params
+  void reset(size_t fft_size, size_t sampling_rate = 48000){ _spectradsp.reset(fft_size, sampling_rate); };
+
   // getters
   visual_t getVisType() const { return _v; }
   float getAmp() const { return _spectradsp.getAmp(); }
   float getAvg() const { return _spectradsp.getAvg(); }
   uint16_t getColors() const { return _color1; }
+  size_t getFFTsize() const { return _spectradsp.getFFTsize(); }
 
 private:
   bool _running{false}, _cleanup{false};

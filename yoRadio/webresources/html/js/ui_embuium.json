@@ -69,6 +69,34 @@
                 ]
               },
               {
+                "id":"fft_size",
+                "html":"select",
+                "label":"Размер FFT таблицы",
+                "section":"options",
+                "block":[
+                  {
+                    "value":32,
+                    "label":"16 полос"
+                  },
+                  {
+                    "value":64,
+                    "label":"32 полосы"
+                  },
+                  {
+                    "value":128,
+                    "label":"64 полосы"
+                  },
+                  {
+                    "value":256,
+                    "label":"128 полос"
+                  },
+                  {
+                    "value":512,
+                    "label":"256 полос"
+                  }
+                ]
+              },
+              {
                 "id":"amp",
                 "html":"input",
                 "type":"range",

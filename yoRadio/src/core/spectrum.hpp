@@ -39,6 +39,8 @@ public:
 	// reinit FFT
 	void reset(size_t fft_size = 512, size_t sampling_rate = 48000, size_t channels = 2);
 
+	size_t getFFTsize() const { return _fft_size; }
+
 	void setAmp(float amp){ _amp = amp; }
 	float getAmp() const { return _amp; }
 

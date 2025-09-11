@@ -244,20 +244,21 @@ void SpectrumAnalyser_Widget::_draw_spectrum(Arduino_GFX* g){
   const float* result_data = _spectradsp.getData();
   size_t len = _spectradsp.getDataSize();
 
+  int32_t xx = (_x+_w)/2;
   // Add left channel to the screen
   // The order of the values inverted
   for (int x = 0 ; x != len / 2; ++x) {
     // Left channel:
     // invert the order of values and clamp it to 0-127
-    float data = result_data[len / 2 - x - 1];
+    float data = result_data[x];
 
     // Convert input value in dB to the color - this will draw "waterfall spectrogram"
-    g->writePixel(x, _y + _hh, convert_to_rgb(0, 128, clamp(data, 0.0F, 128.0F)));
+    g->writePixel(xx - x, _y + _hh, convert_to_rgb(0, 128, clamp(data, 0.0F, 128.0F)));
 
     // Right channel:
     data = result_data[len / 2 + x];
     // Convert input value in dB to the color - this will draw "waterfall spectrogram"
-    g->writePixel(x + len / 2, _y + _hh, convert_to_rgb(0, 128, clamp(data, 0.0F, 128.0F)));
+    g->writePixel(xx + x, _y + _hh, convert_to_rgb(0, 128, clamp(data, 0.0F, 128.0F)));
   }
   
   // move spectrogram offset
@@ -273,19 +274,20 @@ void SpectrumAnalyser_Widget::_draw_wave(Arduino_GFX* g){
   // clear amplitude area
   g->fillRect(_x, _y, _w, _h, 0);
 
+  int32_t xx = (_x+_w)/2;
   // Add left channel to the screen
   // The order of the values inverted
   for (int x = 0 ; x != len / 2; ++x) {
     // Left channel:
     // invert the order of values and clamp it to area size
-    float data = clamp(result_data[len / 2 - x - 1], 0.0F, (float)_h);
+    float data = clamp(result_data[x], 0.0F, (float)_h);
     // this will draw dot amplitudes (with inverted Y axis)
-    g->drawPixel(_x + x, _y + _h - data, _color1);
+    g->drawPixel(xx - x, _y + _h - data, _color1);
 
     // Right channel:
-    data = clamp( result_data[len / 2 + x], 0.0F, (float)_h);
+    data = clamp( result_data[len/2 + x], 0.0F, (float)_h);
     // this will draw dot amplitudes (with inverted Y axis)
-    g->drawPixel(_x + len / 2 + x, _y + _h - data, _color1);
+    g->drawPixel(xx + x, _y + _h - data, _color1);
   }
 }
 
@@ -296,19 +298,20 @@ void SpectrumAnalyser_Widget::_draw_lines(Arduino_GFX* g){
   // clear amplitude area
   g->fillRect(_x, _y, _w, _h, 0);
 
+  int32_t xx = (_x+_w)/2;
   // Add left channel to the screen
   // The order of the values inverted
   for (int x = 0 ; x != len / 2; ++x) {
     // Left channel:
     // invert the order of values and clamp it to area size
-    float data = clamp(result_data[len / 2 - x - 1], 0.0F, (float)_h);
+    float data = clamp(result_data[x], 0.0F, (float)_h);
     // this will draw dot amplitudes (with inverted Y axis)
-    g->writeLine(_x + x, _y + _h, _x + x, _y + _h - data, _color1);  // writePixel(_x + x, _y + _h - data, _color1);
+    g->writeLine(xx - x, _y + _h, xx - x, _y + _h - data, _color1);
 
     // Right channel:
-    data = clamp( result_data[len / 2 + x], 0.0F, (float)_h);
+    data = clamp( result_data[len/2 + x], 0.0F, (float)_h);
     // this will draw dot amplitudes (with inverted Y axis)
-    g->drawLine(_x + len / 2 + x, _y + _h, _x + len / 2 + x, _y + _h - data, _color1); // g->writePixel(_x + len / 2 + x, _y + _h - data, _color1);
+    g->drawLine(xx + x, _y + _h, xx + x, _y + _h - data, _color1);
   }
 
 }
@@ -323,18 +326,18 @@ void SpectrumAnalyser_Widget::_events_subsribe(){
 }
 
 void SpectrumAnalyser_Widget::_events_chg_hndlr(int32_t id, void* data){
+  LOGD(T_spectre, printf, "Analyzer event:%d\n", id);
   // process command events received via event loop bus
   switch (static_cast<evt::yo_event_t>(id)){
-
     // Play radio station from a playlist
     case evt::yo_event_t::playerPlay :
-      LOGV(T_spectre, println, "Starting analyzer" );
+      LOGD(T_spectre, println, "Starting analyzer" );
       _running = true;
       break;
 
     case evt::yo_event_t::playerPause :
     case evt::yo_event_t::playerStop :
-      LOGV(T_spectre, println, "Stopping analyzer" );
+      LOGD(T_spectre, println, "Stopping analyzer" );
       _cleanup = true;
       break;
 
