@@ -75,6 +75,7 @@ void DisplayGFX::_loopDspTask() {
       _gfx->fillScreen(0);
       _mpp->render(_gfx);
       _gfx->flush();
+      _redraw = false;
     } else if (_mpp->refresh(_gfx)){
       // refresh screen items if needed
       _gfx->flush();
