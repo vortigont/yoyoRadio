@@ -187,19 +187,22 @@ void Widget_Dispatcher::_spawn_wdgt(const widget_cfgitem_t &item){
 
     // Scroller
     case yoyo_wdgt_t::textScroller : {
+      auto cfg = reinterpret_cast<const scroller_cfg_t*>(item.cfg);
       _lbl2mpp.push_back({item.wlabel, _mpp.nextIndex()});
-      auto u = std::make_shared<MuiItem_AGFX_TextScroller>(
+      auto w = std::make_shared<AGFX_TextScroller>(
           _lbl2mpp.back().id,
-          reinterpret_cast<const scroller_cfg_t*>(item.cfg)->box.getBoxDimensions(_w, _h),  // unwrap into absolute position
-          reinterpret_cast<const scroller_cfg_t*>(item.cfg)->scroll_speed,
-          reinterpret_cast<const scroller_cfg_t*>(item.cfg)->style,
+          cfg->box.getBoxDimensions(_w, _h),  // unwrap into absolute position
+          cfg->style,
+          cfg->scroll_speed,
           item.wlabel);
-      _mpp.addMuippItem(u, root_page);
-      // temp solution, till I make the Q
-      if (std::string_view(item.wlabel).compare(T_scrollerStation))
-        _scroll_title1 = u;
-      if (std::string_view(item.wlabel).compare(T_scrollerTitle))
-        _scroll_title2 = u;
+      _mpp.addMuippItem(w, root_page);
+      // spawn a new unit based on label
+      auto wc = std::make_unique<MessageQ_Controller>(item.wlabel, ns, w, cfg->gid);
+      if (!wc) return;   // maker was unable to produce an object
+      // load unit's configuration
+      wc->load();
+      // move it into container
+      units.emplace_back(std::move(wc));
       }
       break;
 
@@ -295,7 +298,6 @@ void Widget_Dispatcher::_events_chg_hndlr(int32_t id, void* data){
       }
     }
     break;
-*/
     // new station title - update "title_status" widget
     case evt::yo_event_t::playerStationTitle : {
       // this is not thread-safe, to be fixed later (todo: this should be done from inside the widget)
@@ -311,6 +313,7 @@ void Widget_Dispatcher::_events_chg_hndlr(int32_t id, void* data){
         _scroll_title2->setText(static_cast<const char*>(data));
     }
     break;
+*/
     
     default:;
   }

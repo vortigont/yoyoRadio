@@ -41,6 +41,7 @@ static constexpr text_wdgt_t device_state_cfg {
 
 // Scroller 1 - station title or so
 static constexpr scroller_cfg_t scroll_s1_cfg {
+  1,                              // Message queue Group
   {32, 32, 0, 0, 16, 2},           // grid x,y; box position on a grid, box size on a grid;
   {
     FONT_SMALL_U8G2,              // font
@@ -54,7 +55,8 @@ static constexpr scroller_cfg_t scroll_s1_cfg {
 
 // Scroller 2 - song title or so
 static constexpr scroller_cfg_t scroll_s2_cfg {
-  {32, 32, 0, 2, 16, 2},           // grid x,y; box position on a grid, box size on a grid;
+  2,                              // Message queue Group
+  {32, 32, 0, 2, 16, 2},          // grid x,y; box position on a grid, box size on a grid;
   {
     FONT_SMALL_U8G2,              // font
     RGB565_CYAN, 0,               // color, bgcolor;

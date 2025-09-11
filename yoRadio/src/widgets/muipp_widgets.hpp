@@ -47,6 +47,8 @@ struct text_wdgt_t {
  * 
  */
 struct scroller_cfg_t {
+  // Message queue Group
+  uint32_t gid;
   muipp::grid_box box;
   AGFX_text_t style;
   uint32_t scroll_speed;
