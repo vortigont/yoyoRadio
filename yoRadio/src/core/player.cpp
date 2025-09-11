@@ -323,6 +323,8 @@ void AudioController::_play_station_from_playlist(int idx){
     if (err == ESP_OK){
       handle->set_item(T_station, _curStationIndex);
     }
+
+    LOGD(T_Player, printf, "_play_station_from_playlist:%d\n", idx);
     int32_t d = e2int(evt::yo_state::webstream);
     EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::devMode), &d, sizeof(d));
     EVT_POST(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerPlay));

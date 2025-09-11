@@ -52,3 +52,4 @@ static constexpr const char* T_spectre = "spectre";
 static constexpr const char* T_amp = "amp";
 static constexpr const char* T_avg = "avg";
 static constexpr const char* T_brightness = "brightness";
+static constexpr const char* T_fft_size = "fft_size";
