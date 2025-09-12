@@ -1,29 +1,18 @@
 /*
-  This file is a part of EmbUI project
-  https://github.com/vortigont/EmbUI
+  This file is a part of yoyoRadio project
+  https://github.com/vortigont/yoyoRadio/
 
-  Copyright © 2023-2025 Emil Muratov (vortigont)
+  a fork of yoRadio project from https://github.com/e2002/yoradio
 
-  EmbUI is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.
-
-  EmbUI is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
-
-  You should have received a copy of the GNU General Public License
-  along with EmbUI.  If not, see <https://www.gnu.org/licenses/>.
+  Copyright © 2025 Emil Muratov (Vortigont)
 */
+
 
 #pragma once
 #include <string>
 #include <list>
 #include <memory>
 #include <mutex>
-#include "evtloop.h"
 
 #define SCROLLER_HEADER_GID  1
 #define SCROLLER_TRACK_GID  2

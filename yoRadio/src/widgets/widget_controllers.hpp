@@ -22,6 +22,7 @@
 #include "embui_units.hpp"
 #include "muipp_widgets.hpp"
 #include "core/textmsgq.hpp"
+#include "freertos/timers.h"
 
 class SpectrumAnalyser_Controller : public EmbUIUnit_Presets {
   std::shared_ptr<SpectrumAnalyser_Widget> _unit;
@@ -64,9 +65,8 @@ class MessageQ_Controller : public EmbUIUnit {
   std::shared_ptr<AGFX_TextScroller> _unit;
 
 public:
-  MessageQ_Controller(const char* label, const char* name_space, std::shared_ptr<AGFX_TextScroller> unit, size_t qid = 0, size_t qlen = 16) :
-    EmbUIUnit(label, name_space), _unit(unit), qid(qid), _max_q_len(qlen) {}
-  ~MessageQ_Controller(){ _events_unsubsribe(); }
+  MessageQ_Controller(const char* label, const char* name_space, std::shared_ptr<AGFX_TextScroller> unit, size_t qid = 0, size_t qlen = 16);
+  ~MessageQ_Controller();
 
   // start or initialize unit
   void start() override;
@@ -83,6 +83,9 @@ private:
   using message_t = std::unique_ptr<TextMessage>;
   std::list< message_t > _mqueue;
   message_t _current_msg;
+
+  // queue timer
+  TimerHandle_t _tmr = nullptr;
 
   esp_event_handler_instance_t _hdlr_msg_evt{nullptr};
 
@@ -122,6 +125,9 @@ private:
 
   bool _scroller_callback(CanvasTextScroller::event_t e);
 
+  // crolling ended event, reevaluate current message
+  void _scroll_ended();
+  
   // reevaluate current messeage and start scrolling next one
-  void _scroll_next_message();
+  void _evaluate_queue();
 };
