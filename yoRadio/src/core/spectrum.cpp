@@ -1,3 +1,12 @@
+/*
+  This file is a part of yoyoRadio project
+  https://github.com/vortigont/yoyoRadio/
+
+  a fork of yoRadio project from https://github.com/e2002/yoradio
+
+  Copyright © 2025 Emil Muratov (Vortigont)
+*/
+
 #include "math.h"
 #include "dsp_common.h"
 #include "dsps_math.h"
