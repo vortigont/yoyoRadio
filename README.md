@@ -26,11 +26,12 @@ Stay in touch!
 
 ## Demos - Spectrum analyzer
 
-Guition JC1060P470 ESP32-P4 FFT 512 band Spectrum Analyzer
+Guition JC3248W535 - ESP32-S3 FFT 512 band Spectrum Analyzer
 
 [![Guition JC1060P470 ESP32-P4 FFT 512 band Spectrum Analyzer - yoyoRadio](https://img.youtube.com/vi/IIPXNokoCi4/0.jpg)](https://youtu.be/IIPXNokoCi4)
 
-Guition JC3248W535 - ESP32-S3 FFT 512 band Spectrum Analyzer
+
+Guition JC1060P470 ESP32-P4 FFT 512 band Spectrum Analyzer
 
 [![Guition JC3248W535 - ESP32-S3 FFT 512 band Spectrum Analyzer - yoyoRadio](https://img.youtube.com/vi/J_0954iV2jw/0.jpg)](https://youtu.be/J_0954iV2jw)
 
