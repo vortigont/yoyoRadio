@@ -1,6 +1,7 @@
 #if __has_include("Arduino_GFX.h")
 #include "muipp_widgets.hpp"
 #include "components.hpp"
+#include "core/evtloop.h"
 #include "agfx.h"
 #include "locale/l10n.h"
 #include "core/const_strings.h"
@@ -183,6 +184,7 @@ void MuiItem_Bitrate_Widget::_events_subsribe(){
   );
 }
 
+
 // ***** SpectrumAnalyser_Widget ***** //
 // The function convert value to RGB565 color value
 constexpr int8_t colors[3][3] = { {0, 0, 31}, {0, 63, 0}, {31, 0, 0} };
@@ -322,11 +324,10 @@ void SpectrumAnalyser_Widget::_events_subsribe(){
     [](void* self, esp_event_base_t base, int32_t id, void* data){ static_cast<SpectrumAnalyser_Widget*>(self)->_events_chg_hndlr(id, data); },
     this, &_hdlr_chg_evt
   );
-
 }
 
 void SpectrumAnalyser_Widget::_events_chg_hndlr(int32_t id, void* data){
-  LOGD(T_spectre, printf, "Analyzer event:%d\n", id);
+  LOGV(T_spectre, printf, "Event:%d\n", id);
   // process command events received via event loop bus
   switch (static_cast<evt::yo_event_t>(id)){
     // Play radio station from a playlist

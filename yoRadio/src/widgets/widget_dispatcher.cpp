@@ -10,6 +10,7 @@
 #include "nvs_handle.hpp"
 #include "widget_dispatcher.hpp"
 #include "widget_controllers.hpp"
+#include "core/evtloop.h"
 #include "EmbUI.h"
 #include "locale/l10n.h"
 #include "core/log.h"

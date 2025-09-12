@@ -2,7 +2,6 @@
 #include <ctime>
 #include "muipp_agfx.hpp"
 #include "core/common.h"
-#include "core/evtloop.h"
 #include "core/spectrum.hpp"
 
 // a list of known widget types
