@@ -75,6 +75,10 @@
                 "section":"options",
                 "block":[
                   {
+                    "value":16,
+                    "label":"8 полос"
+                  },
+                  {
                     "value":32,
                     "label":"16 полос"
                   },
