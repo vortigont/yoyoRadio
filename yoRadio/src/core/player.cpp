@@ -443,7 +443,10 @@ void AudioController::_audio_cb_generic(Audio::event_t e, const char* msg){
       // copy by value including null terminator
       // todo: check if it is safe to pass by pointer
       msgPool.addMsg({ msg , -1 /*cnt*/, 0, e2int(evt::yo_event_t::playerStationTitle), SCROLLER_HEADER_GID});
-      //EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerStationTitle), msg, strlen(msg)+1);
+      // Audio lib currently does not provides bitrate events properly, so let's publish it here
+      // if we got the title then bitrate should be known by now?
+      audio_info_t info{ audio.getBitRate() / 1000, audio.getCodecname() };
+      EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerAudioInfo), &info, sizeof(info));
     } break;
 
     case Audio::evt_bitrate : {
