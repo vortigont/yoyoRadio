@@ -20,6 +20,7 @@ ESP_EVENT_DECLARE_BASE(YO_CMD_EVENTS);          // declaration of Yo setter Comm
 //ESP_EVENT_DECLARE_BASE(YO_GET_STATE_EVENTS);    // declaration of Yo "Get State" Command events - this is a request of some current states (in reply to this command, an YO_NTF_EVENTS could be generated)
 ESP_EVENT_DECLARE_BASE(YO_NTF_STATE_EVENTS);    // declaration of Yo "Notify State" command events - this a current state reporting event (those events are published on request, not on change!!!)
 ESP_EVENT_DECLARE_BASE(YO_CHG_STATE_EVENTS);    // declaration of Yo "Change State" notification events base (those events are published when some state changes or in reply to "cmd set" events)
+ESP_EVENT_DECLARE_BASE(YO_MSGQ_EVENTS);         // declaration of Yo "Text Message Queue" notification events
 
 // Radio's Event Loop
 namespace evt {
@@ -82,6 +83,7 @@ enum class yo_event_t:int32_t {
   // Display events
   displayBootstring = 200,
   displayBrightness,        // set / get display brightness change, param int32_t - brightness in range 0-100%
+  displayRedraw,            // request display redraw - wipe the screen and render all widgets
 
   // ext devices control
   btnLock = 300,            // Lock button
@@ -89,6 +91,10 @@ enum class yo_event_t:int32_t {
   btnLockState,             // request for button lock state, ButtonEventHandler will reply with YO_STATE_EVENTS:: btnUnLock/btnLock
 
   encoderMode = 310,        // change event, which mode encoder has switched to, param: unsigned
+
+  // TextMessageQ
+  newMsg = 400,             // notify consumers about new message in the pool, param: uint32_t - message queue ID
+
 
   // Module manager
   modClk = 1000,            // Enable/disable Clock module. param: unsigned n, if zero, disable, other - enable

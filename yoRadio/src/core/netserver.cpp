@@ -296,6 +296,7 @@ void NetServer::_events_unsubsribe(){
 }
 
 void NetServer::_events_chg_hndlr(int32_t id, void* data){
+  LOGV(T_WebUI, printf, "NetServer CHG event:%d\n", id);
   JsonDocument doc;
   JsonObject obj = doc.to<JsonObject>();
 

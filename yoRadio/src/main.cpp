@@ -32,25 +32,6 @@ void setup() {
   LOGI(T_BOOT, println, "Loading hw configuration");
   load_hwcomponets_configuration();
 
-  //telnet.begin();
-/*
-  if(SDC_CS!=255) {
-    LOGI(T_BOOT, println, "Wait for SDCARD");
-    display->putRequest(WAITFORSD, 0);
-  }
-*/
-
-  //LOGI(T_BOOT, println, "Init Controls");
-  //initControls();
-
-  #ifdef MQTT_ROOT_TOPIC
-    mqttInit();
-  #endif
-
-  // spawn Modules instances from saved configurations, this must be done AFTER display initialization
-  zookeeper.start();
-  zookeeper.setHandlers();
-
   LOGD(T_BOOT, println, "Setup complete");
 }
 

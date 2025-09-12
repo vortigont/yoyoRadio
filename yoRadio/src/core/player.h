@@ -6,6 +6,7 @@
 #include "Audio.h"
 #include "es8311.h"
 #include "EmbUI.h"
+#include "spectrum.hpp"
 
 #ifndef MQTT_BURL_SIZE
   #define MQTT_BURL_SIZE  512
@@ -101,9 +102,6 @@ protected:
 public:
     bool resumeAfterUrl = false;
     uint32_t sd_min, sd_max;
-    #ifdef MQTT_ROOT_TOPIC
-    char      burl[MQTT_BURL_SIZE];  /* buffer for browseUrl  */
-    #endif
 
     AudioController() = default;
     virtual ~AudioController();
@@ -171,7 +169,9 @@ public:
     uint32_t getAudioCurrentTime(){ return audio.getAudioCurrentTime(); };
     uint32_t getAudioFileDuration(){ return getAudioFileDuration(); };
 
-
+    // attach DSP callback
+    void setDSPCallback(Audio::i2s_process_cb_t cb){ audio.setI2SProcessCallback(cb); };
+    void unsetDSPCallback(){ audio.setI2SProcessCallback(nullptr); }
 
 private:
   std::mutex _mtx;

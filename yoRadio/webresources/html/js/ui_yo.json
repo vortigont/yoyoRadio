@@ -10,8 +10,8 @@
         "value": "ui_page_radio"
       },
       {
-        "label": "🏗 Модули",
-        "value": "ui_page_modules"
+        "label": "🏗 Виджеты",
+        "value": "embuium.wdgt.list"
       },
       {
         "label": "Настройки",

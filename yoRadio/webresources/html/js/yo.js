@@ -144,5 +144,10 @@ window.addEventListener("load", async function(ev){
 		response = await response.json();
 		uiblocks['yo'] = response;
 	}
+	let embuium = await fetch("/js/ui_embuium.json", {method: 'GET'});
+	if (embuium.ok){
+		embuium = await embuium.json();
+		uiblocks['embuium'] = embuium;
+	}
   }.bind(window)
 );

@@ -41,7 +41,8 @@ static constexpr text_wdgt_t device_state_cfg {
 
 // Scroller 1 - station title or so
 static constexpr scroller_cfg_t scroll_s1_cfg {
-  {32, 32, 0, 1, 32, 2},           // grid x,y; box position on a grid, box size on a grid;
+  1,                              // Message queue Group
+  {32, 32, 0, 0, 32, 2},          // grid x,y; box position on a grid, box size on a grid;
   {
     FONT_SMALL_U8G2,              // font
     RGB565_OLIVE, 0,              // color, bgcolor;
@@ -49,12 +50,13 @@ static constexpr scroller_cfg_t scroll_s1_cfg {
     muipp::text_align_t::left, muipp::text_align_t::baseline, //  muipp::text_align_t halign{muipp::text_align_t::left}, valign{muipp::text_align_t::baseline};
     false                         // transp_bg
   },
-  40                              // scroll speed
+  30                              // scroll speed
 };
 
 // Scroller 2 - song title or so
 static constexpr scroller_cfg_t scroll_s2_cfg {
-  {32, 32, 0, 2, 32, 2},           // grid x,y; box position on a grid, box size on a grid;
+  2,                              // Message queue Group
+  {32, 32, 0, 2, 32, 2},          // grid x,y; box position on a grid, box size on a grid;
   {
     FONT_SMALL_U8G2,              // font
     RGB565_CYAN, 0,               // color, bgcolor;
@@ -79,18 +81,27 @@ static constexpr bitrate_box_cfg_t bitrate_cfg {
   T_bitrate_k                     // print format
 };
 
+static constexpr spectrum_box_cfg_t spectrum_cfg {
+  {16, 16, 0, 10, 16, 6},        // grid x,y; box position on a grid (x,y), box size on a grid (w,h)
+
+};
+
 // a preset with set of widgets
+#define  baseline_320x480  25091201UL
 
 static const std::vector<widget_cfgitem_t> cfg1 {
   // Clock
-  { yoyo_wdgt_t::clock, &clock_cfg},
+  { yoyo_wdgt_t::clock, T_clock, true, &clock_cfg},
   // text - device state
-  { yoyo_wdgt_t::text, &device_state_cfg},
-  { yoyo_wdgt_t::bitrate, &bitrate_cfg}
+  //{ yoyo_wdgt_t::textStatic, T_stateHeader, true, &device_state_cfg},
   // Scroller 1 - station
-  //{ yoyo_wdgt_t::scrollerStation, &scroll_s1_cfg},
+  { yoyo_wdgt_t::textScroller, T_scrollerStation, true, &scroll_s1_cfg},
   // Scroller 2 - track title, etc...
-  //{ yoyo_wdgt_t::scrollerTitle, &scroll_s2_cfg},
+  { yoyo_wdgt_t::textScroller, T_scrollerTitle, true, &scroll_s2_cfg},
+  // bitrate
+  { yoyo_wdgt_t::bitrate, T_bitrate, true, &bitrate_cfg},
+  // spectrum
+  { yoyo_wdgt_t::spectrumAnalyzer, T_spectrumAnalyzer, true, &spectrum_cfg }
 };
 
 };    // namespace   display_320x480

@@ -1,0 +1,147 @@
+{
+  "wdgt":{
+    "list":{
+      "section":"units",
+      "comment":"list of widgets",
+      "label":"🏗 Виджеты",
+      "main":true,
+      "block":[
+        {
+          "section":"clock",
+          "line":true,
+          "block":[
+            {
+              "id":"set_embuium_wdgt_unit_clock_state",
+              "html":"input",
+              "label":"🕓 Часы",
+              "type":"checkbox",
+              "onChange": true
+            }
+          ]
+        },
+        {
+          "section":"spectrumAnalyzer",
+          "line":true,
+          "block":[
+            {
+              "id":"set_embuium_wdgt_unit_spectrumAnalyzer_state",
+              "html":"input",
+              "label":"Спектроанализатор",
+              "type":"checkbox",
+              "onChange": true
+            },
+            {
+              "id": "get_embuium_wdgt_unit_spectrumAnalyzer_page",
+              "html": "button",
+              "type": 0,
+              "label": "🛠 Параметры"
+            }
+          ]
+        }
+      ]    
+    },
+    "unit":{
+      "spectrumAnalyzer":{
+        "page":{
+          "cfg":{
+            "section":"set_embuium_wdgt_unit_spectrumAnalyzer_cfg",
+            "label":"Спектроанализатор",
+            "main":true,
+            "block":[
+              {
+                "id":"type",
+                "html":"select",
+                "label":"Визуализация",
+                "section":"options",
+                "block":[
+                  {
+                    "value":0,
+                    "label":"Волна"
+                  },
+                  {
+                    "value":1,
+                    "label":"Спектрограмма"
+                  },
+                  {
+                    "value":2,
+                    "label":"Линии"
+                  }
+                ]
+              },
+              {
+                "id":"fft_size",
+                "html":"select",
+                "label":"Размер FFT таблицы",
+                "section":"options",
+                "block":[
+                  {
+                    "value":16,
+                    "label":"8 полос"
+                  },
+                  {
+                    "value":32,
+                    "label":"16 полос"
+                  },
+                  {
+                    "value":64,
+                    "label":"32 полосы"
+                  },
+                  {
+                    "value":128,
+                    "label":"64 полосы"
+                  },
+                  {
+                    "value":256,
+                    "label":"128 полос"
+                  },
+                  {
+                    "value":512,
+                    "label":"256 полос"
+                  }
+                ]
+              },
+              {
+                "id":"amp",
+                "html":"input",
+                "type":"range",
+                "label":"Усиление",
+                "min":2,
+                "max":10,
+                "step":0.25
+              },
+              {
+                "id":"avg",
+                "html":"input",
+                "type":"range",
+                "label":"Усредняющий фактор",
+                "min":0.5,
+                "max":0.95,
+                "step":0.05
+              },
+              {
+                "id":"color",
+                "html":"input",
+                "type":"color",
+                "label":"Цвет амплитуды",
+                "data_color":"rgb565"
+              },
+              {
+                "id": "set_embuium_wdgt_unit_spectrumAnalyzer_cfg",
+                "html": "button",
+                "type": "submit",
+                "label":"✅ Применить"
+              },
+              {
+                "html":"button",
+                "action": "embuium.wdgt.list",
+                "color": "green",
+                "type":"generic",
+                "label":"🔙 Выход"
+              }
+            ]      
+          }
+        }
+      }
+    }
+  }
+}

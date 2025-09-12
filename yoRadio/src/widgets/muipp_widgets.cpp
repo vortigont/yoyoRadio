@@ -1,7 +1,10 @@
 #if __has_include("Arduino_GFX.h")
 #include "muipp_widgets.hpp"
+#include "components.hpp"
+#include "core/evtloop.h"
 #include "agfx.h"
 #include "locale/l10n.h"
+#include "core/const_strings.h"
 #include "core/log.h"
 
 /**************************
@@ -125,7 +128,7 @@ MuiItem_Bitrate_Widget::MuiItem_Bitrate_Widget(muiItemId id,
   AGFX_text_t tcfg)
     : MuiItem_Uncontrollable(id), _x(x), _y(y), _w(w), _h(h),  _tcfg(tcfg) { _events_subsribe(); };
 
-MuiItem_Bitrate_Widget::MuiItem_Bitrate_Widget(muiItemId id, const bitrate_box_cfg_t *cfg, int16_t screen_w, int16_t screen_h) : MuiItem_Uncontrollable(id){
+MuiItem_Bitrate_Widget::MuiItem_Bitrate_Widget(muiItemId id, const bitrate_box_cfg_t *cfg, int16_t screen_w, int16_t screen_h, const char* label) : MuiItem_Uncontrollable(id, label){
   std::tie(_x, _y, _w, _h) = cfg->box.getBoxDimensions(screen_w, screen_h);
   _radius = cfg->radius;
   _tcfg = cfg->style;
@@ -180,5 +183,174 @@ void MuiItem_Bitrate_Widget::_events_subsribe(){
     this, &_hdlr_chg_evt
   );
 }
+
+
+// ***** SpectrumAnalyser_Widget ***** //
+// The function convert value to RGB565 color value
+constexpr int8_t colors[3][3] = { {0, 0, 31}, {0, 63, 0}, {31, 0, 0} };
+uint16_t convert_to_rgb(uint8_t minval, uint8_t maxval, int8_t val){
+    uint16_t result;
+
+    float i_f = (float)(val - minval) / (float)(maxval - minval) * 2;
+
+    int Ii = i_f;
+    float If = i_f - Ii;
+
+    const int8_t *c1 = colors[Ii];
+    const int8_t *c2 = colors[Ii + 1];
+    uint16_t res_colors[3];
+
+    res_colors[0] = c1[0] + If * (c2[0] - c1[0]);
+    res_colors[1] = c1[1] + If * (c2[1] - c1[1]);
+    res_colors[2] = c1[2] + If * (c2[2] - c1[2]);
+    result = res_colors[2] | (res_colors[1] << 5) | (res_colors[0] << 11);
+    return result;
+}
+
+SpectrumAnalyser_Widget::SpectrumAnalyser_Widget(muiItemId id, const muipp::grid_box &cfg, int16_t screen_w, int16_t screen_h) :
+  MuiItem_Uncontrollable(id, nullptr) {
+    std::tie(_x, _y, _w, _h) = cfg.getBoxDimensions(screen_w, screen_h);
+    if (_spectradsp.init()){
+      // set callback and subscribe only if mem allocation was done
+      player->setDSPCallback([this](const int16_t* outBuff, int32_t validSamples, bool *continueI2S){ _spectradsp.data_sink(outBuff, validSamples); *continueI2S = true; } );
+      _events_subsribe();
+    }
+  };
+
+SpectrumAnalyser_Widget::~SpectrumAnalyser_Widget(){
+  player->setDSPCallback(nullptr);
+  esp_event_handler_instance_unregister_with(evt::get_hndlr(), YO_CHG_STATE_EVENTS, ESP_EVENT_ANY_ID, _hdlr_chg_evt);
+}
+
+void SpectrumAnalyser_Widget::render(const MuiItem* parent, void* r){
+  if (_cleanup) {
+    _running = false;
+    return _clean_canvas(static_cast<Arduino_GFX*>(r));
+  }
+
+  switch (_v){
+    case visual_t::spectrogram :
+      _draw_spectrum(static_cast<Arduino_GFX*>(r));
+      break;
+
+    case visual_t::line :
+      _draw_lines(static_cast<Arduino_GFX*>(r));
+      break;
+
+    default:
+      _draw_wave(static_cast<Arduino_GFX*>(r));
+  }
+};
+
+void SpectrumAnalyser_Widget::_draw_spectrum(Arduino_GFX* g){
+  const float* result_data = _spectradsp.getData();
+  size_t len = _spectradsp.getDataSize();
+
+  int32_t xx = (_x+_w)/2;
+  // Add left channel to the screen
+  // The order of the values inverted
+  for (int x = 0 ; x != len / 2; ++x) {
+    // Left channel:
+    // invert the order of values and clamp it to 0-127
+    float data = result_data[x];
+
+    // Convert input value in dB to the color - this will draw "waterfall spectrogram"
+    g->writePixel(xx - x, _y + _hh, convert_to_rgb(0, 128, clamp(data, 0.0F, 128.0F)));
+
+    // Right channel:
+    data = result_data[len / 2 + x];
+    // Convert input value in dB to the color - this will draw "waterfall spectrogram"
+    g->writePixel(xx + x, _y + _hh, convert_to_rgb(0, 128, clamp(data, 0.0F, 128.0F)));
+  }
+  
+  // move spectrogram offset
+  ++_hh;
+  // reset y-offset
+  if (_hh > _h) _hh = 0;
+}
+
+void SpectrumAnalyser_Widget::_draw_wave(Arduino_GFX* g){
+  const float* result_data = _spectradsp.getData();
+  size_t len = _spectradsp.getDataSize();
+
+  // clear amplitude area
+  g->fillRect(_x, _y, _w, _h, 0);
+
+  int32_t xx = (_x+_w)/2;
+  // Add left channel to the screen
+  // The order of the values inverted
+  for (int x = 0 ; x != len / 2; ++x) {
+    // Left channel:
+    // invert the order of values and clamp it to area size
+    float data = clamp(result_data[x], 0.0F, (float)_h);
+    // this will draw dot amplitudes (with inverted Y axis)
+    g->drawPixel(xx - x, _y + _h - data, _color1);
+
+    // Right channel:
+    data = clamp( result_data[len/2 + x], 0.0F, (float)_h);
+    // this will draw dot amplitudes (with inverted Y axis)
+    g->drawPixel(xx + x, _y + _h - data, _color1);
+  }
+}
+
+void SpectrumAnalyser_Widget::_draw_lines(Arduino_GFX* g){
+  const float* result_data = _spectradsp.getData();
+  size_t len = _spectradsp.getDataSize();
+
+  // clear amplitude area
+  g->fillRect(_x, _y, _w, _h, 0);
+
+  int32_t xx = (_x+_w)/2;
+  // Add left channel to the screen
+  // The order of the values inverted
+  for (int x = 0 ; x != len / 2; ++x) {
+    // Left channel:
+    // invert the order of values and clamp it to area size
+    float data = clamp(result_data[x], 0.0F, (float)_h);
+    // this will draw dot amplitudes (with inverted Y axis)
+    g->writeLine(xx - x, _y + _h, xx - x, _y + _h - data, _color1);
+
+    // Right channel:
+    data = clamp( result_data[len/2 + x], 0.0F, (float)_h);
+    // this will draw dot amplitudes (with inverted Y axis)
+    g->drawLine(xx + x, _y + _h, xx + x, _y + _h - data, _color1);
+  }
+
+}
+
+
+void SpectrumAnalyser_Widget::_events_subsribe(){
+  esp_event_handler_instance_register_with(evt::get_hndlr(), YO_CHG_STATE_EVENTS, ESP_EVENT_ANY_ID,
+    [](void* self, esp_event_base_t base, int32_t id, void* data){ static_cast<SpectrumAnalyser_Widget*>(self)->_events_chg_hndlr(id, data); },
+    this, &_hdlr_chg_evt
+  );
+}
+
+void SpectrumAnalyser_Widget::_events_chg_hndlr(int32_t id, void* data){
+  LOGV(T_spectre, printf, "Event:%d\n", id);
+  // process command events received via event loop bus
+  switch (static_cast<evt::yo_event_t>(id)){
+    // Play radio station from a playlist
+    case evt::yo_event_t::playerPlay :
+      LOGD(T_spectre, println, "Starting analyzer" );
+      _running = true;
+      break;
+
+    case evt::yo_event_t::playerPause :
+    case evt::yo_event_t::playerStop :
+      LOGD(T_spectre, println, "Stopping analyzer" );
+      _cleanup = true;
+      break;
+
+    default:;
+  }
+}
+
+void SpectrumAnalyser_Widget::_clean_canvas(Arduino_GFX* g){
+  g->fillRect(_x, _y, _w, _h, 0);
+  _cleanup = false;
+}
+
+
 
 #endif  // #if __has_include("Arduino_GFX.h")

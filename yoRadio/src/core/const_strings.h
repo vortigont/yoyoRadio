@@ -45,6 +45,11 @@ static constexpr const char* T_last_profile = "last_profile";
 static constexpr const char* T_profile = "profile";
 static constexpr const char* T_profiles = "profiles";
 
+// Widgets
+static constexpr const char* T_spectre = "spectre";
 
-static constexpr const char* T_cfg = "cfg";
+
+static constexpr const char* T_amp = "amp";
+static constexpr const char* T_avg = "avg";
 static constexpr const char* T_brightness = "brightness";
+static constexpr const char* T_fft_size = "fft_size";
