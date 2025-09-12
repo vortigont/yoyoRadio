@@ -15,14 +15,4 @@
 static constexpr const char* T_bitrate_Kbps = "%u Kbps";
 static constexpr const char* T_bitrate_k = "%uk";
 
-/**
- * @brief this struct is a configuration placeholder that carries a widget type and an abstract pointer to it's config struct
- * used to define static configuration presets
- * 
- */
-struct widget_cfgitem_t {
-    // type of the widget
-    yoyo_wdgt_t wtype;
-    // a pointer to it's configuration
-    const void* cfg;
-};
+

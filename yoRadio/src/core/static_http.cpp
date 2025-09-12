@@ -7,6 +7,7 @@
 enum class embedded_data_t {
   index,
   ui,
+  um,   // unit manager
   i18n,
   yoscript,
   yostyle,
@@ -35,6 +36,9 @@ static void mk_response(embedded_data_t obj, AsyncWebServerRequest* req){
         break;
       case embedded_data_t::ui :
         response = req->beginResponse(200, asyncsrv::T_application_json, ui_yo_json_gz_start, ui_yo_json_gz_end - ui_yo_json_gz_start );
+        break;
+      case embedded_data_t::um :
+        response = req->beginResponse(200, asyncsrv::T_application_json, ui_embuium_json_gz_start, ui_embuium_json_gz_end - ui_embuium_json_gz_start );
         break;
 /*
       case embedded_data_t::i18n :
@@ -91,6 +95,7 @@ void set_static_http_handlers(){
   embui.server.on("/index.html", HTTP_GET, [](AsyncWebServerRequest *request){ mk_response(embedded_data_t::index, request); } );
   embui.server.on("/js/yo.js", HTTP_GET, [](AsyncWebServerRequest *request){ mk_response(embedded_data_t::yoscript, request); } );
   embui.server.on("/js/ui_yo.json", HTTP_GET, [](AsyncWebServerRequest *request){ mk_response(embedded_data_t::ui, request); } );
+  embui.server.on("/js/ui_embuium.json", HTTP_GET, [](AsyncWebServerRequest *request){ mk_response(embedded_data_t::um, request); } );
   embui.server.on("/js/yo_style.css", HTTP_GET, [](AsyncWebServerRequest *request){ mk_response(embedded_data_t::yostyle, request); } );
   embui.server.on("/js/yo_theme.css", HTTP_GET, [](AsyncWebServerRequest *request){ mk_response(embedded_data_t::yotheme, request); } );
   //embui.server.on("/js/i18n.json", HTTP_GET, [](AsyncWebServerRequest *request){ mk_response(embedded_data_t::i18n, request); } );

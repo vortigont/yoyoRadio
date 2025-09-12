@@ -2,17 +2,34 @@
 #include <ctime>
 #include "muipp_agfx.hpp"
 #include "core/common.h"
-#include "core/evtloop.h"
+#include "core/spectrum.hpp"
 
 // a list of known widget types
 enum class yoyo_wdgt_t {
   unknown = 0,
   bitrate,
   clock,
-  text,
-  scrollerStation,
-  scrollerTitle
+  textStatic,
+  textScroller,
+  spectrumAnalyzer
 };
+
+/**
+ * @brief this struct is a configuration placeholder that carries a widget type and an abstract pointer to it's config struct
+ * used to define static configuration presets
+ * @note mapping widget's label to it's class type is done via 'widgets_map' struct in "widget_dispatcher.hpp"
+ */
+struct widget_cfgitem_t {
+  // widget type
+  yoyo_wdgt_t wtype;
+  // widget's label, should point to constant string persisting during whole duration of Dispatcher run-time
+  const char* wlabel;
+  // weither widget is loaded on start or not
+  bool enabled;
+  // a pointer to it's bootstrap configuration
+  const void* cfg;
+};
+
 
 /**
  * @brief Text-alike widget configuration
@@ -29,6 +46,8 @@ struct text_wdgt_t {
  * 
  */
 struct scroller_cfg_t {
+  // Message queue Group
+  uint32_t gid;
   muipp::grid_box box;
   AGFX_text_t style;
   uint32_t scroll_speed;
@@ -95,7 +114,8 @@ class ClockWidget: public MuiItem_Uncontrollable {
   clock_date_cfg_t _dcfg;
   
 public:
-  ClockWidget(muiItemId id, const clock_time_cfg_t& clk, const clock_date_cfg_t& date): MuiItem_Uncontrollable(id, nullptr), _tcfg(clk), _dcfg(date) {};
+  ClockWidget(muiItemId id, const clock_time_cfg_t *clk, const clock_date_cfg_t *date): MuiItem_Uncontrollable(id, nullptr), _tcfg(*clk), _dcfg(*date) {};
+  //ClockWidget(muiItemId id, const clock_time_cfg_t& clk, const clock_date_cfg_t& date): MuiItem_Uncontrollable(id, nullptr), _tcfg(clk), _dcfg(date) {};
 
   void render(const MuiItem* parent, void* r = nullptr) override;
   bool refresh_req() const override;
@@ -136,7 +156,7 @@ public:
       uint16_t w, uint16_t h,
       AGFX_text_t tcfg = {});
 
-  MuiItem_Bitrate_Widget(muiItemId id, const bitrate_box_cfg_t *cfg, int16_t screen_w, int16_t screen_h);
+  MuiItem_Bitrate_Widget(muiItemId id, const bitrate_box_cfg_t *cfg, int16_t screen_w, int16_t screen_h, const char* label = nullptr);
 
   ~MuiItem_Bitrate_Widget();
 
@@ -153,4 +173,89 @@ private:
    */
   void _events_subsribe();
 
+};
+
+
+// *****  SpectrumAnalyser_Widget
+/**
+ * @brief config for Spectrum Analyzer widget box
+ * 
+ */
+struct spectrum_box_cfg_t {
+  // widget box on a grid
+  muipp::grid_box box;
+};
+
+/**
+ * @brief graphics spectrum analyzer
+ * 
+ */
+class SpectrumAnalyser_Widget : public MuiItem_Uncontrollable {
+  int16_t _x, _y;
+  uint16_t _w, _h;
+  // y-offset for spectrogram
+  uint16_t _hh{0};
+  SpectraDSP _spectradsp;
+
+public:
+  SpectrumAnalyser_Widget(muiItemId id, const muipp::grid_box &cfg, int16_t screen_w, int16_t screen_h);
+  ~SpectrumAnalyser_Widget();
+
+  void render(const MuiItem* parent, void* r = nullptr);
+  bool refresh_req() const override { return _running; };
+
+  // Controls
+  enum class visual_t { wave, spectrogram, line };
+
+  // set Visualization type
+  void setVisType(visual_t val){ _v = val; };
+
+  // set amlification
+  void setAmp(float val){ _spectradsp.setAmp(val); };
+
+  // set averaging factor
+  void setAvg(float val){ _spectradsp.setAvg(val); };
+
+  // set Colors
+  void setColors(uint16_t c1){ _color1 = c1; };
+
+  // reset analyzer params
+  void reset(size_t fft_size, size_t sampling_rate = 48000){ _spectradsp.reset(fft_size, sampling_rate); };
+
+  // getters
+  visual_t getVisType() const { return _v; }
+  float getAmp() const { return _spectradsp.getAmp(); }
+  float getAvg() const { return _spectradsp.getAvg(); }
+  uint16_t getColors() const { return _color1; }
+  size_t getFFTsize() const { return _spectradsp.getFFTsize(); }
+
+private:
+  bool _running{false}, _cleanup{false};
+
+  // Controls
+  // visualization type
+  enum visual_t _v{visual_t::wave};
+  // Colors
+  uint16_t _color1{RGB565_CYAN};     // amplitude
+
+  esp_event_handler_instance_t _hdlr_chg_evt{nullptr};
+  
+
+  void _draw_spectrum(Arduino_GFX* g);
+
+  void _draw_wave(Arduino_GFX* g);
+
+  void _draw_lines(Arduino_GFX* g);
+
+  // cleanup widget area when audio stops
+  void _clean_canvas(Arduino_GFX* g);
+
+  /**
+   * @brief subscribe to event mesage bus
+   * 
+   */
+  void _events_subsribe();
+
+  // change events
+  void _events_chg_hndlr(int32_t id, void* data);
 };

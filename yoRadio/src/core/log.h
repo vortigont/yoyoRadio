@@ -70,10 +70,11 @@ static constexpr const char* S_E = "E: ";
 
 // LOG tags
 static constexpr const char* T_BOOT = "##[BOOT]#";
-static constexpr const char* T_Player = "Player";
-static constexpr const char* T_Module = "Module";
-static constexpr const char* T_WebUI = "WebUI";
-static constexpr const char* T_ModMGR = "ModMGR";
-static constexpr const char* T_Display = "Display";
 static constexpr const char* T_Clock = "Clock";
-static constexpr const char* T_Config = "Config";
+static constexpr const char* T_Display = "Display";
+static constexpr const char* T_ModMGR = "ModMGR";
+static constexpr const char* T_Module = "module";
+static constexpr const char* T_Player = "Player";
+static constexpr const char* T_WebUI = "WebUI";
+static constexpr const char* T_WidgetMgr = "WidgetMgr";
+static constexpr const char* T_Scroller = "Scroller";

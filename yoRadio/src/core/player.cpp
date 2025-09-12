@@ -3,9 +3,15 @@
 #include "player.h"
 #include "const_strings.h"
 #include "locale/l10n.h"
-#include "netserver.h"
+//#include "netserver.h"
 #include "evtloop.h"
+#include "textmsgq.hpp"
 #include "log.h"
+
+void data_proc(const int16_t *data, int32_t size, bool* do_out){
+  LOGD(T_Player, printf, "i2s data samples: %u\n", size);
+}
+
 
 AudioController::~AudioController(){
   _events_unsubsribe();
@@ -58,6 +64,8 @@ void AudioController::_stop(){
   // update stream's meta info
   audio_info_t info{ 0, T_n_a };
   EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerAudioInfo), &info, sizeof(info));
+  // notify that playback has stopped
+  EVT_POST(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerStop));
 }
 
 #ifndef PL_QUEUE_TICKS
@@ -99,6 +107,8 @@ void AudioController::_play(uint16_t stationId) {
     // notify that device has switched to 'webstream' playback mode
     int32_t d = e2int(evt::yo_state::webstream);
     EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::devMode), &d, sizeof(d));
+    // notify that playback has started
+    EVT_POST(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerPlay));
   } else {
     //telnet.printf("##ERROR#:\tError connecting to %s\n", config.station.url);
     _stop();
@@ -248,10 +258,9 @@ void AudioController::_events_cmd_hndlr(int32_t id, void* data){
   switch (static_cast<evt::yo_event_t>(id)){
 
     // Play radio station from a playlist
-    case evt::yo_event_t::playerStation : {
+    case evt::yo_event_t::playerStation :
       _play_station_from_playlist(*reinterpret_cast<int32_t*>(data));
       break;
-    }
 
     case evt::yo_event_t::playerStop :
       _stop();
@@ -315,6 +324,8 @@ void AudioController::_play_station_from_playlist(int idx){
     if (err == ESP_OK){
       handle->set_item(T_station, _curStationIndex);
     }
+
+    LOGD(T_Player, printf, "_play_station_from_playlist:%d\n", idx);
     int32_t d = e2int(evt::yo_state::webstream);
     EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::devMode), &d, sizeof(d));
     EVT_POST(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerPlay));
@@ -415,23 +426,34 @@ void AudioController::_audio_cb_generic(Audio::event_t e, const char* msg){
       LOG(println, msg);
       // copy by value including null terminator
       // todo: check if it is safe to pass by pointer
-      EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerTrackTitle), msg, strlen(msg)+1);
+      msgPool.addMsg({ msg , -1 /*cnt*/, 0 /* interval*/, e2int(evt::yo_event_t::playerTrackTitle) /* id*/, SCROLLER_TRACK_GID /* qid*/});
+      //EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerTrackTitle), msg, strlen(msg)+1);
     } break;
 
+    // station URL
+    case Audio::evt_icyurl : {
+      LOGI(T_Player, print, "icy-url: "); LOG(println, msg);
+      msgPool.addMsg({ msg , 1 /*cnt*/, 0 /* interval*/, e2int(evt::yo_event_t::playerTrackTitle) /* id*/, SCROLLER_HEADER_GID /* qid*/});
+    } break;
+    
     // station title
     case Audio::evt_name : {
       LOGI(T_Player, print, "Station title: ");
       LOG(println, msg);
       // copy by value including null terminator
       // todo: check if it is safe to pass by pointer
-      EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerStationTitle), msg, strlen(msg)+1);
+      msgPool.addMsg({ msg , -1 /*cnt*/, 0, e2int(evt::yo_event_t::playerStationTitle), SCROLLER_HEADER_GID});
+      // Audio lib currently does not provides bitrate events properly, so let's publish it here
+      // if we got the title then bitrate should be known by now?
+      audio_info_t info{ audio.getBitRate() / 1000, audio.getCodecname() };
+      EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerAudioInfo), &info, sizeof(info));
     } break;
 
     case Audio::evt_bitrate : {
-        LOGI(T_Player, print, "BitRate: ");
-        LOG(println, msg);
-        audio_info_t info{ audio.getBitRate() / 1000, audio.getCodecname() };
-        EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerAudioInfo), &info, sizeof(info));
+      LOGI(T_Player, print, "BitRate: ");
+      LOG(println, msg);
+      audio_info_t info{ audio.getBitRate() / 1000, audio.getCodecname() };
+      EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerAudioInfo), &info, sizeof(info));
     } break;
 /*
     case Audio::id3lyrics :

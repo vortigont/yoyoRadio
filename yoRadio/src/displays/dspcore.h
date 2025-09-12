@@ -143,128 +143,52 @@ public:
 class DisplayGFX : public Display {
   // display graphics object
   Arduino_GFX *_gfx;
-  MuiPlusPlus _mpp;
+  MuiPlusPlus *_mpp;
   
 
-  public:
-    DisplayGFX(Arduino_GFX* gfx) : _gfx(gfx) {};
-    ~DisplayGFX();
+public:
+  DisplayGFX(Arduino_GFX *gfx, MuiPlusPlus *mpp) : _gfx(gfx), _mpp(mpp) {};
+  ~DisplayGFX(){ _events_unsubsribe(); };
 
-    // initialize display (create device driver class)
-    void init() override;
-
-    // returns true if display has reached "main operational state" on boot
-    bool ready() const { return _state == state_t::normal; }
-
-    // flush msg Q
-    void resetQueue() override;
-
-    // send and event to display to process and draw specific component
-    void putRequest(displayRequestType_e type, int payload=0);
-
-    // Widgets operations
-
-    /**
-     * @brief Loads a preset with widgets
-     * intended to load static configurations
-     * 
-     * @param cfg 
-     */
-    void load_main_preset(const std::vector<widget_cfgitem_t>& preset) override;
+  /**
+   * @brief initialize GFX display
+   * creates display servicing task
+   * 
+   */
+  void init() override;
 
 private:
-/*
-    ScrollWidget _meta, _title1, _plcurrent;
-    ScrollWidget *_weather;
-    // string with player state - 'ready', 'connecting', etc...
-    ScrollWidget *_title2;
-    BitrateWidget *_fullbitrate;
-    // Фоновые виджеты
-    FillWidget *_metabackground, *_plbackground;
-    // Volume bar
-    SliderWidget *_volbar, *_heapbar;
+  // flag demanding a full wipe/redraw the screen
+  bool _redraw{true};
+  state_t _state{state_t::empty};
+  void _createDspTask();
+  void _loopDspTask();
 
-    Pager _pager;
-    Page _footer;
-    // some pages container
-    std::array<Page*,4> _pages;
+  TaskHandle_t _dspTask{nullptr};
+  //QueueHandle_t _displayQueue{nullptr};
 
-    VuWidget *_vuwidget;
-    NumWidget _nums;
-    ProgressWidget _testprogress;
-    ClockWidget _clock;
-    // bootscreen
-    Page *_boot;
-    TextWidget *_bootstring, *_volip, *_voltxt, *_rssi, *_bitrate;
-*/
-    // ticker timer
-    Ticker _returnTicker;
-    state_t _state{state_t::empty};
-    void _apScreen();
-    void _swichMode(displayMode_e newmode);
-    void _drawPlaylist();
-    void _volume();
-    void _title();
-    void _station();
-    void _drawNextStationNum(uint16_t num);
-    void _createDspTask();
-    void _buildPager();
-    void _bootScreen();
-    void _setReturnTicker(uint8_t time_s);
-    void _layoutChange(bool played);
+  // event function handlers
+  esp_event_handler_instance_t _hdlr_cmd_evt{nullptr};
+  esp_event_handler_instance_t _hdlr_chg_evt{nullptr};
 
-    void _loopDspTask();
+  /**
+   * @brief subscribe to event mesage bus
+   * 
+   */
+  void _events_subsribe();
 
-    TaskHandle_t _dspTask{nullptr};
-    QueueHandle_t _displayQueue{nullptr};
+  /**
+   * @brief unregister from event loop
+   * 
+   */
+  void _events_unsubsribe();
 
-    // event function handlers
-    esp_event_handler_instance_t _hdlr_cmd_evt{nullptr};
-    esp_event_handler_instance_t _hdlr_chg_evt{nullptr};
+  // command events handler
+  void _events_cmd_hndlr(int32_t id, void* data);
 
-    /**
-     * @brief subscribe to event mesage bus
-     * 
-     */
-    void _events_subsribe();
+  // state change events handler
+  void _events_chg_hndlr(int32_t id, void* data);
 
-    /**
-     * @brief unregister from event loop
-     * 
-     */
-    void _events_unsubsribe();
-
-    // command events handler
-    void _events_cmd_hndlr(int32_t id, void* data);
-
-    // state change events handler
-    void _events_chg_hndlr(int32_t id, void* data);
-
-    // *************************************************
-    // ************* MuiPP screen sets *****************
-
-    // *** Main Screen ***
-    // a set of widgets for Main screen (where radio plays)
-    // it's not the best design but OK for now, for future I could use something like ViSets from the Iron project
-
-    /**
-     * @brief static text with device's status
-     * i.e. 'mode', 'playback'...
-     * 
-     */
-    MuiItem_pt _title_status;
-
-    /**
-     * @brief Scroller #1 - for station name
-     * 
-     */
-    std::shared_ptr<MuiItem_AGFX_TextScroller> _scroll_title1;
-
-    /**
-     * @brief Scroller #2 - for track title
-     * 
-     */
-    std::shared_ptr<MuiItem_AGFX_TextScroller> _scroll_title2;
 };
 
 
@@ -277,7 +201,6 @@ public:
     DisplayDummy() = default;
 
     void init() override {};
-    void putRequest(displayRequestType_e type, int payload = 0) override;
 };
 
 

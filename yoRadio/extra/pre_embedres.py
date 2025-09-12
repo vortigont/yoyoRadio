@@ -25,6 +25,7 @@ in_gz_files = ["webresources/html/index.html",
                "webresources/html/js/embui.js",
                "webresources/html/js/embui_style.css",
                "webresources/html/js/ui_yo.json",
+               "webresources/html/js/ui_embuium.json",
                "webresources/html/js/yo.js",
                "webresources/html/js/yo_style.css",
                "webresources/html/js/yo_theme.css"

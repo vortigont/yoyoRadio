@@ -8,7 +8,7 @@ namespace display_1024x600 {
 // Clock
 static constexpr clock_time_cfg_t clock_time_cfg {
   { 22, 2, muipp::coordinate_spec_t::grid, muipp::coordinate_spec_t::grid, 32, 32 },      // placement at (22.2) on (32x32) grid
-  nullptr, nullptr,
+  nullptr, nullptr,         // U8G2 font
   &FONT_CLOCK_DOTS_H, &FONT_CLOCK_DOTS_S,
   FONT_DEFAULT_COLOR, 0,    // color, bgcolor;
   1, 1,       // font_hours_size, font_seconds_size;
@@ -34,14 +34,15 @@ static constexpr text_wdgt_t device_state_cfg {
     FONT_SMALL_U8G2,              // font
     RGB565_WHITE, 0,              // color, bgcolor;
     1,                            // font size multiplicator
-    muipp::text_align_t::center, muipp::text_align_t::baseline,   // horizontal / vertical alignment
+    muipp::text_align_t::left, muipp::text_align_t::baseline,   // horizontal / vertical alignment
     true                          // transparent background
   }
 };
 
 // Scroller 1 - station title or so
 static constexpr scroller_cfg_t scroll_s1_cfg {
-  {32, 32, 0, 0, 15, 1},           // grid x,y; box position on a grid, box size on a grid;
+  1,                              // Message queue Group
+  {32, 32, 0, 0, 16, 2},           // grid x,y; box position on a grid, box size on a grid;
   {
     FONT_SMALL_U8G2,              // font
     RGB565_OLIVE, 0,              // color, bgcolor;
@@ -54,7 +55,8 @@ static constexpr scroller_cfg_t scroll_s1_cfg {
 
 // Scroller 2 - song title or so
 static constexpr scroller_cfg_t scroll_s2_cfg {
-  {32, 32, 0, 1, 16, 1},           // grid x,y; box position on a grid, box size on a grid;
+  2,                              // Message queue Group
+  {32, 32, 0, 2, 16, 2},          // grid x,y; box position on a grid, box size on a grid;
   {
     FONT_SMALL_U8G2,              // font
     RGB565_CYAN, 0,               // color, bgcolor;
@@ -67,7 +69,7 @@ static constexpr scroller_cfg_t scroll_s2_cfg {
 
 // Bitrate widget box
 static constexpr bitrate_box_cfg_t bitrate_cfg {
-  {32, 32, 18, 0, 3, 3},           // grid x,y; box position on a grid (x,y), box size on a grid (w,h)
+  {32, 32, 16, 1, 3, 3},           // grid x,y; box position on a grid (x,y), box size on a grid (w,h)
   10,                             // radius for round-shaped corners
   {
     FONT_SMALL_U8G2,              // font
@@ -79,19 +81,29 @@ static constexpr bitrate_box_cfg_t bitrate_cfg {
   T_bitrate_Kbps                  // print format
 };
 
+
+// Spectrum Analyzer
+static constexpr spectrum_box_cfg_t spectrum_cfg {
+  {32, 32, 0, 16, 16, 16},        // grid x,y; box position on a grid (x,y), box size on a grid (w,h)
+
+};
+
 // a preset with set of widgets
+#define  baseline_1024x600  25090711U
 
 static const std::vector<widget_cfgitem_t> cfg1 {
   // Clock
-  { yoyo_wdgt_t::clock, &clock_cfg},
+  { yoyo_wdgt_t::clock, T_clock, true, &clock_cfg},
   // text - device state
-  { yoyo_wdgt_t::text, &device_state_cfg},
+  { yoyo_wdgt_t::textStatic, T_stateHeader, true, &device_state_cfg},
   // Scroller 1 - station
-  { yoyo_wdgt_t::scrollerStation, &scroll_s1_cfg},
+  { yoyo_wdgt_t::textScroller, T_scrollerStation, true, &scroll_s1_cfg},
   // Scroller 2 - track title, etc...
-  { yoyo_wdgt_t::scrollerTitle, &scroll_s2_cfg},
+  { yoyo_wdgt_t::textScroller, T_scrollerTitle, true, &scroll_s2_cfg},
   // bitrate
-  { yoyo_wdgt_t::bitrate, &bitrate_cfg}
+  { yoyo_wdgt_t::bitrate, T_bitrate, true, &bitrate_cfg},
+  // spectrum
+  { yoyo_wdgt_t::spectrumAnalyzer, T_spectrumAnalyzer, true, &spectrum_cfg }
 };
 
-};    // namespace   display_320x480
+};    // namespace   display_1024x600

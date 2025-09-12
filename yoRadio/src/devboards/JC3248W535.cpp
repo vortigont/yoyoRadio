@@ -16,10 +16,6 @@ Arduino_GFX* create_display_dev(const JC3248W535::display_t &cfg, Arduino_DataBu
   if (!drv)
     drv = new Arduino_AXS15231B(bus, GFX_NOT_DEFINED /* RST */, 0 /* rotation */, false /* IPS */, cfg.w, cfg.h);
 
-  // device specific controller
-  //if (!dsp_dev)
-  //  dsp_dev = new Dsp_JC3248W535(cfg.backlight);
-
   // gfx object
   return new Arduino_Canvas(cfg.w, cfg.h, drv);
 }
