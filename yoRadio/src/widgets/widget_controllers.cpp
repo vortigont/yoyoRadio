@@ -85,8 +85,15 @@ void MessageQ_Controller::_consume_msg(){
       if (_current_msg && _current_msg->id == m->id){
         // worst case - we have to update current running message in thread-safe manner
         // for now let's use non-thread safe way and see the impact :))
-        _current_msg.reset(m.release());
-        _unit->update(_current_msg->msg.c_str());
+        if (m->msg.length()){
+          _current_msg.reset(m.release());
+          _unit->update(_current_msg->msg.c_str());
+        } else {
+          // if new message is empty, abort current scroller
+          _unit->abort();
+          _current_msg.release();
+          m.reset(nullptr);
+        }
         continue;
       } else {
         auto id = m->id;
@@ -94,7 +101,14 @@ void MessageQ_Controller::_consume_msg(){
         auto lookup = std::find_if(_mqueue.begin(), _mqueue.end(), [id](const message_t &itm){ return id == itm->id; });
         if (lookup != _mqueue.end()){
           // found a matching message in our queue, let's replace it with a new one
+        if (m->msg.length()){
           (*lookup).reset(m.release());
+        } else {
+          // if new message is empty, then remove our message too
+          _mqueue.erase(lookup);
+          m.reset(nullptr);
+        }
+
           // we consumed the message, could go on here
           continue;
         }
