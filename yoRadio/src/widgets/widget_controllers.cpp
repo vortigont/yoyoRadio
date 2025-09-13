@@ -42,7 +42,7 @@ void SpectrumAnalyser_Controller::load_cfg(JsonVariantConst cfg){
 // *******************
 // MessageQ_Controller
 
-MessageQ_Controller::MessageQ_Controller(const char* label, const char* name_space, std::shared_ptr<AGFX_TextScroller> unit, size_t qid, size_t qlen) :
+MessageQ_Controller::MessageQ_Controller(const char* label, const char* name_space, std::shared_ptr<AGFX_TextScroller> unit, int32_t qid, size_t qlen) :
   EmbUIUnit(label, name_space), _unit(unit), qid(qid), _max_q_len(qlen) {
   // create timer
   _tmr = xTimerCreate("MQ",
@@ -69,8 +69,8 @@ void MessageQ_Controller::_consume_msg(){
 
   // get into pool's message list. This is kind of dirty, think about do this in a more beautifull way
   for ( auto &m : msgPool._msg_list){
-    // skip empty and messages we are not interested in
-    if (!m || (qid != 0 && m->qid != qid))
+    // skip empty messages, I won't check group ID, it is either ours or ANY_GROUP that we must catch
+    if (!m) // || (qid != ESP_EVENT_ANY_ID && m->qid != qid))
       continue;
 
     // a short cut - pick the message if currently nothing is scrolled at all
@@ -127,8 +127,8 @@ void MessageQ_Controller::_consume_msg(){
 
 void MessageQ_Controller::_events_subsribe(){
   // command events
-  esp_event_handler_instance_register_with(evt::get_hndlr(), YO_MSGQ_EVENTS, ESP_EVENT_ANY_ID,
-    [](void* self, esp_event_base_t base, int32_t id, void* data){ static_cast<MessageQ_Controller*>(self)->_events_msg_hndlr(id, data); },
+  esp_event_handler_instance_register_with(evt::get_hndlr(), YO_MSGQ_EVENTS, qid,
+    [](void* self, esp_event_base_t base, int32_t id, void* data){ static_cast<MessageQ_Controller*>(self)->_events_msg_hndlr(reinterpret_cast<TextControlMessage*>(data)); },
     this, &_hdlr_msg_evt
   );
 
@@ -139,15 +139,25 @@ void MessageQ_Controller::_events_unsubsribe(){
   esp_event_handler_instance_unregister_with(evt::get_hndlr(), YO_MSGQ_EVENTS, ESP_EVENT_ANY_ID, _hdlr_msg_evt);
 }
 
-void MessageQ_Controller::_events_msg_hndlr(int32_t id, void* data){
-  LOGD(T_MQCtrl, printf, "Q id:%u, event:%u\n", qid, id);
-  switch (static_cast<evt::yo_event_t>(id)){
+void MessageQ_Controller::_events_msg_hndlr(TextControlMessage *cm){
+  LOGD(T_MQCtrl, printf, "Q id:%d, event:%u\n", qid, cm->e);
+  switch (cm->e){
     // new message arrived
     case evt::yo_event_t::newMsg :
-      if (*reinterpret_cast<uint32_t*>(data) == qid || qid == 0){
-        _consume_msg();
-      }
+      _consume_msg();
       break;
+    
+    case evt::yo_event_t::clearMsg : {
+      // check if current message needs to be cleared
+      if (_current_msg->id == cm->id){
+        // let's do this in a thread-safe manner, set message's counter to 1, and it will be cleared on scroll_end event from scroller
+        _current_msg->cnt = 1;
+        _unit->abort();
+      }
+      // remove matching from the queue
+      auto id = cm->id;
+      std::erase_if(_mqueue, [id](const auto &m){ return (m->id == id); });
+    }
 
     default:;
   }

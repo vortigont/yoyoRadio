@@ -65,7 +65,16 @@ class MessageQ_Controller : public EmbUIUnit {
   std::shared_ptr<AGFX_TextScroller> _unit;
 
 public:
-  MessageQ_Controller(const char* label, const char* name_space, std::shared_ptr<AGFX_TextScroller> unit, size_t qid = 0, size_t qlen = 16);
+  /**
+   * @brief Construct a new MessageQ_Controller object
+   * 
+   * @param label unit label
+   * @param name_space namespace label
+   * @param unit text scroller unit
+   * @param qid message queue ID (message group), -1 - any group (catch-all queue)
+   * @param qlen message queue length
+   */
+  MessageQ_Controller(const char* label, const char* name_space, std::shared_ptr<AGFX_TextScroller> unit, int32_t qid = ESP_EVENT_ANY_ID, size_t qlen = 16);
   ~MessageQ_Controller();
 
   // start or initialize unit
@@ -75,7 +84,7 @@ public:
   void stop() override { _events_unsubsribe(); };
 
   // Instance's queue ID
-  const size_t qid;
+  const int32_t qid;
 
 private:
   const size_t _max_q_len;
@@ -102,7 +111,7 @@ private:
   void _events_unsubsribe();
 
   // command events handler
-  void _events_msg_hndlr(int32_t id, void* data);
+  void _events_msg_hndlr(TextControlMessage *cm);
 
   /**
    * @brief derived method should generate object's configuration into provided JsonVariant

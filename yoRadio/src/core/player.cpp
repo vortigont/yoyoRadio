@@ -3,7 +3,6 @@
 #include "player.h"
 #include "const_strings.h"
 #include "locale/l10n.h"
-//#include "netserver.h"
 #include "evtloop.h"
 #include "textmsgq.hpp"
 #include "log.h"
@@ -55,7 +54,6 @@ void AudioController::setError(const char *e){
 }
 
 void AudioController::_stop(){
-  log_i("%s called", __func__);
   std::lock_guard<std::mutex> lock(_mtx);
   _status = STOPPED;
   audio.stopSong();
@@ -66,6 +64,9 @@ void AudioController::_stop(){
   EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerAudioInfo), &info, sizeof(info));
   // notify that playback has stopped
   EVT_POST(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerStop));
+  // clear titles
+  msgPool.clearMsg(e2int(evt::yo_event_t::playerTrackTitle), SCROLLER_TRACK_GID);
+  msgPool.clearMsg(e2int(evt::yo_event_t::playerStationTitle), SCROLLER_HEADER_GID);
 }
 
 #ifndef PL_QUEUE_TICKS
@@ -424,10 +425,7 @@ void AudioController::_audio_cb_generic(Audio::event_t e, const char* msg){
     case Audio::evt_streamtitle : {
       LOGI(T_Player, print, "Stream title: ");
       LOG(println, msg);
-      // copy by value including null terminator
-      // todo: check if it is safe to pass by pointer
       msgPool.addMsg({ msg , -1 /*cnt*/, 0 /* interval*/, e2int(evt::yo_event_t::playerTrackTitle) /* id*/, SCROLLER_TRACK_GID /* qid*/});
-      //EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerTrackTitle), msg, strlen(msg)+1);
     } break;
 
     // station URL

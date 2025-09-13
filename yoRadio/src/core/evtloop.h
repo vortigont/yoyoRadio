@@ -92,9 +92,9 @@ enum class yo_event_t:int32_t {
 
   encoderMode = 310,        // change event, which mode encoder has switched to, param: unsigned
 
-  // TextMessageQ
-  newMsg = 400,             // notify consumers about new message in the pool, param: uint32_t - message queue ID
-
+  // TextMessageQ           - those are not event_id, but used a as commands directly in a payload for YO_MSGQ_EVENTS, where evet_id is mapped to message group
+  newMsg = 400,             // notify consumers about new message in the pool for specific group, param {newMsg}
+  clearMsg,                 // clear message with specific ID from a message queue, payload type: {clearMsg, uint32_t msd_id}
 
   // Module manager
   modClk = 1000,            // Enable/disable Clock module. param: unsigned n, if zero, disable, other - enable
