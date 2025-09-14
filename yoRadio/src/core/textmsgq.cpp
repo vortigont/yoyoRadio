@@ -24,8 +24,15 @@ MessagePool msgPool;
 
 void MessagePool::addMsg(TextMessage&& msg){
   std::lock_guard lock(msgPool.mtx);
+  // do not accept empty messages, instead clear ones with same id if present
+  if (msg.msg.empty() && msg.id){
+    clearMsg(msg.id, msg.qid);
+    return;
+  }
+
   // clear voids first
   _purge_voids();
+
   // if queue is full, then remove the oldest message
   if (_msg_list.size() > MSG_POOL_MAX_SIZE ){
     LOGW("MSG Pool", println, "MessagePool overflow!");

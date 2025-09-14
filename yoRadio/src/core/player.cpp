@@ -421,31 +421,36 @@ void AudioController::_audio_cb_generic(Audio::event_t e, const char* msg){
       LOG(println, msg);
       break;
 
-    // track title
-    case Audio::evt_streamtitle : {
-      LOGI(T_Player, print, "Stream title: ");
-      LOG(println, msg);
-      msgPool.addMsg({ msg , -1 /*cnt*/, 0 /* interval*/, e2int(evt::yo_event_t::playerTrackTitle) /* id*/, SCROLLER_TRACK_GID /* qid*/});
-    } break;
+    case Audio::evt_eof :
+      LOGI(T_Player, printf, "End of file reached:%s\n", msg);
+      break;
 
-    // station URL
-    case Audio::evt_icyurl : {
-      LOGI(T_Player, print, "icy-url: "); LOG(println, msg);
-      msgPool.addMsg({ msg , 1 /*cnt*/, 0 /* interval*/, e2int(evt::yo_event_t::playerTrackTitle) /* id*/, SCROLLER_HEADER_GID /* qid*/});
-    } break;
-    
-    // station title
+    // station name title
     case Audio::evt_name : {
-      LOGI(T_Player, print, "Station title: ");
+      // check if message is not empty
+      LOGI(T_Player, print, "Station name: ");
       LOG(println, msg);
-      // copy by value including null terminator
-      // todo: check if it is safe to pass by pointer
       msgPool.addMsg({ msg , -1 /*cnt*/, 0, e2int(evt::yo_event_t::playerStationTitle), SCROLLER_HEADER_GID});
       // Audio lib currently does not provides bitrate events properly, so let's publish it here
       // if we got the title then bitrate should be known by now?
       audio_info_t info{ audio.getBitRate() / 1000, audio.getCodecname() };
-      EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerAudioInfo), &info, sizeof(info));
+      EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerAudioInfo), &info, sizeof(info));  
     } break;
+
+    // station description (optional)
+    case Audio::evt_icydescription :
+      LOGI(T_Player, print, "icy_descr: ");
+      LOG(println, msg);
+      // send it to the song's title queue
+      msgPool.addMsg({ msg , 1 /*cnt*/, 0 /* interval*/, 0 /* id*/, SCROLLER_TRACK_GID /* qid*/});
+      break;
+
+    // track title / song artist/name
+    case Audio::evt_streamtitle : {
+      LOGI(T_Player, print, "Stream track title: ");
+      LOG(println, msg);
+      msgPool.addMsg({ msg , -1 /*cnt*/, 0 /* interval*/, e2int(evt::yo_event_t::playerTrackTitle) /* id*/,  SCROLLER_TRACK_GID /* qid*/});
+    } break;   
 
     case Audio::evt_bitrate : {
       LOGI(T_Player, print, "BitRate: ");
@@ -453,24 +458,17 @@ void AudioController::_audio_cb_generic(Audio::event_t e, const char* msg){
       audio_info_t info{ audio.getBitRate() / 1000, audio.getCodecname() };
       EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerAudioInfo), &info, sizeof(info));
     } break;
-/*
-    case Audio::id3lyrics :
-      break;
-    case Audio::commercial :
-      break;
-    case Audio::icyurl :
-      break;
-    case Audio::icylogo :
-      break;
-    case Audio::icydescr :
-      break;
-    case Audio::lasthost :
-      // passes connection URL
-      break;
-*/
-    case Audio::evt_eof :
-      LOGI(T_Player, println, "End of file reached");
-      break;
+
+    // station URL
+    case Audio::evt_icyurl : {
+      // pick only non-empy messages
+      LOGI(T_Player, print, "icy-url: "); LOG(println, msg);
+      msgPool.addMsg({ msg , 1 /*cnt*/, 0 /* interval*/, e2int(evt::yo_event_t::playerTrackTitle) /* id*/, SCROLLER_HEADER_GID /* qid*/});
+    } break;
+
+    // evt_icylogo, evt_lasthost, evt_image, evt_lyrics, evt_log
+
+    //  evt_lasthost
 
     default: {
       // default is just print the message
