@@ -313,12 +313,10 @@ void AudioController::_play_station_from_playlist(int idx){
     LOGW(T_Player, printf, "Can't switch playlist to station:%d\n", idx);
     return;
   }
-  // stop previous playback if any
-  audio.stopSong();
-  setMute(false);
   // connect to a station
-  if (audio.connecttohost(_pls.getURL())){
+  if (_connect_to_url(_pls.getURL())){
     // connection successfull, let's save new playlist position and send notifications
+    LOGD(T_Player, printf, "_play_station_from_playlist:%d\n", idx);
     _curStationIndex = abs(idx);
     esp_err_t err;
     std::unique_ptr<nvs::NVSHandle> handle = nvs::open_nvs_handle(T_Player, NVS_READONLY, &err);
@@ -326,15 +324,25 @@ void AudioController::_play_station_from_playlist(int idx){
       handle->set_item(T_station, _curStationIndex);
     }
 
-    LOGD(T_Player, printf, "_play_station_from_playlist:%d\n", idx);
-    int32_t d = e2int(evt::yo_state::webstream);
-    EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::devMode), &d, sizeof(d));
-    EVT_POST(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerPlay));
     // notify with a new playlist index
     EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerStation), &_curStationIndex, sizeof(_curStationIndex));    
   } else {
     // todo: handle error
   }
+}
+
+bool AudioController::_connect_to_url(const char* url){
+  // stop previous playback if any
+  audio.stopSong();
+  setMute(false);
+  // connect to a station
+  bool success = audio.connecttohost(url);
+  if (success){
+    int32_t d = e2int(evt::yo_state::webstream);
+    EVT_POST_DATA(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::devMode), &d, sizeof(d));
+    EVT_POST(YO_CHG_STATE_EVENTS, e2int(evt::yo_event_t::playerPlay));
+  }
+  return success;
 }
 
 void AudioController::_embui_actions_register(){
@@ -365,6 +373,12 @@ void AudioController::_embui_player_commands(Interface *interf, JsonVariantConst
   if(a.compare(T_volume) == 0) return setVolume(data.as<int32_t>());     // volume slider
 
   if(a.compare(T_playstation) == 0) return _play_station_from_playlist(data.as<int>());
+
+  // connect to a stream
+  if(a.compare(T_connect) == 0){
+    _connect_to_url(data[P_url].as<const char*>());
+    return;
+  }
 
   if(a.compare(T_balance) == 0) return setBalance(data.as<int8_t>());
 

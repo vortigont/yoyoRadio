@@ -187,6 +187,8 @@ private:
    */
   void _play_station_from_playlist(int idx);
 
+  bool _connect_to_url(const char* url);
+
   // event function handlers
   esp_event_handler_instance_t _hdlr_cmd_evt{nullptr};
 

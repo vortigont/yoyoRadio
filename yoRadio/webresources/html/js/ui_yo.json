@@ -57,6 +57,23 @@
             "onChange": true
           },
           {
+            "section":"player_connect",
+            "block":[
+              {
+                "id":"url",
+                "html":"input",
+                "type":"text",
+                "label":"Подключиться к потоку по URL"
+              },
+              {
+                "id":"player_connect",
+                "html":"button",
+                "type":"submit",
+                "label":"Подключить"
+              }    
+            ]
+          },
+          {
             "section": "player_equalizer",
             "hidden": true,
             "show_btn": false,
