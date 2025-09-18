@@ -6,12 +6,14 @@
 // device defines
 #include "devboards/JC3248W535.hpp"
 #include "devboards/JC1060P470C.hpp"
+#include "devboards/generic.hpp"
 // presets
 #include "widgets/presets.hpp"
 #include "core/log.h"
 
 #define   MAX_BOOT_FAIL_CNT   5
 
+static constexpr const char* T_dev_generic            = "generic";        //  generic board
 static constexpr const char* T_dev_JC3248W535         = "JC3248W535";     //  Guition JC3248W535 ESP32-S3
 static constexpr const char* T_dev_JC1060P470         = "JC1060P470";     //  Guition JC1060P470 ESP32-P4
 
@@ -71,6 +73,7 @@ void load_device_profile_from_NVS(){
   std::string_view sv(profile);
   if (sv.compare(T_dev_JC3248W535) == 0) return load_device_JC3248W535();
   if (sv.compare(T_dev_JC1060P470) == 0) return load_device_JC1060P470();
+  if (sv.compare(T_dev_generic) == 0) return load_device_ILI9341();
 }
 
 void load_device_JC3248W535(){
@@ -125,4 +128,31 @@ void load_device_JC1060P470(){
   // Init the display UI
   display->init();
 
+}
+
+void load_device_ILI9341(){
+  LOGD(T_devcfg, println, "Creating devices for ILI9341");
+  // JC3248W535 uses generic esp32 DAC
+  player = new ESP32_I2S_Generic(I2S_BCLK, I2S_LRC, I2S_DOUT);
+  player->init();
+
+  // Display
+  // create display hw controller
+  dctrl = new DisplayControl_AGFX_PWM(TFT_BACKLIGHT, HIGH, agfx);
+  dctrl->init();
+
+  // create Agfx object
+  agfx = generic_boards::create_display_dev_ILI9341(bus);
+  
+  // create Widget dispatcher
+  wdispatcher = new Widget_Dispatcher(T_wdgt, baseline_320x480, display_320x480::cfg1, agfx->width(), agfx->height());
+  wdispatcher->begin();
+
+  // link the above into Display object
+  display = new DisplayGFX(agfx, wdispatcher->getMuipp());
+  // Init the display UI
+  display->init();
+
+  // apply widget preset for 320x240
+  //display->load_main_preset(display_320x480::cfg1);
 }

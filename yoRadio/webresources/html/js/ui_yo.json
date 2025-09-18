@@ -168,7 +168,8 @@
           "label":"Модель модуля/платы",
           "section":"options",
           "block":[
-            { "value":"custom", "label":"Пользовательский (dev_profile.json)" },
+            { "value":"dummy", "label":"Пустой" },
+            { "value":"generic", "label":"Пользовательский (dev_profile.json)" },
             { "value":"JC3248W535", "label":"Guition JC3248W535 ESP32-S3 480x320" },
             { "value":"JC1060P470", "label":"Guition JC1060P470 ESP32-P4 1024x600" }
           ]

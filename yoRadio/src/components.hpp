@@ -32,3 +32,5 @@ void load_device_JC3248W535();
 // create and init devices for JC1060P470 board
 void load_device_JC1060P470();
 
+// generic
+void load_device_ILI9341();

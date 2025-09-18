@@ -59,15 +59,6 @@ The connection tables are located here https://github.com/e2002/yoradio#connecti
   #define DSP_MODEL  DSP_DUMMY
 #endif
 
-// включаем файлы с определениями для "бутербродов" - комбо-плат с всевозможным обвесом
-#if DSP_MODEL == DSP_JC3248W535
-#include "JC3248W535_pincfg.h"
-#endif  // DSP_MODEL == DSP_JC3248W535
-
-#if DSP_MODEL == DSP_JC1060P470
-#include "JC1060P470CIW_pincfg.h"
-#endif  // DSP_MODEL == DSP_JC1060P470
-
 #ifndef DSP_HSPI
   #define DSP_HSPI   false      // use HSPI for displays (miso=12, mosi=13, clk=14) instead of VSPI (by default)
 #endif
@@ -85,6 +76,10 @@ The connection tables are located here https://github.com/e2002/yoradio#connecti
 #ifndef TFT_DC
   #define TFT_DC        4
 #endif
+#ifndef TFT_BACKLIGHT
+  #define TFT_BACKLIGHT   -1
+#endif
+
 
 /*        NEXTION                 */
 #ifndef NEXTION_RX
