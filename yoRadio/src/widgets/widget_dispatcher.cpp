@@ -10,7 +10,7 @@
 #include "nvs_handle.hpp"
 #include "widget_dispatcher.hpp"
 #include "widget_controllers.hpp"
-#include "core/evtloop.h"
+#include "components.hpp"
 #include "EmbUI.h"
 #include "locale/l10n.h"
 #include "core/log.h"
@@ -198,7 +198,7 @@ void Widget_Dispatcher::_spawn_wdgt(const widget_cfgitem_t &item){
           item.wlabel);
       _mpp.addMuippItem(w, root_page);
       // spawn a new unit based on label
-      auto wc = std::make_unique<MessageQ_Controller>(item.wlabel, ns, w, cfg->gid);
+      auto wc = std::make_unique<MessageQ_Controller>(item.wlabel, ns, msgPool, w, cfg->gid);
       if (!wc) return;   // maker was unable to produce an object
       // load unit's configuration
       wc->load();

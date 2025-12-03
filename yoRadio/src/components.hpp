@@ -1,5 +1,6 @@
 #pragma once
 #include "core/player.h"
+#include "core/textmsgq.hpp"
 
 /*
     Project modules are shared objects that could be accesses via `extern` declaration
@@ -9,6 +10,8 @@
 // ******************
 extern AudioController* player;
 
+// MessagePool object 
+extern MessagePool msgPool;
 
 
 /**

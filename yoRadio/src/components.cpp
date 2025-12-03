@@ -28,6 +28,8 @@ Widget_Dispatcher* wdispatcher{nullptr};
 // Display
 Display* display{nullptr};
 DisplayControl* dctrl{nullptr};
+// text messages exchange pool
+MessagePool msgPool;
 
 
 

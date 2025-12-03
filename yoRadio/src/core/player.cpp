@@ -1,6 +1,6 @@
 #include "nvs_handle.hpp"
 #include "common.h"
-#include "player.h"
+#include "components.hpp"
 #include "const_strings.h"
 #include "locale/l10n.h"
 #include "evtloop.h"
