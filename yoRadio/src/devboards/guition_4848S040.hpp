@@ -46,7 +46,6 @@
 
 
 /* Основные настройки */
-#define PLAYER_FORCE_MONO true
 #define L10N_LANGUAGE RU
 #define BITRATE_FULL  true
 

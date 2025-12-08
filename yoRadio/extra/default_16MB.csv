@@ -2,11 +2,11 @@
 # NOTE: Keep first line intact!
 # NOTE: set ALL fields to hex value and do NOT use leave blank fields. Factory builder scripts needs it!
 # 16M = 0x1000000
-#app0,           app,   ota_0,   64K,             1728K,
-#app1,           app,   ota_1,   ,                1728K,
-#spiffs,         data,  spiffs,  ,                12928K,
+#app0,           app,   ota_0,   64K,             3MiB,
+#app1,           app,   ota_1,   ,                3MiB,
+#spiffs,         data,  spiffs,  ,                10MiB,
 nvs,      data, nvs,     0x9000,  0x5000,
 otadata,  data, ota,     0xe000,  0x2000,
-app0,     app,  ota_0,   0x10000, 0x1b0000,
-app1,     app,  ota_1,   0x1c0000,0x1b0000,
-spiffs,   data, spiffs,  0x370000,0xc90000,
+app0,     app,  ota_0,   0x10000, 0x300000,
+app1,     app,  ota_1,   0x310000,0x300000,
+spiffs,   data, spiffs,  0x610000,0x9f0000,

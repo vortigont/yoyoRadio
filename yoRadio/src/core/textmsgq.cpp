@@ -20,10 +20,8 @@
  */
 #define MSG_POOL_MAX_SIZE 4
 
-MessagePool msgPool;
 
 void MessagePool::addMsg(TextMessage&& msg){
-  std::lock_guard lock(msgPool.mtx);
   // do not accept empty messages, instead clear ones with same id if present
   if (msg.msg.empty() && msg.id){
     clearMsg(msg.id, msg.qid);
@@ -33,29 +31,38 @@ void MessagePool::addMsg(TextMessage&& msg){
   // clear voids first
   _purge_voids();
 
-  // if queue is full, then remove the oldest message
-  if (_msg_list.size() > MSG_POOL_MAX_SIZE ){
-    LOGW("MSG Pool", println, "MessagePool overflow!");
-    _msg_list.pop_front();
-  }
+  { // lock list
+    std::lock_guard lock(_mtx);
 
-  _msg_list.emplace_back(std::make_unique<TextMessage>(msg));
+    // if queue is full, then remove the oldest message
+    if (_msg_list.size() > MSG_POOL_MAX_SIZE ){
+      LOGW("MSG Pool", println, "MessagePool overflow!");
+      _msg_list.pop_front();
+    }
+
+    _msg_list.emplace_back(std::make_unique<TextMessage>(msg));
+  }
   // send a notification via event bus
   evt::yo_event_t e{evt::yo_event_t::newMsg};
   EVT_POST_DATA(YO_MSGQ_EVENTS, _msg_list.back()->qid, &e, sizeof(e));
 };
 
-const std::list< TextMessage_pt > &MessagePool::getPool(){
-  // go over all elements and remove empty ones, i.e. leftovers after previous eviction calls
-  _purge_voids();
-  return _msg_list;
-}
-
 void MessagePool::clearMsg(uint32_t id, int32_t qid){
-  std::lock_guard lock(msgPool.mtx);
+  std::lock_guard lock(_mtx);
   // clear local Q first, remove empty or matching messages
   std::erase_if(_msg_list, [id, qid](const auto &m){ return ( !m || (m->id == id && (qid == ESP_EVENT_ANY_ID || qid == m->qid)) ); });
   // send an event to clean message from consumer's queues
   TextControlMessage cm{evt::yo_event_t::clearMsg, id};
   EVT_POST_DATA(YO_MSGQ_EVENTS, qid, &cm, sizeof(cm));
+}
+
+TextMessage* MessagePool::evictMessage(int32_t qid){
+  std::lock_guard lock(_mtx);
+  auto m = std::find_if(_msg_list.begin(), _msg_list.end(), [qid](const TextMessage_pt& msg){ return (qid == ESP_EVENT_ANY_ID || qid == msg->qid); });
+  if (m != _msg_list.end()){
+    auto mptr = m->release();
+    _msg_list.erase(m);
+    return mptr;
+  } else
+    return nullptr;
 }

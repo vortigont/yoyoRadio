@@ -62,6 +62,7 @@ private:
  * it depends on MessagePool instance to consume new messages from and event bus
  */
 class MessageQ_Controller : public EmbUIUnit {
+  MessagePool& _pool;
   std::shared_ptr<AGFX_TextScroller> _unit;
 
 public:
@@ -71,10 +72,10 @@ public:
    * @param label unit label
    * @param name_space namespace label
    * @param unit text scroller unit
-   * @param qid message queue ID (message group), -1 - any group (catch-all queue)
+   * @param qid message queue ID (message group), ESP_EVENT_ANY_ID - any group (catch-all queue)
    * @param qlen message queue length
    */
-  MessageQ_Controller(const char* label, const char* name_space, std::shared_ptr<AGFX_TextScroller> unit, int32_t qid = ESP_EVENT_ANY_ID, size_t qlen = 16);
+  MessageQ_Controller(const char* label, const char* name_space, MessagePool& pool, std::shared_ptr<AGFX_TextScroller> unit, int32_t qid = ESP_EVENT_ANY_ID, size_t qlen = 16);
   ~MessageQ_Controller();
 
   // start or initialize unit
@@ -89,9 +90,8 @@ public:
 private:
   const size_t _max_q_len;
   // message queue
-  using message_t = std::unique_ptr<TextMessage>;
-  std::list< message_t > _mqueue;
-  message_t _current_msg;
+  std::list< TextMessage_pt > _mqueue;
+  TextMessage_pt _current_msg;
 
   // queue timer
   TimerHandle_t _tmr = nullptr;

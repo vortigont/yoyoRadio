@@ -72,13 +72,14 @@ class MessagePool {
   // @note list could contain null objects when those are consumed by requestors, so all dereferencing operations MUST chech for empty pointers first!
   std::list< TextMessage_pt > _msg_list;
   // declare our friends who can mangle with message list
-  friend class MessageQ_Controller;
+  //friend class MessageQ_Controller;
+
+  // Access Mutex
+  std::mutex _mtx;
 
 public:
   MessagePool() = default;
 
-  // Access Mutex
-  std::mutex mtx;
 
   // Add message to the pool
   void addMsg(TextMessage&& msg);
@@ -87,18 +88,19 @@ public:
   void clearMsg(uint32_t id, int32_t qid = ESP_EVENT_ANY_ID);
 
   /**
-   * @brief access the pool as const
-   * adding / removing messages is not allowed, but can iterate and steal message pointers
-   * on each access pool is purged from invalidated messages first
-   * @return const std::list< TextMessage_pt >& 
+   * @brief Evict Message with specified Q ID
+   * 
+   * 
+   * @param qid to look for, if ESP_EVENT_ANY_ID specified then any available message returned
+   * @return TextMessage* matching message, nullptr if no messages found
+   * @note you MUST control the lifetime of message object after eviction and destruct when not needed
    */
-  const std::list< TextMessage_pt > &getPool();
+  TextMessage* evictMessage(int32_t qid);
 
 private:
   // clears the queue from an empty messages consumed previously
-  void _purge_voids(){ std::erase_if(_msg_list, [](const TextMessage_pt &m ){ return !m; }); };
+  void _purge_voids(){
+    std::lock_guard lock(_mtx);
+    std::erase_if(_msg_list, [](const TextMessage_pt &m ){ return !m; });
+  };
 };
-
-
-// MessagePool object 
-extern MessagePool msgPool;
